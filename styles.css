@@ -128,10 +128,215 @@ body {
   background-color: #00563a;
 }
 
-.hamburger {
-  display: none;
-  font-size: 1.5rem;
+.auth-buttons .btn-admin-login {
+  background-color: #ffd700;
+  color: var(--primary-color);
+  border: 2px solid var(--primary-color);
+  padding: 0.75rem 1.5rem;
+  border-radius: 4px;
   cursor: pointer;
+  font-weight: 600;
+  transition: var(--transition);
+  text-decoration: none;
+  display: inline-block;
+  margin-left: 0.5rem;
+}
+
+.btn-admin-login:hover {
+  background-color: #ffc700;
+  transform: translateY(-2px);
+  box-shadow: 0 4px 12px rgba(255, 215, 0, 0.3);
+}
+
+.hamburger {
+  display: flex;
+  flex-direction: column;
+  cursor: pointer;
+  gap: 6px;
+}
+
+.hamburger span {
+  width: 28px;
+  height: 3px;
+  background-color: var(--primary-color);
+  border-radius: 2px;
+  transition: all 0.3s ease;
+}
+
+.hamburger.active span:nth-child(1) {
+  transform: rotate(45deg) translate(10px, 10px);
+}
+
+.hamburger.active span:nth-child(2) {
+  opacity: 0;
+}
+
+.hamburger.active span:nth-child(3) {
+  transform: rotate(-45deg) translate(7px, -7px);
+}
+
+/* Sidebar Navigation */
+.sidebar-overlay {
+  display: none;
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  background: rgba(0, 0, 0, 0.5);
+  z-index: 999;
+}
+
+.sidebar-overlay.active {
+  display: block;
+}
+
+.sidebar {
+  position: fixed;
+  left: -300px;
+  top: 0;
+  width: 300px;
+  height: 100vh;
+  background: linear-gradient(135deg, var(--primary-color) 0%, #005035 100%);
+  color: white;
+  z-index: 1001;
+  overflow-y: auto;
+  transition: left 0.3s ease;
+  display: flex;
+  flex-direction: column;
+}
+
+.sidebar.active {
+  left: 0;
+}
+
+.sidebar-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 20px;
+  border-bottom: 2px solid rgba(255, 255, 255, 0.2);
+}
+
+.logo-small {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  font-size: 18px;
+  font-weight: 700;
+}
+
+.logo-small img {
+  width: 40px;
+  height: 40px;
+}
+
+.close-sidebar {
+  background: none;
+  border: none;
+  color: white;
+  font-size: 24px;
+  cursor: pointer;
+  transition: transform 0.3s ease;
+}
+
+.close-sidebar:hover {
+  transform: scale(1.2);
+}
+
+.sidebar-menu {
+  flex: 1;
+  padding: 20px 0;
+}
+
+.sidebar-menu ul {
+  list-style: none;
+}
+
+.sidebar-menu > ul > li {
+  margin: 0;
+}
+
+.sidebar-menu a {
+  display: block;
+  padding: 15px 25px;
+  color: white;
+  text-decoration: none;
+  transition: all 0.3s ease;
+  font-size: 15px;
+  font-weight: 500;
+}
+
+.sidebar-menu a:hover {
+  background: rgba(255, 255, 255, 0.1);
+  padding-left: 35px;
+}
+
+.sidebar-menu i {
+  margin-right: 12px;
+  width: 20px;
+  text-align: center;
+}
+
+.dropdown-menu {
+  display: none;
+  list-style: none;
+  background: rgba(0, 0, 0, 0.2);
+}
+
+.dropdown-menu.active {
+  display: block;
+}
+
+.dropdown-menu li {
+  margin: 0;
+}
+
+.dropdown-menu a {
+  padding-left: 50px;
+  font-size: 14px;
+}
+
+.dropdown-menu a:hover {
+  padding-left: 60px;
+}
+
+.sidebar-auth {
+  padding: 20px;
+  border-top: 2px solid rgba(255, 255, 255, 0.2);
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.btn-sidebar-login,
+.btn-sidebar-admin {
+  padding: 12px 20px;
+  border: 2px solid white;
+  background: transparent;
+  color: white;
+  border-radius: 6px;
+  cursor: pointer;
+  font-weight: 600;
+  text-decoration: none;
+  transition: all 0.3s ease;
+  font-size: 14px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+}
+
+.btn-sidebar-login:hover {
+  background: var(--secondary-color);
+  color: var(--primary-color);
+  border-color: var(--secondary-color);
+}
+
+.btn-sidebar-admin:hover {
+  background: var(--secondary-color);
+  color: var(--primary-color);
+  border-color: var(--secondary-color);
 }
 
 /* Hero Section */
@@ -520,30 +725,17 @@ body {
 
 /* Responsive Design */
 @media (max-width: 768px) {
-  .nav-menu {
-    display: none;
-    flex-direction: column;
-    position: absolute;
-    top: 100%;
-    left: 0;
-    width: 100%;
-    background-color: var(--white);
-    padding: 1rem;
-    box-shadow: var(--shadow);
-  }
-
-  .nav-menu.active {
+  .hamburger {
     display: flex;
   }
 
-  .hamburger {
-    display: block;
+  .nav-container {
+    padding: 1rem;
   }
 
-  .dropdown-content {
-    position: static;
-    box-shadow: none;
-    background-color: var(--light-color);
+  .hero {
+    padding: 8rem 1.5rem 4rem;
+    margin-top: 70px;
   }
 
   .hero-content h2 {
@@ -560,7 +752,7 @@ body {
     font-size: 2rem;
   }
 
-  .nav-container {
-    padding: 1rem;
+  .modal-dialog {
+    width: 90%;
   }
 }

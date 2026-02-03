@@ -1,0 +1,1425 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Admin Dashboard - Babcock University Publishing</title>
+    <link
+      rel="stylesheet"
+      href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" />
+    <link
+      href="https://fonts.googleapis.com/css2?family=Montserrat:wght@300;400;500;600;700&family=Playfair+Display:wght@400;500;600;700&display=swap"
+      rel="stylesheet" />
+    <!-- <link rel="stylesheet" href="admin-styles.css" /> -->
+    <style>
+      :root {
+        --primary-color: #006747;
+        --secondary-color: #ffd700;
+        --danger-color: #ff6b6b;
+        --success-color: #4ecdc4;
+        --warning-color: #ffa500;
+        --gray-color: #666;
+        --light-gray: #f5f5f5;
+        --border-color: #ddd;
+        --shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
+      }
+
+      * {
+        margin: 0;
+        padding: 0;
+        box-sizing: border-box;
+      }
+
+      body {
+        font-family: "Montserrat", sans-serif;
+        background: var(--light-gray);
+        color: #333;
+      }
+
+      /* Login Modal */
+      .modal {
+        display: none;
+        position: fixed;
+        top: 0;
+        left: 0;
+        width: 100%;
+        height: 100%;
+        background: rgba(0, 0, 0, 0.7);
+        z-index: 1000;
+        align-items: center;
+        justify-content: center;
+      }
+
+      .modal.active {
+        display: flex;
+      }
+
+      .modal-content {
+        background: white;
+        padding: 40px;
+        border-radius: 12px;
+        box-shadow: 0 5px 40px rgba(0, 0, 0, 0.3);
+        max-width: 500px;
+        width: 90%;
+        animation: slideIn 0.3s ease;
+      }
+
+      @keyframes slideIn {
+        from {
+          transform: translateY(-50px);
+          opacity: 0;
+        }
+        to {
+          transform: translateY(0);
+          opacity: 1;
+        }
+      }
+
+      .login-modal-content {
+        max-width: 400px;
+      }
+
+      .login-container {
+        text-align: center;
+      }
+
+      .login-header {
+        margin-bottom: 30px;
+      }
+
+      .login-logo {
+        width: 60px;
+        height: 60px;
+        margin-bottom: 15px;
+      }
+
+      .login-header h2 {
+        color: var(--primary-color);
+        font-size: 28px;
+        margin-bottom: 10px;
+      }
+
+      .admin-form .form-group {
+        margin-bottom: 20px;
+        text-align: left;
+      }
+
+      .form-group label {
+        display: block;
+        margin-bottom: 8px;
+        font-weight: 600;
+        color: var(--primary-color);
+      }
+
+      .form-group input,
+      .form-group select {
+        width: 100%;
+        padding: 12px;
+        border: 2px solid var(--border-color);
+        border-radius: 6px;
+        font-size: 14px;
+        font-family: "Montserrat", sans-serif;
+        transition: border-color 0.3s;
+      }
+
+      .form-group input:focus,
+      .form-group select:focus {
+        outline: none;
+        border-color: var(--primary-color);
+      }
+
+      .login-note {
+        font-size: 12px;
+        color: var(--gray-color);
+        margin-top: 15px;
+      }
+
+      /* Buttons */
+      .btn {
+        padding: 12px 20px;
+        border: none;
+        border-radius: 6px;
+        font-size: 14px;
+        font-weight: 600;
+        cursor: pointer;
+        transition: all 0.3s ease;
+        font-family: "Montserrat", sans-serif;
+      }
+
+      .btn-primary {
+        background: var(--primary-color);
+        color: white;
+      }
+
+      .btn-primary:hover {
+        background: #005035;
+        transform: translateY(-2px);
+        box-shadow: 0 4px 12px rgba(0, 103, 71, 0.3);
+      }
+
+      .btn-secondary {
+        background: var(--gray-color);
+        color: white;
+      }
+
+      .btn-secondary:hover {
+        background: #555;
+      }
+
+      .btn-danger {
+        background: var(--danger-color);
+        color: white;
+        padding: 8px 16px;
+        font-size: 12px;
+      }
+
+      .btn-danger:hover {
+        background: #ff5252;
+      }
+
+      .btn-success {
+        background: var(--success-color);
+        color: white;
+        padding: 8px 16px;
+        font-size: 12px;
+      }
+
+      .btn-success:hover {
+        background: #45b8ab;
+      }
+
+      .btn-block {
+        width: 100%;
+      }
+
+      /* Dashboard Layout */
+      .dashboard-hidden {
+        display: none;
+      }
+
+      .dashboard-hidden.active {
+        display: flex;
+      }
+
+      .dashboard-hidden {
+        height: 100vh;
+      }
+
+      .sidebar {
+        width: 250px;
+        background: var(--primary-color);
+        color: white;
+        display: flex;
+        flex-direction: column;
+        padding: 20px;
+        box-shadow: 2px 0 10px rgba(0, 0, 0, 0.1);
+        overflow-y: auto;
+      }
+
+      .sidebar-header {
+        display: flex;
+        align-items: center;
+        gap: 15px;
+        margin-bottom: 40px;
+        padding-bottom: 20px;
+        border-bottom: 2px solid rgba(255, 255, 255, 0.2);
+      }
+
+      .sidebar-logo {
+        width: 40px;
+        height: 40px;
+      }
+
+      .sidebar-header h3 {
+        font-size: 18px;
+        font-weight: 700;
+      }
+
+      .sidebar-nav {
+        flex: 1;
+      }
+
+      .sidebar-nav ul {
+        list-style: none;
+      }
+
+      .sidebar-nav li {
+        margin-bottom: 10px;
+      }
+
+      .nav-item {
+        display: block;
+        padding: 15px;
+        color: white;
+        text-decoration: none;
+        border-radius: 6px;
+        transition: all 0.3s ease;
+        font-size: 14px;
+        font-weight: 500;
+      }
+
+      .nav-item:hover {
+        background: rgba(255, 255, 255, 0.1);
+        padding-left: 20px;
+      }
+
+      .nav-item.active {
+        background: var(--secondary-color);
+        color: var(--primary-color);
+      }
+
+      .nav-item i {
+        margin-right: 10px;
+        width: 20px;
+      }
+
+      .sidebar-footer {
+        margin-top: auto;
+        padding-top: 20px;
+        border-top: 2px solid rgba(255, 255, 255, 0.2);
+      }
+
+      /* Main Content */
+      .main-content {
+        flex: 1;
+        display: flex;
+        flex-direction: column;
+        overflow-y: auto;
+      }
+
+      .top-bar {
+        background: white;
+        padding: 20px 30px;
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        box-shadow: var(--shadow);
+        border-bottom: 3px solid var(--secondary-color);
+      }
+
+      .top-bar h1 {
+        color: var(--primary-color);
+        font-size: 28px;
+      }
+
+      .admin-info {
+        display: flex;
+        align-items: center;
+        gap: 15px;
+      }
+
+      .admin-email {
+        font-weight: 600;
+        color: var(--primary-color);
+      }
+
+      .admin-avatar {
+        width: 40px;
+        height: 40px;
+        border-radius: 50%;
+        border: 2px solid var(--primary-color);
+      }
+
+      /* Content Sections */
+      .content-section {
+        display: none;
+        padding: 30px;
+        animation: fadeIn 0.3s ease;
+      }
+
+      .content-section.active {
+        display: block;
+      }
+
+      @keyframes fadeIn {
+        from {
+          opacity: 0;
+        }
+        to {
+          opacity: 1;
+        }
+      }
+
+      .section-header {
+        margin-bottom: 30px;
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        flex-wrap: wrap;
+        gap: 20px;
+      }
+
+      .section-header h2 {
+        color: var(--primary-color);
+        font-size: 24px;
+      }
+
+      .filter-buttons {
+        display: flex;
+        gap: 10px;
+      }
+
+      .filter-btn {
+        padding: 10px 20px;
+        border: 2px solid var(--border-color);
+        background: white;
+        border-radius: 6px;
+        cursor: pointer;
+        font-weight: 600;
+        transition: all 0.3s ease;
+        font-size: 13px;
+      }
+
+      .filter-btn:hover {
+        border-color: var(--primary-color);
+        color: var(--primary-color);
+      }
+
+      .filter-btn.active {
+        background: var(--primary-color);
+        color: white;
+        border-color: var(--primary-color);
+      }
+
+      /* Stats Grid */
+      .stats-grid {
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+        gap: 20px;
+      }
+
+      .stat-card {
+        background: white;
+        padding: 25px;
+        border-radius: 12px;
+        box-shadow: var(--shadow);
+        display: flex;
+        align-items: center;
+        gap: 20px;
+        transition: all 0.3s ease;
+      }
+
+      .stat-card:hover {
+        transform: translateY(-5px);
+        box-shadow: 0 5px 25px rgba(0, 0, 0, 0.15);
+      }
+
+      .stat-icon {
+        width: 80px;
+        height: 80px;
+        border-radius: 12px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        color: white;
+        font-size: 32px;
+      }
+
+      .stat-info h3 {
+        font-size: 28px;
+        color: var(--primary-color);
+        margin-bottom: 5px;
+      }
+
+      .stat-info p {
+        font-size: 13px;
+        color: var(--gray-color);
+      }
+
+      /* Tables */
+      .table-container {
+        background: white;
+        border-radius: 12px;
+        box-shadow: var(--shadow);
+        overflow: hidden;
+        overflow-x: auto;
+      }
+
+      .data-table {
+        width: 100%;
+        border-collapse: collapse;
+      }
+
+      .data-table thead {
+        background: var(--primary-color);
+        color: white;
+      }
+
+      .data-table th {
+        padding: 15px;
+        text-align: left;
+        font-weight: 600;
+        font-size: 13px;
+      }
+
+      .data-table td {
+        padding: 15px;
+        border-bottom: 1px solid var(--border-color);
+        font-size: 13px;
+      }
+
+      .data-table tbody tr:hover {
+        background: var(--light-gray);
+      }
+
+      .status-badge {
+        display: inline-block;
+        padding: 6px 12px;
+        border-radius: 20px;
+        font-size: 11px;
+        font-weight: 600;
+        text-transform: uppercase;
+      }
+
+      .status-pending {
+        background: #fff3cd;
+        color: #856404;
+      }
+
+      .status-approved {
+        background: #d4edda;
+        color: #155724;
+      }
+
+      .status-confirmed {
+        background: #d4edda;
+        color: #155724;
+      }
+
+      .status-rejected {
+        background: #f8d7da;
+        color: #721c24;
+      }
+
+      .status-completed {
+        background: #d4edda;
+        color: #155724;
+      }
+
+      .action-buttons {
+        display: flex;
+        gap: 8px;
+      }
+
+      /* Books Container */
+      .books-container,
+      .contacts-container {
+        display: grid;
+        grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+        gap: 20px;
+      }
+
+      .book-card,
+      .contact-card {
+        background: white;
+        border-radius: 12px;
+        padding: 20px;
+        box-shadow: var(--shadow);
+        transition: all 0.3s ease;
+      }
+
+      .book-card:hover,
+      .contact-card:hover {
+        transform: translateY(-5px);
+        box-shadow: 0 5px 25px rgba(0, 0, 0, 0.15);
+      }
+
+      .book-card h3,
+      .contact-card h3 {
+        color: var(--primary-color);
+        margin-bottom: 10px;
+        font-size: 16px;
+      }
+
+      .book-card p,
+      .contact-card p {
+        font-size: 13px;
+        color: var(--gray-color);
+        margin-bottom: 8px;
+      }
+
+      .book-card .book-meta {
+        margin: 15px 0;
+        padding: 15px 0;
+        border-top: 1px solid var(--border-color);
+        border-bottom: 1px solid var(--border-color);
+      }
+
+      .book-meta-item {
+        display: flex;
+        justify-content: space-between;
+        margin-bottom: 8px;
+        font-size: 13px;
+      }
+
+      .book-meta-label {
+        font-weight: 600;
+        color: var(--primary-color);
+      }
+
+      /* Modal Dialog */
+      .modal-header {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        margin-bottom: 20px;
+        border-bottom: 2px solid var(--border-color);
+        padding-bottom: 15px;
+      }
+
+      .modal-header h3 {
+        color: var(--primary-color);
+      }
+
+      .close-btn {
+        background: none;
+        border: none;
+        font-size: 28px;
+        cursor: pointer;
+        color: var(--gray-color);
+      }
+
+      .close-btn:hover {
+        color: var(--primary-color);
+      }
+
+      .modal-body {
+        margin-bottom: 20px;
+      }
+
+      .modal-footer {
+        display: flex;
+        gap: 10px;
+        justify-content: flex-end;
+      }
+
+      /* Responsive Design */
+      @media (max-width: 768px) {
+        .dashboard-hidden {
+          flex-direction: column;
+        }
+
+        .sidebar {
+          width: 100%;
+          flex-direction: row;
+          align-items: center;
+          padding: 10px 20px;
+        }
+
+        .sidebar-header {
+          margin-bottom: 0;
+          padding-bottom: 0;
+          border-bottom: none;
+          flex: 1;
+        }
+
+        .sidebar-nav {
+          display: none;
+        }
+
+        .sidebar-nav.mobile-open {
+          display: block;
+          position: absolute;
+          top: 60px;
+          left: 0;
+          width: 100%;
+          background: var(--primary-color);
+        }
+
+        .main-content {
+          flex: 1;
+        }
+
+        .top-bar {
+          flex-direction: column;
+          align-items: flex-start;
+          gap: 15px;
+        }
+
+        .content-section {
+          padding: 20px;
+        }
+
+        .section-header {
+          flex-direction: column;
+          align-items: flex-start;
+        }
+
+        .stats-grid {
+          grid-template-columns: 1fr;
+        }
+
+        .data-table {
+          font-size: 12px;
+        }
+
+        .data-table th,
+        .data-table td {
+          padding: 10px;
+        }
+
+        .filter-buttons {
+          flex-wrap: wrap;
+        }
+
+        .books-container,
+        .contacts-container {
+          grid-template-columns: 1fr;
+        }
+      }
+
+      /* Empty State */
+      .empty-state {
+        text-align: center;
+        padding: 40px;
+        color: var(--gray-color);
+      }
+
+      .empty-state i {
+        font-size: 48px;
+        margin-bottom: 20px;
+        color: var(--border-color);
+      }
+
+      .empty-state p {
+        font-size: 16px;
+      }
+
+      /* Loading Spinner */
+      .spinner {
+        display: inline-block;
+        width: 20px;
+        height: 20px;
+        border: 3px solid rgba(0, 103, 71, 0.3);
+        border-radius: 50%;
+        border-top-color: var(--primary-color);
+        animation: spin 0.8s linear infinite;
+      }
+
+      @keyframes spin {
+        to {
+          transform: rotate(360deg);
+        }
+      }
+    </style>
+  </head>
+  <body>
+    <!-- Login Modal -->
+    <div id="loginModal" class="modal active">
+      <div class="modal-content login-modal-content">
+        <div class="login-container">
+          <div class="login-header">
+            <img
+              src="./babcock-logo.svg"
+              alt="Babcock Logo"
+              class="login-logo" />
+            <h2>Admin Dashboard</h2>
+          </div>
+          <form id="adminLoginForm" class="admin-form">
+            <div class="form-group">
+              <label for="adminEmail">Email</label>
+              <input
+                type="email"
+                id="adminEmail"
+                name="email"
+                required
+                placeholder="admin@babcock.edu.ng" />
+            </div>
+            <div class="form-group">
+              <label for="adminPassword">Password</label>
+              <input
+                type="password"
+                id="adminPassword"
+                name="password"
+                required
+                placeholder="Enter password" />
+            </div>
+            <button type="submit" class="btn btn-primary btn-block">
+              Login
+            </button>
+            <p class="login-note">Default: admin@babcock.edu.ng / admin123</p>
+          </form>
+        </div>
+      </div>
+    </div>
+
+    <!-- Dashboard -->
+    <div id="dashboardContainer" class="dashboard-hidden">
+      <!-- Sidebar -->
+      <aside class="sidebar">
+        <div class="sidebar-header">
+          <img
+            src="./babcock-logo.svg"
+            alt="Babcock Logo"
+            class="sidebar-logo" />
+          <h3>Admin Panel</h3>
+        </div>
+        <nav class="sidebar-nav">
+          <ul>
+            <li>
+              <a href="#" class="nav-item active" data-section="dashboard"
+                ><i class="fas fa-chart-line"></i> Dashboard</a
+              >
+            </li>
+            <li>
+              <a href="#" class="nav-item" data-section="authors"
+                ><i class="fas fa-user-graduate"></i> Author Registration</a
+              >
+            </li>
+            <li>
+              <a href="#" class="nav-item" data-section="training"
+                ><i class="fas fa-book"></i> Student Training</a
+              >
+            </li>
+            <li>
+              <a href="#" class="nav-item" data-section="books"
+                ><i class="fas fa-book-open"></i> All Books</a
+              >
+            </li>
+            <li>
+              <a href="#" class="nav-item" data-section="contacts"
+                ><i class="fas fa-envelope"></i> Contact Messages</a
+              >
+            </li>
+          </ul>
+        </nav>
+        <div class="sidebar-footer">
+          <button id="logoutBtn" class="btn btn-secondary btn-block">
+            <i class="fas fa-sign-out-alt"></i> Logout
+          </button>
+        </div>
+      </aside>
+
+      <!-- Main Content -->
+      <main class="main-content">
+        <div class="top-bar">
+          <h1 id="pageTitle">Dashboard</h1>
+          <div class="admin-info">
+            <span id="adminEmail" class="admin-email"></span>
+            <img src="./babcock-logo.svg" alt="Admin" class="admin-avatar" />
+          </div>
+        </div>
+
+        <!-- Dashboard Section -->
+        <section id="dashboard" class="content-section active">
+          <div class="stats-grid">
+            <div class="stat-card">
+              <div class="stat-icon" style="background: #ffd700">
+                <i class="fas fa-clock"></i>
+              </div>
+              <div class="stat-info">
+                <h3 id="pendingAuthorsCount">0</h3>
+                <p>Pending Author Approvals</p>
+              </div>
+            </div>
+            <div class="stat-card">
+              <div class="stat-icon" style="background: #006747">
+                <i class="fas fa-check-circle"></i>
+              </div>
+              <div class="stat-info">
+                <h3 id="approvedAuthorsCount">0</h3>
+                <p>Approved Authors</p>
+              </div>
+            </div>
+            <div class="stat-card">
+              <div class="stat-icon" style="background: #ff6b6b">
+                <i class="fas fa-graduation-cap"></i>
+              </div>
+              <div class="stat-info">
+                <h3 id="pendingTrainingCount">0</h3>
+                <p>Pending Training Approvals</p>
+              </div>
+            </div>
+            <div class="stat-card">
+              <div class="stat-icon" style="background: #4ecdc4">
+                <i class="fas fa-book"></i>
+              </div>
+              <div class="stat-info">
+                <h3 id="totalBooksCount">0</h3>
+                <p>Total Books</p>
+              </div>
+            </div>
+            <div class="stat-card">
+              <div class="stat-icon" style="background: #9b59b6">
+                <i class="fas fa-envelope"></i>
+              </div>
+              <div class="stat-info">
+                <h3 id="totalContactsCount">0</h3>
+                <p>Contact Messages</p>
+              </div>
+            </div>
+          </div>
+        </section>
+
+        <!-- Author Registration Section -->
+        <section id="authors" class="content-section">
+          <div class="section-header">
+            <h2>Author Registration Approvals</h2>
+            <div class="filter-buttons">
+              <button class="filter-btn active" data-filter="pending">
+                Pending
+              </button>
+              <button class="filter-btn" data-filter="approved">
+                Approved
+              </button>
+              <button class="filter-btn" data-filter="rejected">
+                Rejected
+              </button>
+              <button class="filter-btn" data-filter="all">All</button>
+            </div>
+          </div>
+          <div id="authorsTable" class="table-container">
+            <table class="data-table">
+              <thead>
+                <tr>
+                  <th>Full Name</th>
+                  <th>Email</th>
+                  <th>Faculty</th>
+                  <th>Department</th>
+                  <th>Staff ID</th>
+                  <th>Status</th>
+                  <th>Date</th>
+                  <th>Actions</th>
+                </tr>
+              </thead>
+              <tbody id="authorsTableBody">
+                <!-- Data will be populated here -->
+              </tbody>
+            </table>
+          </div>
+        </section>
+
+        <!-- Training Registration Section -->
+        <section id="training" class="content-section">
+          <div class="section-header">
+            <h2>Student Training Registration Approvals</h2>
+            <div class="filter-buttons">
+              <button class="filter-btn active" data-filter="pending">
+                Pending
+              </button>
+              <button class="filter-btn" data-filter="confirmed">
+                Confirmed
+              </button>
+              <button class="filter-btn" data-filter="completed">
+                Completed
+              </button>
+              <button class="filter-btn" data-filter="all">All</button>
+            </div>
+          </div>
+          <div id="trainingTable" class="table-container">
+            <table class="data-table">
+              <thead>
+                <tr>
+                  <th>Full Name</th>
+                  <th>Email</th>
+                  <th>Student ID</th>
+                  <th>Faculty</th>
+                  <th>Level</th>
+                  <th>Training Type</th>
+                  <th>Preferred Date</th>
+                  <th>Status</th>
+                  <th>Actions</th>
+                </tr>
+              </thead>
+              <tbody id="trainingTableBody">
+                <!-- Data will be populated here -->
+              </tbody>
+            </table>
+          </div>
+        </section>
+
+        <!-- Books Section -->
+        <section id="books" class="content-section">
+          <div class="section-header">
+            <h2>All Books</h2>
+          </div>
+          <div id="booksContainer" class="books-container">
+            <!-- Books will be populated here -->
+          </div>
+        </section>
+
+        <!-- Contacts Section -->
+        <section id="contacts" class="content-section">
+          <div class="section-header">
+            <h2>Contact Messages</h2>
+          </div>
+          <div id="contactsContainer" class="contacts-container">
+            <!-- Contacts will be populated here -->
+          </div>
+        </section>
+      </main>
+    </div>
+
+    <!-- Status Modal -->
+    <div id="statusModal" class="modal">
+      <div class="modal-content">
+        <div class="modal-header">
+          <h3>Update Status</h3>
+          <button class="close-btn" onclick="closeStatusModal()">
+            &times;
+          </button>
+        </div>
+        <div class="modal-body">
+          <div class="form-group">
+            <label for="statusSelect">Select Status</label>
+            <select id="statusSelect">
+              <option value="">-- Select Status --</option>
+            </select>
+          </div>
+        </div>
+        <div class="modal-footer">
+          <button class="btn btn-secondary" onclick="closeStatusModal()">
+            Cancel
+          </button>
+          <button class="btn btn-primary" onclick="updateStatus()">
+            Update
+          </button>
+        </div>
+      </div>
+    </div>
+
+    <script>
+      const API_URL = "http://localhost:3001/api";
+      let currentAdminEmail = "";
+      let currentFilter = "pending";
+      let currentSection = "dashboard";
+      let currentUpdateId = null;
+      let currentUpdateType = null;
+
+      // Initialize
+      document.addEventListener("DOMContentLoaded", () => {
+        setupEventListeners();
+        loadDashboardStats();
+      });
+
+      function setupEventListeners() {
+        // Login form
+        document
+          .getElementById("adminLoginForm")
+          .addEventListener("submit", handleLogin);
+
+        // Logout button
+        document.getElementById("logoutBtn").addEventListener("click", logout);
+
+        // Navigation
+        document.querySelectorAll(".nav-item").forEach((item) => {
+          item.addEventListener("click", (e) => {
+            e.preventDefault();
+            const section = item.getAttribute("data-section");
+            switchSection(section);
+          });
+        });
+
+        // Filter buttons
+        document.querySelectorAll(".filter-btn").forEach((btn) => {
+          btn.addEventListener("click", (e) => {
+            e.preventDefault();
+            const filter = btn.getAttribute("data-filter");
+            const parent = btn.parentElement;
+
+            parent
+              .querySelectorAll(".filter-btn")
+              .forEach((b) => b.classList.remove("active"));
+            btn.classList.add("active");
+
+            currentFilter = filter;
+
+            if (currentSection === "authors") {
+              loadAuthorRegistrations();
+            } else if (currentSection === "training") {
+              loadTrainingRegistrations();
+            }
+          });
+        });
+      }
+
+      async function handleLogin(e) {
+        e.preventDefault();
+
+        const email = document.getElementById("adminEmail").value;
+        const password = document.getElementById("adminPassword").value;
+
+        try {
+          const response = await fetch(`${API_URL}/admin/login`, {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({ email, password }),
+          });
+
+          const data = await response.json();
+
+          if (data.success) {
+            currentAdminEmail = email;
+            document.getElementById("loginModal").classList.remove("active");
+            document
+              .getElementById("dashboardContainer")
+              .classList.add("active");
+            document.getElementById("adminEmail").textContent = email;
+            loadDashboardStats();
+          } else {
+            alert(data.message || "Login failed");
+          }
+        } catch (error) {
+          console.error("Login error:", error);
+          alert("Login error: " + error.message);
+        }
+      }
+
+      function logout() {
+        currentAdminEmail = "";
+        document
+          .getElementById("dashboardContainer")
+          .classList.remove("active");
+        document.getElementById("loginModal").classList.add("active");
+        document.getElementById("adminLoginForm").reset();
+      }
+
+      function switchSection(section) {
+        // Update navigation
+        document.querySelectorAll(".nav-item").forEach((item) => {
+          item.classList.remove("active");
+        });
+        document
+          .querySelector(`[data-section="${section}"]`)
+          .classList.add("active");
+
+        // Update content
+        document.querySelectorAll(".content-section").forEach((s) => {
+          s.classList.remove("active");
+        });
+        document.getElementById(section).classList.add("active");
+
+        // Update page title
+        const titles = {
+          dashboard: "Dashboard",
+          authors: "Author Registrations",
+          training: "Student Training",
+          books: "All Books",
+          contacts: "Contact Messages",
+        };
+        document.getElementById("pageTitle").textContent = titles[section];
+
+        currentSection = section;
+
+        // Load section data
+        if (section === "authors") {
+          loadAuthorRegistrations();
+        } else if (section === "training") {
+          loadTrainingRegistrations();
+        } else if (section === "books") {
+          loadAllBooks();
+        } else if (section === "contacts") {
+          loadAllContacts();
+        }
+      }
+
+      async function loadDashboardStats() {
+        try {
+          const response = await fetch(`${API_URL}/admin/dashboard/stats`);
+          const data = await response.json();
+
+          if (data.success) {
+            document.getElementById("pendingAuthorsCount").textContent =
+              data.stats.pendingAuthors;
+            document.getElementById("approvedAuthorsCount").textContent =
+              data.stats.approvedAuthors;
+            document.getElementById("pendingTrainingCount").textContent =
+              data.stats.pendingTraining;
+            document.getElementById("totalBooksCount").textContent =
+              data.stats.totalBooks;
+            document.getElementById("totalContactsCount").textContent =
+              data.stats.totalContacts;
+          }
+        } catch (error) {
+          console.error("Error loading stats:", error);
+        }
+      }
+
+      async function loadAuthorRegistrations() {
+        const endpoint =
+          currentFilter === "all"
+            ? `/api/admin/authors/all`
+            : `/api/admin/authors/pending`;
+
+        try {
+          const response = await fetch(`${API_URL}${endpoint}`);
+          const data = await response.json();
+
+          if (data.success) {
+            const tbody = document.getElementById("authorsTableBody");
+            tbody.innerHTML = "";
+
+            let filteredAuthors = data.authors;
+            if (currentFilter !== "all") {
+              filteredAuthors = data.authors.filter(
+                (a) => a.status === currentFilter,
+              );
+            }
+
+            if (filteredAuthors.length === 0) {
+              tbody.innerHTML =
+                '<tr><td colspan="8" style="text-align: center; padding: 40px;">No registrations found</td></tr>';
+              return;
+            }
+
+            filteredAuthors.forEach((author) => {
+              const row = document.createElement("tr");
+              const createdDate = new Date(
+                author.created_at,
+              ).toLocaleDateString();
+
+              row.innerHTML = `
+          <td>${author.full_name}</td>
+          <td>${author.email}</td>
+          <td>${author.faculty || "-"}</td>
+          <td>${author.department || "-"}</td>
+          <td>${author.staff_id || "-"}</td>
+          <td>
+            <span class="status-badge status-${author.status}">
+              ${author.status}
+            </span>
+          </td>
+          <td>${createdDate}</td>
+          <td>
+            <div class="action-buttons">
+              ${
+                author.status === "pending"
+                  ? `
+                <button class="btn btn-success" onclick="openStatusModal(${author.id}, 'author', 'approved')">Approve</button>
+                <button class="btn btn-danger" onclick="openStatusModal(${author.id}, 'author', 'rejected')">Reject</button>
+              `
+                  : `<button class="btn btn-primary" onclick="openStatusModal(${author.id}, 'author')">Change Status</button>`
+              }
+            </div>
+          </td>
+        `;
+              tbody.appendChild(row);
+            });
+          }
+        } catch (error) {
+          console.error("Error loading authors:", error);
+        }
+      }
+
+      async function loadTrainingRegistrations() {
+        const endpoint =
+          currentFilter === "all"
+            ? `/api/admin/training/all`
+            : `/api/admin/training/pending`;
+
+        try {
+          const response = await fetch(`${API_URL}${endpoint}`);
+          const data = await response.json();
+
+          if (data.success) {
+            const tbody = document.getElementById("trainingTableBody");
+            tbody.innerHTML = "";
+
+            let filteredRegistrations = data.registrations;
+            if (currentFilter !== "all") {
+              filteredRegistrations = data.registrations.filter(
+                (r) => r.status === currentFilter,
+              );
+            }
+
+            if (filteredRegistrations.length === 0) {
+              tbody.innerHTML =
+                '<tr><td colspan="9" style="text-align: center; padding: 40px;">No registrations found</td></tr>';
+              return;
+            }
+
+            filteredRegistrations.forEach((reg) => {
+              const row = document.createElement("tr");
+              const createdDate = new Date(reg.created_at).toLocaleDateString();
+              const preferredDate = reg.preferred_date
+                ? new Date(reg.preferred_date).toLocaleDateString()
+                : "-";
+
+              row.innerHTML = `
+          <td>${reg.full_name}</td>
+          <td>${reg.email}</td>
+          <td>${reg.student_id || "-"}</td>
+          <td>${reg.faculty || "-"}</td>
+          <td>${reg.level || "-"}</td>
+          <td>${reg.training_type || "-"}</td>
+          <td>${preferredDate}</td>
+          <td>
+            <span class="status-badge status-${reg.status}">
+              ${reg.status}
+            </span>
+          </td>
+          <td>
+            <div class="action-buttons">
+              ${
+                reg.status === "pending"
+                  ? `
+                <button class="btn btn-success" onclick="openStatusModal(${reg.id}, 'training', 'confirmed')">Confirm</button>
+                <button class="btn btn-danger" onclick="openStatusModal(${reg.id}, 'training', 'rejected')">Reject</button>
+              `
+                  : `<button class="btn btn-primary" onclick="openStatusModal(${reg.id}, 'training')">Change Status</button>`
+              }
+            </div>
+          </td>
+        `;
+              tbody.appendChild(row);
+            });
+          }
+        } catch (error) {
+          console.error("Error loading training registrations:", error);
+        }
+      }
+
+      async function loadAllBooks() {
+        try {
+          const response = await fetch(`${API_URL}/admin/training/all`);
+          const data = await response.json();
+
+          const container = document.getElementById("booksContainer");
+          container.innerHTML = "";
+
+          if (data.registrations.length === 0) {
+            container.innerHTML =
+              '<div class="empty-state"><i class="fas fa-book"></i><p>No books found</p></div>';
+            return;
+          }
+
+          // This is a placeholder - you would typically fetch actual books data
+          data.registrations.forEach((item, index) => {
+            const card = document.createElement("div");
+            card.className = "book-card";
+            card.innerHTML = `
+        <h3>Sample Book ${index + 1}</h3>
+        <p>Author: System</p>
+        <p>Category: Publishing</p>
+        <div class="book-meta">
+          <div class="book-meta-item">
+            <span class="book-meta-label">Status:</span>
+            <span>Available</span>
+          </div>
+          <div class="book-meta-item">
+            <span class="book-meta-label">Pages:</span>
+            <span>250</span>
+          </div>
+        </div>
+        <p style="font-size: 12px; color: #999;">Feature coming soon...</p>
+      `;
+            container.appendChild(card);
+          });
+        } catch (error) {
+          console.error("Error loading books:", error);
+        }
+      }
+
+      async function loadAllContacts() {
+        const container = document.getElementById("contactsContainer");
+        container.innerHTML = "";
+
+        try {
+          // Placeholder for contacts - would typically fetch from API
+          const card = document.createElement("div");
+          card.className = "contact-card";
+          card.innerHTML = `
+      <h3>Contact Management</h3>
+      <p><strong>Feature:</strong> Display contact form submissions</p>
+      <p>Status: <span class="status-badge status-pending">Coming Soon</span></p>
+      <p style="font-size: 12px; color: #999; margin-top: 15px;">This section will display all contact form submissions with ability to mark as read and replied.</p>
+    `;
+          container.appendChild(card);
+        } catch (error) {
+          console.error("Error loading contacts:", error);
+        }
+      }
+
+      function openStatusModal(id, type, quickStatus = null) {
+        currentUpdateId = id;
+        currentUpdateType = type;
+
+        const select = document.getElementById("statusSelect");
+        select.innerHTML = '<option value="">-- Select Status --</option>';
+
+        if (type === "author") {
+          if (quickStatus) {
+            select.value = quickStatus;
+          } else {
+            select.innerHTML += `
+        <option value="pending">Pending</option>
+        <option value="approved">Approved</option>
+        <option value="rejected">Rejected</option>
+      `;
+          }
+        } else if (type === "training") {
+          if (quickStatus) {
+            select.value = quickStatus;
+          } else {
+            select.innerHTML += `
+        <option value="pending">Pending</option>
+        <option value="confirmed">Confirmed</option>
+        <option value="completed">Completed</option>
+      `;
+          }
+        }
+
+        document.getElementById("statusModal").classList.add("active");
+      }
+
+      function closeStatusModal() {
+        document.getElementById("statusModal").classList.remove("active");
+        currentUpdateId = null;
+        currentUpdateType = null;
+      }
+
+      async function updateStatus() {
+        const status = document.getElementById("statusSelect").value;
+
+        if (!status) {
+          alert("Please select a status");
+          return;
+        }
+
+        try {
+          const endpoint =
+            currentUpdateType === "author"
+              ? `/api/admin/authors/${currentUpdateId}/status`
+              : `/api/admin/training/${currentUpdateId}/status`;
+
+          const response = await fetch(`${API_URL}${endpoint}`, {
+            method: "PUT",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({ status }),
+          });
+
+          const data = await response.json();
+
+          if (data.success) {
+            alert(data.message);
+            closeStatusModal();
+
+            // Reload the current section
+            if (currentUpdateType === "author") {
+              loadAuthorRegistrations();
+            } else if (currentUpdateType === "training") {
+              loadTrainingRegistrations();
+            }
+
+            // Reload stats
+            loadDashboardStats();
+          } else {
+            alert(data.message || "Update failed");
+          }
+        } catch (error) {
+          console.error("Error updating status:", error);
+          alert("Error: " + error.message);
+        }
+      }
+
+      // Close modal when clicking outside
+      document.addEventListener("click", (e) => {
+        const modal = document.getElementById("statusModal");
+        if (e.target === modal) {
+          closeStatusModal();
+        }
+      });
+    </script>
+    <!-- <script src="admin-script.js"></script> -->
+  </body>
+</html>

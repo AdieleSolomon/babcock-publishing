@@ -20,21 +20,56 @@ document.addEventListener("DOMContentLoaded", function () {
 
 // Setup Event Listeners
 function setupEventListeners() {
-  // Mobile menu toggle
+  // Sidebar toggle
   const hamburger = document.querySelector(".hamburger");
-  const navMenu = document.querySelector(".nav-menu");
+  const sidebar = document.querySelector(".sidebar");
+  const sidebarOverlay = document.querySelector(".sidebar-overlay");
+  const closeSidebar = document.querySelector(".close-sidebar");
 
   if (hamburger) {
     hamburger.addEventListener("click", () => {
-      navMenu.classList.toggle("active");
+      sidebar.classList.add("active");
+      sidebarOverlay.classList.add("active");
+      hamburger.classList.add("active");
     });
   }
 
-  // Close mobile menu when clicking outside
-  document.addEventListener("click", (event) => {
-    if (!event.target.closest(".nav-container")) {
-      navMenu.classList.remove("active");
-    }
+  if (closeSidebar) {
+    closeSidebar.addEventListener("click", () => {
+      sidebar.classList.remove("active");
+      sidebarOverlay.classList.remove("active");
+      hamburger.classList.remove("active");
+    });
+  }
+
+  if (sidebarOverlay) {
+    sidebarOverlay.addEventListener("click", () => {
+      sidebar.classList.remove("active");
+      sidebarOverlay.classList.remove("active");
+      hamburger.classList.remove("active");
+    });
+  }
+
+  // Handle dropdown menus in sidebar
+  const dropdownToggles = document.querySelectorAll(".dropdown-toggle");
+  dropdownToggles.forEach((toggle) => {
+    toggle.addEventListener("click", (e) => {
+      e.preventDefault();
+      const dropdownMenu = toggle.nextElementSibling;
+      dropdownMenu.classList.toggle("active");
+    });
+  });
+
+  // Close sidebar when clicking on a link
+  const sidebarLinks = document.querySelectorAll(".sidebar-menu a");
+  sidebarLinks.forEach((link) => {
+    link.addEventListener("click", () => {
+      setTimeout(() => {
+        sidebar.classList.remove("active");
+        sidebarOverlay.classList.remove("active");
+        hamburger.classList.remove("active");
+      }, 200);
+    });
   });
 }
 
