@@ -1,5 +1,5 @@
 /** @type {import('tailwindcss').Config} */
-module.exports = {
+export default {
   content: [
     "./src/pages/**/*.{js,ts,jsx,tsx,mdx}",
     "./src/components/**/*.{js,ts,jsx,tsx,mdx}",
@@ -12,6 +12,9 @@ module.exports = {
         "babcock-gold": "#FFD700",
         "babcock-navy": "#0A2463",
         "babcock-light-blue": "#0077B6",
+        "gray-50": "#F9FAFB",
+        "gray-300": "#D1D5DB",
+        "gray-800": "#1F2937",
       },
       fontFamily: {
         sans: ["Inter", "system-ui", "sans-serif"],
