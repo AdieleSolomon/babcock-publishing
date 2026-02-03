@@ -1,9 +1,8 @@
 git init
-git pull
 git add .
 git commit -m "Initial commit"
 git branch -M main
-git remote add origin https://github.com/AdieleSolomon/babcock-publishing.git
+git remote add origin https://github.com/yourusername/babcock-publishing.git
 git push -u origin main
 
 git add .
