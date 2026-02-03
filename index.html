@@ -1,0 +1,521 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Babcock University Publishing Company</title>
+    <link
+      rel="stylesheet"
+      href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" />
+    <link
+      href="https://fonts.googleapis.com/css2?family=Montserrat:wght@300;400;500;600;700&family=Playfair+Display:wght@400;500;600;700&display=swap"
+      rel="stylesheet" />
+    <link rel="stylesheet" href="styles.css" />
+  </head>
+  <body>
+    <!-- Navigation -->
+    <nav class="navbar">
+      <div class="nav-container">
+        <div class="logo">
+          <img
+            src="https://via.placeholder.com/50/006747/FFFFFF?text=BUPC"
+            alt="BUPC Logo" />
+          <div class="logo-text">
+            <h1>Babcock University</h1>
+            <p>Publishing Company</p>
+          </div>
+        </div>
+
+        <ul class="nav-menu">
+          <li><a href="#home">Home</a></li>
+          <li class="dropdown">
+            <a href="#authors">Authors <i class="fas fa-chevron-down"></i></a>
+            <div class="dropdown-content">
+              <a href="#" onclick="showModal('registerModal')"
+                >Register as Author</a
+              >
+              <a href="#" onclick="showModal('uploadModal')"
+                >Upload Books for Review</a
+              >
+              <a href="#" onclick="showModal('submitModal')"
+                >Submit Work for Publishing</a
+              >
+            </div>
+          </li>
+          <li>
+            <a href="#" onclick="showModal('trainingModal')"
+              >Student Training</a
+            >
+          </li>
+          <li><a href="#about">About Us</a></li>
+          <li><a href="#contact">Contact Us</a></li>
+          <li><a href="#services">Services</a></li>
+          <li><a href="#catalog">Catalog</a></li>
+        </ul>
+
+        <div class="auth-buttons">
+          <button class="btn-login" onclick="showModal('loginModal')">
+            Author Login
+          </button>
+        </div>
+
+        <div class="hamburger">
+          <i class="fas fa-bars"></i>
+        </div>
+      </div>
+    </nav>
+
+    <!-- Hero Section -->
+    <section id="home" class="hero">
+      <div class="hero-content">
+        <h2>Excellence in Academic Publishing</h2>
+        <p>
+          Babcock University Publishing Company - Your gateway to scholarly
+          publishing and printing excellence
+        </p>
+        <div class="hero-buttons">
+          <button class="btn-primary" onclick="showModal('registerModal')">
+            Become an Author
+          </button>
+          <button class="btn-secondary" onclick="showModal('trainingModal')">
+            Student Training
+          </button>
+        </div>
+      </div>
+    </section>
+
+    <!-- Services Section -->
+    <section id="services" class="services">
+      <div class="container">
+        <h2 class="section-title">Our Services</h2>
+        <div class="services-grid">
+          <div class="service-card">
+            <i class="fas fa-book-open"></i>
+            <h3>Academic Publishing</h3>
+            <p>
+              Professional publishing of textbooks, journals, and research
+              papers
+            </p>
+          </div>
+          <div class="service-card">
+            <i class="fas fa-print"></i>
+            <h3>Printing Services</h3>
+            <p>
+              High-quality printing for books, journals, and academic materials
+            </p>
+          </div>
+          <div class="service-card">
+            <i class="fas fa-user-graduate"></i>
+            <h3>Student Training</h3>
+            <p>
+              Training programs in publishing, editing, and printing
+              technologies
+            </p>
+          </div>
+          <div class="service-card">
+            <i class="fas fa-edit"></i>
+            <h3>Editing & Proofreading</h3>
+            <p>Professional editing services for academic works</p>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- About Section -->
+    <section id="about" class="about">
+      <div class="container">
+        <h2 class="section-title">
+          About Babcock University Publishing Company
+        </h2>
+        <div class="about-content">
+          <div class="about-text">
+            <p>
+              Established as part of Babcock University's commitment to academic
+              excellence, our publishing company serves as a premier platform
+              for scholarly works, textbooks, and research publications.
+            </p>
+            <p>
+              We combine traditional publishing expertise with modern digital
+              solutions to provide comprehensive publishing services to our
+              academic community.
+            </p>
+            <div class="about-features">
+              <div class="feature">
+                <i class="fas fa-award"></i>
+                <span>Quality Assurance</span>
+              </div>
+              <div class="feature">
+                <i class="fas fa-university"></i>
+                <span>Academic Excellence</span>
+              </div>
+              <div class="feature">
+                <i class="fas fa-globe"></i>
+                <span>Global Standards</span>
+              </div>
+            </div>
+          </div>
+          <div class="about-image">
+            <img
+              src="https://images.unsplash.com/photo-1589829085413-56de8ae18c73?ixlib=rb-4.0.3&auto=format&fit=crop&w=600&q=80"
+              alt="University Publishing" />
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- Catalog Section -->
+    <section id="catalog" class="catalog">
+      <div class="container">
+        <h2 class="section-title">Our Publications</h2>
+        <div class="catalog-grid" id="publicationsList">
+          <!-- Publications will be loaded here -->
+        </div>
+      </div>
+    </section>
+
+    <!-- Contact Section -->
+    <section id="contact" class="contact">
+      <div class="container">
+        <h2 class="section-title">Contact Us</h2>
+        <div class="contact-content">
+          <div class="contact-info">
+            <div class="info-item">
+              <i class="fas fa-map-marker-alt"></i>
+              <div>
+                <h4>Location</h4>
+                <p>Babcock University<br />Ilishan-Remo, Ogun State, Nigeria</p>
+              </div>
+            </div>
+            <div class="info-item">
+              <i class="fas fa-phone"></i>
+              <div>
+                <h4>Phone</h4>
+                <p>+234 (0) 803 123 4567</p>
+              </div>
+            </div>
+            <div class="info-item">
+              <i class="fas fa-envelope"></i>
+              <div>
+                <h4>Email</h4>
+                <p>publishing@babcock.edu.ng</p>
+              </div>
+            </div>
+            <div class="info-item">
+              <i class="fas fa-clock"></i>
+              <div>
+                <h4>Working Hours</h4>
+                <p>Monday - Friday: 8:00 AM - 5:00 PM</p>
+              </div>
+            </div>
+          </div>
+          <div class="contact-form">
+            <form id="contactForm">
+              <div class="form-group">
+                <input
+                  type="text"
+                  id="contactName"
+                  placeholder="Full Name"
+                  required />
+              </div>
+              <div class="form-group">
+                <input
+                  type="email"
+                  id="contactEmail"
+                  placeholder="Email Address"
+                  required />
+              </div>
+              <div class="form-group">
+                <input
+                  type="text"
+                  id="contactSubject"
+                  placeholder="Subject"
+                  required />
+              </div>
+              <div class="form-group">
+                <textarea
+                  id="contactMessage"
+                  placeholder="Your Message"
+                  rows="5"
+                  required></textarea>
+              </div>
+              <button type="submit" class="btn-primary">Send Message</button>
+            </form>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- Footer -->
+    <footer class="footer">
+      <div class="container">
+        <div class="footer-content">
+          <div class="footer-section">
+            <h3>Babcock University Publishing</h3>
+            <p>Excellence in academic publishing and printing services.</p>
+          </div>
+          <div class="footer-section">
+            <h4>Quick Links</h4>
+            <ul>
+              <li><a href="#home">Home</a></li>
+              <li><a href="#services">Services</a></li>
+              <li><a href="#about">About Us</a></li>
+              <li><a href="#contact">Contact</a></li>
+            </ul>
+          </div>
+          <div class="footer-section">
+            <h4>Connect With Us</h4>
+            <div class="social-links">
+              <a href="#"><i class="fab fa-facebook"></i></a>
+              <a href="#"><i class="fab fa-twitter"></i></a>
+              <a href="#"><i class="fab fa-linkedin"></i></a>
+              <a href="#"><i class="fab fa-instagram"></i></a>
+            </div>
+          </div>
+        </div>
+        <div class="footer-bottom">
+          <p>
+            &copy; 2024 Babcock University Publishing Company. All rights
+            reserved.
+          </p>
+        </div>
+      </div>
+    </footer>
+
+    <!-- Modals -->
+    <div id="registerModal" class="modal">
+      <div class="modal-content">
+        <span class="close" onclick="closeModal('registerModal')">&times;</span>
+        <h2>Register as Author</h2>
+        <form id="authorRegisterForm">
+          <div class="form-group">
+            <input type="text" id="fullName" placeholder="Full Name" required />
+          </div>
+          <div class="form-group">
+            <input
+              type="email"
+              id="authorEmail"
+              placeholder="Email Address"
+              required />
+          </div>
+          <div class="form-group">
+            <input
+              type="tel"
+              id="authorPhone"
+              placeholder="Phone Number"
+              required />
+          </div>
+          <div class="form-group">
+            <input type="text" id="faculty" placeholder="Faculty" required />
+          </div>
+          <div class="form-group">
+            <input
+              type="text"
+              id="department"
+              placeholder="Department"
+              required />
+          </div>
+          <div class="form-group">
+            <input type="text" id="staffId" placeholder="Staff ID" required />
+          </div>
+          <div class="form-group">
+            <input
+              type="password"
+              id="authorPassword"
+              placeholder="Password"
+              required />
+          </div>
+          <button type="submit" class="btn-primary">Register</button>
+        </form>
+      </div>
+    </div>
+
+    <div id="loginModal" class="modal">
+      <div class="modal-content">
+        <span class="close" onclick="closeModal('loginModal')">&times;</span>
+        <h2>Author Login</h2>
+        <form id="authorLoginForm">
+          <div class="form-group">
+            <input
+              type="email"
+              id="loginEmail"
+              placeholder="Email Address"
+              required />
+          </div>
+          <div class="form-group">
+            <input
+              type="password"
+              id="loginPassword"
+              placeholder="Password"
+              required />
+          </div>
+          <button type="submit" class="btn-primary">Login</button>
+        </form>
+      </div>
+    </div>
+
+    <div id="uploadModal" class="modal">
+      <div class="modal-content">
+        <span class="close" onclick="closeModal('uploadModal')">&times;</span>
+        <h2>Upload Book for Review</h2>
+        <form id="uploadBookForm">
+          <div class="form-group">
+            <input
+              type="text"
+              id="bookTitle"
+              placeholder="Book Title"
+              required />
+          </div>
+          <div class="form-group">
+            <textarea
+              id="bookDescription"
+              placeholder="Book Description"
+              rows="4"
+              required></textarea>
+          </div>
+          <div class="form-group">
+            <select id="bookCategory" required>
+              <option value="">Select Category</option>
+              <option value="textbook">Textbook</option>
+              <option value="research">Research Paper</option>
+              <option value="journal">Journal Article</option>
+              <option value="monograph">Monograph</option>
+              <option value="other">Other</option>
+            </select>
+          </div>
+          <div class="form-group">
+            <label for="manuscriptFile">Upload Manuscript (PDF/DOC)</label>
+            <input
+              type="file"
+              id="manuscriptFile"
+              accept=".pdf,.doc,.docx"
+              required />
+          </div>
+          <div class="form-group">
+            <label for="coverImage">Cover Image (Optional)</label>
+            <input type="file" id="coverImage" accept="image/*" />
+          </div>
+          <button type="submit" class="btn-primary">Upload for Review</button>
+        </form>
+      </div>
+    </div>
+
+    <div id="submitModal" class="modal">
+      <div class="modal-content">
+        <span class="close" onclick="closeModal('submitModal')">&times;</span>
+        <h2>Submit for Publishing & Printing</h2>
+        <form id="submitPublishingForm">
+          <div class="form-group">
+            <select id="bookSelect" required>
+              <option value="">Select Your Book</option>
+            </select>
+          </div>
+          <div class="form-group">
+            <select id="submissionType" required>
+              <option value="">Submission Type</option>
+              <option value="publishing">Publishing Only</option>
+              <option value="printing">Printing Only</option>
+              <option value="both">Publishing & Printing</option>
+            </select>
+          </div>
+          <div class="form-group">
+            <textarea
+              id="specialInstructions"
+              placeholder="Special Instructions (Optional)"
+              rows="4"></textarea>
+          </div>
+          <button type="submit" class="btn-primary">
+            Submit for Processing
+          </button>
+        </form>
+      </div>
+    </div>
+
+    <div id="trainingModal" class="modal">
+      <div class="modal-content">
+        <span class="close" onclick="closeModal('trainingModal')">&times;</span>
+        <h2>Student Training Registration</h2>
+        <form id="trainingRegistrationForm">
+          <div class="form-group">
+            <input
+              type="text"
+              id="studentName"
+              placeholder="Full Name"
+              required />
+          </div>
+          <div class="form-group">
+            <input
+              type="email"
+              id="studentEmail"
+              placeholder="Email Address"
+              required />
+          </div>
+          <div class="form-group">
+            <input
+              type="text"
+              id="studentId"
+              placeholder="Student ID"
+              required />
+          </div>
+          <div class="form-group">
+            <input
+              type="text"
+              id="studentFaculty"
+              placeholder="Faculty"
+              required />
+          </div>
+          <div class="form-group">
+            <input
+              type="text"
+              id="studentDepartment"
+              placeholder="Department"
+              required />
+          </div>
+          <div class="form-group">
+            <select id="studentLevel" required>
+              <option value="">Select Level</option>
+              <option value="100">100 Level</option>
+              <option value="200">200 Level</option>
+              <option value="300">300 Level</option>
+              <option value="400">400 Level</option>
+              <option value="500">500 Level</option>
+              <option value="postgraduate">Postgraduate</option>
+            </select>
+          </div>
+          <div class="form-group">
+            <select id="trainingType" required>
+              <option value="">Select Training Type</option>
+              <option value="publishing_basics">Publishing Basics</option>
+              <option value="editing_proofreading">
+                Editing & Proofreading
+              </option>
+              <option value="printing_technology">Printing Technology</option>
+              <option value="digital_publishing">Digital Publishing</option>
+              <option value="all">Complete Publishing Course</option>
+            </select>
+          </div>
+          <div class="form-group">
+            <label for="preferredDate">Preferred Training Date</label>
+            <input type="date" id="preferredDate" required />
+          </div>
+          <button type="submit" class="btn-primary">
+            Register for Training
+          </button>
+        </form>
+      </div>
+    </div>
+
+    <div id="successModal" class="modal">
+      <div class="modal-content success-modal">
+        <span class="close" onclick="closeModal('successModal')">&times;</span>
+        <i class="fas fa-check-circle"></i>
+        <h2>Success!</h2>
+        <p id="successMessage"></p>
+        <button class="btn-primary" onclick="closeModal('successModal')">
+          OK
+        </button>
+      </div>
+    </div>
+
+    <script src="script.js"></script>
+  </body>
+</html>
