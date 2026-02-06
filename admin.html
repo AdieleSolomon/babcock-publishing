@@ -4,24 +4,56 @@
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>Admin Dashboard - Babcock University Publishing</title>
+
+    <!-- Fonts & Icons -->
     <link
       rel="stylesheet"
       href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" />
     <link
-      href="https://fonts.googleapis.com/css2?family=Montserrat:wght@300;400;500;600;700&family=Playfair+Display:wght@400;500;600;700&display=swap"
+      href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700&family=Inter:wght@300;400;500;600;700&display=swap"
       rel="stylesheet" />
-    <!-- <link rel="stylesheet" href="admin-styles.css" /> -->
+
+    <!-- Chart.js -->
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+
+    <!-- DataTables -->
+    <link
+      rel="stylesheet"
+      type="text/css"
+      href="https://cdn.datatables.net/1.13.6/css/jquery.dataTables.min.css" />
+    <link
+      rel="stylesheet"
+      type="text/css"
+      href="https://cdn.datatables.net/buttons/2.4.1/css/buttons.dataTables.min.css" />
+
     <style>
       :root {
         --primary-color: #006747;
+        --primary-dark: #005035;
+        --primary-light: #007c59;
         --secondary-color: #ffd700;
-        --danger-color: #ff6b6b;
-        --success-color: #4ecdc4;
-        --warning-color: #ffa500;
-        --gray-color: #666;
-        --light-gray: #f5f5f5;
-        --border-color: #ddd;
-        --shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
+        --accent-color: #8b0000;
+        --success-color: #28a745;
+        --warning-color: #ffc107;
+        --danger-color: #dc3545;
+        --info-color: #17a2b8;
+        --light-color: #f8f9fa;
+        --dark-color: #343a40;
+        --gray-100: #f8f9fa;
+        --gray-200: #e9ecef;
+        --gray-300: #dee2e6;
+        --gray-400: #ced4da;
+        --gray-500: #adb5bd;
+        --gray-600: #6c757d;
+        --gray-700: #495057;
+        --gray-800: #343a40;
+        --gray-900: #212529;
+
+        --sidebar-width: 260px;
+        --header-height: 70px;
+        --border-radius: 8px;
+        --box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+        --transition: all 0.3s ease;
       }
 
       * {
@@ -31,119 +63,117 @@
       }
 
       body {
-        font-family: "Montserrat", sans-serif;
-        background: var(--light-gray);
-        color: #333;
+        font-family: "Inter", sans-serif;
+        background-color: var(--gray-100);
+        color: var(--gray-800);
+        line-height: 1.6;
       }
 
-      /* Login Modal */
-      .modal {
-        display: none;
-        position: fixed;
-        top: 0;
-        left: 0;
-        width: 100%;
-        height: 100%;
-        background: rgba(0, 0, 0, 0.7);
-        z-index: 1000;
+      /* Login Page Styles */
+      .login-page {
+        min-height: 100vh;
+        display: flex;
         align-items: center;
         justify-content: center;
-      }
-
-      .modal.active {
-        display: flex;
-      }
-
-      .modal-content {
-        background: white;
-        padding: 40px;
-        border-radius: 12px;
-        box-shadow: 0 5px 40px rgba(0, 0, 0, 0.3);
-        max-width: 500px;
-        width: 90%;
-        animation: slideIn 0.3s ease;
-      }
-
-      @keyframes slideIn {
-        from {
-          transform: translateY(-50px);
-          opacity: 0;
-        }
-        to {
-          transform: translateY(0);
-          opacity: 1;
-        }
-      }
-
-      .login-modal-content {
-        max-width: 400px;
+        background: linear-gradient(
+          135deg,
+          var(--primary-color) 0%,
+          var(--primary-dark) 100%
+        );
+        padding: 20px;
       }
 
       .login-container {
-        text-align: center;
+        background: white;
+        border-radius: var(--border-radius);
+        box-shadow: 0 10px 40px rgba(0, 0, 0, 0.2);
+        width: 100%;
+        max-width: 420px;
+        overflow: hidden;
       }
 
       .login-header {
-        margin-bottom: 30px;
+        background: linear-gradient(
+          135deg,
+          var(--primary-color) 0%,
+          var(--primary-dark) 100%
+        );
+        color: white;
+        padding: 40px 30px;
+        text-align: center;
       }
 
-      .login-logo {
+      .login-header .logo {
+        width: 80px;
+        height: 80px;
+        background: white;
+        border-radius: 50%;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        margin: 0 auto 20px;
+      }
+
+      .login-header .logo img {
         width: 60px;
         height: 60px;
-        margin-bottom: 15px;
       }
 
-      .login-header h2 {
-        color: var(--primary-color);
-        font-size: 28px;
-        margin-bottom: 10px;
+      .login-header h1 {
+        font-size: 24px;
+        font-weight: 700;
+        margin-bottom: 5px;
       }
 
-      .admin-form .form-group {
+      .login-header p {
+        opacity: 0.9;
+        font-size: 14px;
+      }
+
+      .login-form {
+        padding: 40px 30px;
+      }
+
+      .form-group {
         margin-bottom: 20px;
-        text-align: left;
       }
 
       .form-group label {
         display: block;
         margin-bottom: 8px;
         font-weight: 600;
-        color: var(--primary-color);
+        color: var(--gray-700);
+        font-size: 14px;
       }
 
-      .form-group input,
-      .form-group select {
+      .form-control {
         width: 100%;
-        padding: 12px;
-        border: 2px solid var(--border-color);
+        padding: 12px 16px;
+        border: 2px solid var(--gray-300);
         border-radius: 6px;
         font-size: 14px;
-        font-family: "Montserrat", sans-serif;
-        transition: border-color 0.3s;
+        font-family: "Inter", sans-serif;
+        transition: var(--transition);
       }
 
-      .form-group input:focus,
-      .form-group select:focus {
+      .form-control:focus {
         outline: none;
         border-color: var(--primary-color);
+        box-shadow: 0 0 0 3px rgba(0, 103, 71, 0.1);
       }
 
-      .login-note {
-        font-size: 12px;
-        color: var(--gray-color);
-        margin-top: 15px;
-      }
-
-      /* Buttons */
       .btn {
-        padding: 12px 20px;
+        padding: 12px 24px;
         border: none;
         border-radius: 6px;
         font-size: 14px;
         font-weight: 600;
         cursor: pointer;
-        transition: all 0.3s ease;
-        font-family: "Montserrat", sans-serif;
+        transition: var(--transition);
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        gap: 8px;
       }
 
       .btn-primary {
@@ -152,287 +182,486 @@
       }
 
       .btn-primary:hover {
-        background: #005035;
+        background: var(--primary-dark);
         transform: translateY(-2px);
         box-shadow: 0 4px 12px rgba(0, 103, 71, 0.3);
-      }
-
-      .btn-secondary {
-        background: var(--gray-color);
-        color: white;
-      }
-
-      .btn-secondary:hover {
-        background: #555;
-      }
-
-      .btn-danger {
-        background: var(--danger-color);
-        color: white;
-        padding: 8px 16px;
-        font-size: 12px;
-      }
-
-      .btn-danger:hover {
-        background: #ff5252;
-      }
-
-      .btn-success {
-        background: var(--success-color);
-        color: white;
-        padding: 8px 16px;
-        font-size: 12px;
-      }
-
-      .btn-success:hover {
-        background: #45b8ab;
       }
 
       .btn-block {
         width: 100%;
       }
 
-      /* Dashboard Layout */
-      .dashboard-hidden {
+      .login-footer {
+        text-align: center;
+        padding: 20px 30px;
+        border-top: 1px solid var(--gray-200);
+        font-size: 12px;
+        color: var(--gray-600);
+      }
+
+      /* Admin Dashboard Styles */
+      .dashboard-container {
         display: none;
+        min-height: 100vh;
       }
 
-      .dashboard-hidden.active {
-        display: flex;
-      }
-
-      .dashboard-hidden {
-        height: 100vh;
-      }
-
-      .sidebar {
-        width: 250px;
-        background: var(--primary-color);
-        color: white;
-        display: flex;
-        flex-direction: column;
-        padding: 20px;
-        box-shadow: 2px 0 10px rgba(0, 0, 0, 0.1);
-        overflow-y: auto;
-      }
-
-      .sidebar-header {
+      /* Header */
+      .dashboard-header {
+        position: fixed;
+        top: 0;
+        left: 0;
+        right: 0;
+        height: var(--header-height);
+        background: white;
+        box-shadow: var(--box-shadow);
+        z-index: 100;
         display: flex;
         align-items: center;
-        gap: 15px;
-        margin-bottom: 40px;
-        padding-bottom: 20px;
-        border-bottom: 2px solid rgba(255, 255, 255, 0.2);
+        justify-content: space-between;
+        padding: 0 30px;
       }
 
-      .sidebar-logo {
+      .header-left {
+        display: flex;
+        align-items: center;
+        gap: 20px;
+      }
+
+      .menu-toggle {
+        background: none;
+        border: none;
+        font-size: 20px;
+        color: var(--gray-700);
+        cursor: pointer;
+        padding: 8px;
+        border-radius: 4px;
+        transition: var(--transition);
+      }
+
+      .menu-toggle:hover {
+        background: var(--gray-200);
+        color: var(--primary-color);
+      }
+
+      .brand {
+        display: flex;
+        align-items: center;
+        gap: 12px;
+      }
+
+      .brand-logo {
         width: 40px;
         height: 40px;
       }
 
-      .sidebar-header h3 {
+      .brand-text h2 {
         font-size: 18px;
         font-weight: 700;
+        color: var(--primary-color);
       }
 
-      .sidebar-nav {
-        flex: 1;
+      .brand-text p {
+        font-size: 12px;
+        color: var(--gray-600);
       }
 
-      .sidebar-nav ul {
-        list-style: none;
+      .header-right {
+        display: flex;
+        align-items: center;
+        gap: 20px;
       }
 
-      .sidebar-nav li {
-        margin-bottom: 10px;
+      .search-box {
+        position: relative;
+      }
+
+      .search-box input {
+        padding: 10px 16px 10px 40px;
+        border: 2px solid var(--gray-300);
+        border-radius: 6px;
+        width: 300px;
+        font-size: 14px;
+        transition: var(--transition);
+      }
+
+      .search-box input:focus {
+        outline: none;
+        border-color: var(--primary-color);
+      }
+
+      .search-box i {
+        position: absolute;
+        left: 14px;
+        top: 50%;
+        transform: translateY(-50%);
+        color: var(--gray-500);
+      }
+
+      .user-menu {
+        display: flex;
+        align-items: center;
+        gap: 12px;
+        padding: 8px 16px;
+        border-radius: 6px;
+        cursor: pointer;
+        transition: var(--transition);
+      }
+
+      .user-menu:hover {
+        background: var(--gray-200);
+      }
+
+      .user-avatar {
+        width: 40px;
+        height: 40px;
+        border-radius: 50%;
+        background: linear-gradient(
+          135deg,
+          var(--primary-color) 0%,
+          var(--primary-dark) 100%
+        );
+        color: white;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-weight: 600;
+      }
+
+      .user-info {
+        display: flex;
+        flex-direction: column;
+      }
+
+      .user-info span:first-child {
+        font-weight: 600;
+        font-size: 14px;
+      }
+
+      .user-info span:last-child {
+        font-size: 12px;
+        color: var(--gray-600);
+      }
+
+      /* Sidebar */
+      .dashboard-sidebar {
+        position: fixed;
+        left: 0;
+        top: var(--header-height);
+        bottom: 0;
+        width: var(--sidebar-width);
+        background: white;
+        box-shadow: 2px 0 6px rgba(0, 0, 0, 0.1);
+        z-index: 99;
+        overflow-y: auto;
+        transition: var(--transition);
+      }
+
+      .sidebar-collapsed {
+        left: calc(-1 * var(--sidebar-width));
+      }
+
+      .sidebar-menu {
+        padding: 20px 0;
+      }
+
+      .menu-section {
+        padding: 0 20px;
+        margin-bottom: 30px;
+      }
+
+      .menu-section h3 {
+        font-size: 12px;
+        text-transform: uppercase;
+        color: var(--gray-500);
+        font-weight: 600;
+        margin-bottom: 15px;
+        letter-spacing: 1px;
       }
 
       .nav-item {
-        display: block;
-        padding: 15px;
-        color: white;
+        display: flex;
+        align-items: center;
+        gap: 12px;
+        padding: 12px 20px;
+        color: var(--gray-700);
         text-decoration: none;
         border-radius: 6px;
-        transition: all 0.3s ease;
+        margin: 4px 0;
+        transition: var(--transition);
         font-size: 14px;
         font-weight: 500;
       }
 
       .nav-item:hover {
-        background: rgba(255, 255, 255, 0.1);
-        padding-left: 20px;
+        background: var(--gray-200);
+        color: var(--primary-color);
       }
 
       .nav-item.active {
-        background: var(--secondary-color);
-        color: var(--primary-color);
+        background: linear-gradient(
+          135deg,
+          var(--primary-color) 0%,
+          var(--primary-dark) 100%
+        );
+        color: white;
+        font-weight: 600;
       }
 
       .nav-item i {
-        margin-right: 10px;
         width: 20px;
+        text-align: center;
       }
 
-      .sidebar-footer {
-        margin-top: auto;
-        padding-top: 20px;
-        border-top: 2px solid rgba(255, 255, 255, 0.2);
+      .badge {
+        display: inline-block;
+        padding: 4px 8px;
+        font-size: 11px;
+        font-weight: 600;
+        border-radius: 20px;
+        margin-left: auto;
+      }
+
+      .badge-danger {
+        background: var(--danger-color);
+        color: white;
+      }
+
+      .badge-success {
+        background: var(--success-color);
+        color: white;
+      }
+
+      .badge-warning {
+        background: var(--warning-color);
+        color: var(--gray-800);
       }
 
       /* Main Content */
-      .main-content {
-        flex: 1;
-        display: flex;
-        flex-direction: column;
-        overflow-y: auto;
-      }
-
-      .top-bar {
-        background: white;
-        padding: 20px 30px;
-        display: flex;
-        justify-content: space-between;
-        align-items: center;
-        box-shadow: var(--shadow);
-        border-bottom: 3px solid var(--secondary-color);
-      }
-
-      .top-bar h1 {
-        color: var(--primary-color);
-        font-size: 28px;
-      }
-
-      .admin-info {
-        display: flex;
-        align-items: center;
-        gap: 15px;
-      }
-
-      .admin-email {
-        font-weight: 600;
-        color: var(--primary-color);
-      }
-
-      .admin-avatar {
-        width: 40px;
-        height: 40px;
-        border-radius: 50%;
-        border: 2px solid var(--primary-color);
-      }
-
-      /* Content Sections */
-      .content-section {
-        display: none;
+      .dashboard-main {
+        margin-left: var(--sidebar-width);
+        margin-top: var(--header-height);
         padding: 30px;
-        animation: fadeIn 0.3s ease;
+        transition: var(--transition);
       }
 
-      .content-section.active {
-        display: block;
+      .sidebar-collapsed + .dashboard-main {
+        margin-left: 0;
       }
 
-      @keyframes fadeIn {
-        from {
-          opacity: 0;
-        }
-        to {
-          opacity: 1;
-        }
-      }
-
-      .section-header {
-        margin-bottom: 30px;
+      .page-header {
         display: flex;
         justify-content: space-between;
         align-items: center;
-        flex-wrap: wrap;
-        gap: 20px;
+        margin-bottom: 30px;
       }
 
-      .section-header h2 {
-        color: var(--primary-color);
+      .page-header h1 {
         font-size: 24px;
+        font-weight: 700;
+        color: var(--gray-800);
       }
 
-      .filter-buttons {
+      .content-placeholder {
+        background: white;
+        border-radius: var(--border-radius);
+        padding: 60px 40px;
+        text-align: center;
+        color: var(--gray-600);
+        font-size: 16px;
+        min-height: 300px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        border: 2px dashed var(--gray-300);
+      }
+
+      .page-actions {
         display: flex;
         gap: 10px;
       }
 
-      .filter-btn {
-        padding: 10px 20px;
-        border: 2px solid var(--border-color);
-        background: white;
-        border-radius: 6px;
-        cursor: pointer;
-        font-weight: 600;
-        transition: all 0.3s ease;
-        font-size: 13px;
-      }
-
-      .filter-btn:hover {
-        border-color: var(--primary-color);
-        color: var(--primary-color);
-      }
-
-      .filter-btn.active {
-        background: var(--primary-color);
-        color: white;
-        border-color: var(--primary-color);
-      }
-
-      /* Stats Grid */
+      /* Dashboard Content */
       .stats-grid {
         display: grid;
-        grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+        grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));
         gap: 20px;
+        margin-bottom: 30px;
       }
 
       .stat-card {
         background: white;
-        padding: 25px;
-        border-radius: 12px;
-        box-shadow: var(--shadow);
+        border-radius: var(--border-radius);
+        padding: 24px;
+        box-shadow: var(--box-shadow);
         display: flex;
         align-items: center;
         gap: 20px;
-        transition: all 0.3s ease;
+        transition: var(--transition);
       }
 
       .stat-card:hover {
         transform: translateY(-5px);
-        box-shadow: 0 5px 25px rgba(0, 0, 0, 0.15);
+        box-shadow: 0 10px 25px rgba(0, 0, 0, 0.15);
       }
 
       .stat-icon {
-        width: 80px;
-        height: 80px;
+        width: 60px;
+        height: 60px;
         border-radius: 12px;
         display: flex;
         align-items: center;
         justify-content: center;
+        font-size: 24px;
         color: white;
-        font-size: 32px;
       }
 
-      .stat-info h3 {
+      .stat-content {
+        flex: 1;
+      }
+
+      .stat-content h3 {
         font-size: 28px;
-        color: var(--primary-color);
+        font-weight: 700;
+        color: var(--gray-800);
         margin-bottom: 5px;
       }
 
-      .stat-info p {
-        font-size: 13px;
-        color: var(--gray-color);
+      .stat-content p {
+        font-size: 14px;
+        color: var(--gray-600);
+        margin-bottom: 8px;
       }
 
-      /* Tables */
-      .table-container {
+      .stat-trend {
+        font-size: 12px;
+        font-weight: 600;
+      }
+
+      .trend-up {
+        color: var(--success-color);
+      }
+
+      .trend-down {
+        color: var(--danger-color);
+      }
+
+      .charts-grid {
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(500px, 1fr));
+        gap: 20px;
+        margin-bottom: 30px;
+      }
+
+      .chart-card {
         background: white;
-        border-radius: 12px;
-        box-shadow: var(--shadow);
-        overflow: hidden;
-        overflow-x: auto;
+        border-radius: var(--border-radius);
+        padding: 24px;
+        box-shadow: var(--box-shadow);
+      }
+
+      .chart-card h3 {
+        font-size: 16px;
+        font-weight: 600;
+        color: var(--gray-800);
+        margin-bottom: 20px;
+      }
+
+      .recent-activities {
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(400px, 1fr));
+        gap: 20px;
+      }
+
+      .activity-card {
+        background: white;
+        border-radius: var(--border-radius);
+        padding: 24px;
+        box-shadow: var(--box-shadow);
+      }
+
+      .activity-card h3 {
+        font-size: 16px;
+        font-weight: 600;
+        color: var(--gray-800);
+        margin-bottom: 20px;
+      }
+
+      .activity-list {
+        list-style: none;
+      }
+
+      .activity-item {
+        display: flex;
+        align-items: center;
+        gap: 15px;
+        padding: 15px 0;
+        border-bottom: 1px solid var(--gray-200);
+      }
+
+      .activity-item:last-child {
+        border-bottom: none;
+      }
+
+      .activity-icon {
+        width: 40px;
+        height: 40px;
+        border-radius: 8px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        color: white;
+        font-size: 16px;
+      }
+
+      .activity-content {
+        flex: 1;
+      }
+
+      .activity-content p {
+        font-size: 14px;
+        color: var(--gray-700);
+        margin-bottom: 5px;
+      }
+
+      .activity-time {
+        font-size: 12px;
+        color: var(--gray-500);
+      }
+
+      /* Data Tables */
+      .data-table-container {
+        background: white;
+        border-radius: var(--border-radius);
+        box-shadow: var(--box-shadow);
+        padding: 24px;
+        margin-bottom: 30px;
+      }
+
+      .table-header {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        margin-bottom: 20px;
+      }
+
+      .table-header h3 {
+        font-size: 18px;
+        font-weight: 600;
+        color: var(--gray-800);
+      }
+
+      .table-filters {
+        display: flex;
+        gap: 10px;
+      }
+
+      .filter-select {
+        padding: 8px 16px;
+        border: 2px solid var(--gray-300);
+        border-radius: 6px;
+        font-size: 14px;
+        background: white;
+        cursor: pointer;
       }
 
       .data-table {
@@ -440,35 +669,34 @@
         border-collapse: collapse;
       }
 
-      .data-table thead {
-        background: var(--primary-color);
-        color: white;
-      }
-
       .data-table th {
-        padding: 15px;
+        background: var(--gray-100);
+        padding: 16px;
         text-align: left;
         font-weight: 600;
-        font-size: 13px;
+        color: var(--gray-700);
+        font-size: 14px;
+        border-bottom: 2px solid var(--gray-200);
       }
 
       .data-table td {
-        padding: 15px;
-        border-bottom: 1px solid var(--border-color);
-        font-size: 13px;
+        padding: 16px;
+        border-bottom: 1px solid var(--gray-200);
+        font-size: 14px;
       }
 
-      .data-table tbody tr:hover {
-        background: var(--light-gray);
+      .data-table tr:hover {
+        background: var(--gray-100);
       }
 
       .status-badge {
         display: inline-block;
         padding: 6px 12px;
         border-radius: 20px;
-        font-size: 11px;
+        font-size: 12px;
         font-weight: 600;
         text-transform: uppercase;
+        letter-spacing: 0.5px;
       }
 
       .status-pending {
@@ -481,9 +709,14 @@
         color: #155724;
       }
 
-      .status-confirmed {
-        background: #d4edda;
-        color: #155724;
+      .status-published {
+        background: #d1ecf1;
+        color: #0c5460;
+      }
+
+      .status-draft {
+        background: #e2e3e5;
+        color: #383d41;
       }
 
       .status-rejected {
@@ -501,188 +734,111 @@
         gap: 8px;
       }
 
-      /* Books Container */
-      .books-container,
-      .contacts-container {
-        display: grid;
-        grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
-        gap: 20px;
+      .btn-sm {
+        padding: 6px 12px;
+        font-size: 12px;
       }
 
-      .book-card,
-      .contact-card {
-        background: white;
-        border-radius: 12px;
+      .btn-success {
+        background: var(--success-color);
+        color: white;
+      }
+
+      .btn-warning {
+        background: var(--warning-color);
+        color: var(--gray-800);
+      }
+
+      .btn-danger {
+        background: var(--danger-color);
+        color: white;
+      }
+
+      .btn-info {
+        background: var(--info-color);
+        color: white;
+      }
+
+      .btn-secondary {
+        background: var(--gray-600);
+        color: white;
+      }
+
+      /* Modal Styles */
+      .modal {
+        display: none;
+        position: fixed;
+        top: 0;
+        left: 0;
+        right: 0;
+        bottom: 0;
+        background: rgba(0, 0, 0, 0.5);
+        z-index: 1000;
+        align-items: center;
+        justify-content: center;
         padding: 20px;
-        box-shadow: var(--shadow);
-        transition: all 0.3s ease;
       }
 
-      .book-card:hover,
-      .contact-card:hover {
-        transform: translateY(-5px);
-        box-shadow: 0 5px 25px rgba(0, 0, 0, 0.15);
-      }
-
-      .book-card h3,
-      .contact-card h3 {
-        color: var(--primary-color);
-        margin-bottom: 10px;
-        font-size: 16px;
-      }
-
-      .book-card p,
-      .contact-card p {
-        font-size: 13px;
-        color: var(--gray-color);
-        margin-bottom: 8px;
-      }
-
-      .book-card .book-meta {
-        margin: 15px 0;
-        padding: 15px 0;
-        border-top: 1px solid var(--border-color);
-        border-bottom: 1px solid var(--border-color);
-      }
-
-      .book-meta-item {
+      .modal.active {
         display: flex;
-        justify-content: space-between;
-        margin-bottom: 8px;
-        font-size: 13px;
       }
 
-      .book-meta-label {
-        font-weight: 600;
-        color: var(--primary-color);
+      .modal-content {
+        background: white;
+        border-radius: var(--border-radius);
+        max-width: 800px;
+        width: 100%;
+        max-height: 90vh;
+        overflow-y: auto;
       }
 
-      /* Modal Dialog */
       .modal-header {
+        padding: 24px;
+        border-bottom: 1px solid var(--gray-200);
         display: flex;
         justify-content: space-between;
         align-items: center;
-        margin-bottom: 20px;
-        border-bottom: 2px solid var(--border-color);
-        padding-bottom: 15px;
       }
 
       .modal-header h3 {
-        color: var(--primary-color);
+        font-size: 20px;
+        font-weight: 600;
+        color: var(--gray-800);
       }
 
-      .close-btn {
+      .modal-close {
         background: none;
         border: none;
-        font-size: 28px;
+        font-size: 24px;
+        color: var(--gray-600);
         cursor: pointer;
-        color: var(--gray-color);
+        padding: 4px;
+        border-radius: 4px;
+        transition: var(--transition);
       }
 
-      .close-btn:hover {
-        color: var(--primary-color);
+      .modal-close:hover {
+        background: var(--gray-200);
+        color: var(--danger-color);
       }
 
       .modal-body {
-        margin-bottom: 20px;
+        padding: 24px;
       }
 
       .modal-footer {
+        padding: 24px;
+        border-top: 1px solid var(--gray-200);
         display: flex;
-        gap: 10px;
         justify-content: flex-end;
+        gap: 10px;
       }
 
-      /* Responsive Design */
-      @media (max-width: 768px) {
-        .dashboard-hidden {
-          flex-direction: column;
-        }
-
-        .sidebar {
-          width: 100%;
-          flex-direction: row;
-          align-items: center;
-          padding: 10px 20px;
-        }
-
-        .sidebar-header {
-          margin-bottom: 0;
-          padding-bottom: 0;
-          border-bottom: none;
-          flex: 1;
-        }
-
-        .sidebar-nav {
-          display: none;
-        }
-
-        .sidebar-nav.mobile-open {
-          display: block;
-          position: absolute;
-          top: 60px;
-          left: 0;
-          width: 100%;
-          background: var(--primary-color);
-        }
-
-        .main-content {
-          flex: 1;
-        }
-
-        .top-bar {
-          flex-direction: column;
-          align-items: flex-start;
-          gap: 15px;
-        }
-
-        .content-section {
-          padding: 20px;
-        }
-
-        .section-header {
-          flex-direction: column;
-          align-items: flex-start;
-        }
-
-        .stats-grid {
-          grid-template-columns: 1fr;
-        }
-
-        .data-table {
-          font-size: 12px;
-        }
-
-        .data-table th,
-        .data-table td {
-          padding: 10px;
-        }
-
-        .filter-buttons {
-          flex-wrap: wrap;
-        }
-
-        .books-container,
-        .contacts-container {
-          grid-template-columns: 1fr;
-        }
-      }
-
-      /* Empty State */
-      .empty-state {
-        text-align: center;
-        padding: 40px;
-        color: var(--gray-color);
-      }
-
-      .empty-state i {
-        font-size: 48px;
+      .form-row {
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+        gap: 20px;
         margin-bottom: 20px;
-        color: var(--border-color);
-      }
-
-      .empty-state p {
-        font-size: 16px;
       }
 
       /* Loading Spinner */
@@ -701,725 +857,2784 @@
           transform: rotate(360deg);
         }
       }
+
+      /* Responsive Design */
+      @media (max-width: 1200px) {
+        .charts-grid {
+          grid-template-columns: 1fr;
+        }
+      }
+
+      @media (max-width: 992px) {
+        .sidebar {
+          position: fixed;
+          left: -100%;
+          z-index: 1000;
+        }
+
+        .dashboard-main {
+          margin-left: 0;
+        }
+
+        .search-box input {
+          width: 200px;
+        }
+      }
+
+      @media (max-width: 768px) {
+        .header-right {
+          display: none;
+        }
+
+        .stats-grid {
+          grid-template-columns: 1fr;
+        }
+
+        .charts-grid {
+          grid-template-columns: 1fr;
+        }
+
+        .recent-activities {
+          grid-template-columns: 1fr;
+        }
+
+        .page-header {
+          flex-direction: column;
+          align-items: flex-start;
+          gap: 15px;
+        }
+
+        .form-row {
+          grid-template-columns: 1fr;
+        }
+      }
+
+      /* Notifications */
+      .notification {
+        position: fixed;
+        top: 20px;
+        right: 20px;
+        padding: 16px 24px;
+        border-radius: var(--border-radius);
+        box-shadow: var(--box-shadow);
+        display: flex;
+        align-items: center;
+        gap: 12px;
+        z-index: 1001;
+        animation: slideIn 0.3s ease;
+      }
+
+      .notification.success {
+        background: var(--success-color);
+        color: white;
+      }
+
+      .notification.error {
+        background: var(--danger-color);
+        color: white;
+      }
+
+      .notification.warning {
+        background: var(--warning-color);
+        color: var(--gray-800);
+      }
+
+      .notification.info {
+        background: var(--info-color);
+        color: white;
+      }
+
+      @keyframes slideIn {
+        from {
+          transform: translateX(100%);
+          opacity: 0;
+        }
+        to {
+          transform: translateX(0);
+          opacity: 1;
+        }
+      }
+
+      /* Book Preview Card */
+      .book-preview {
+        display: flex;
+        gap: 20px;
+        padding: 20px;
+        background: var(--gray-100);
+        border-radius: var(--border-radius);
+        margin-bottom: 20px;
+      }
+
+      .book-cover {
+        width: 120px;
+        height: 160px;
+        background: linear-gradient(
+          135deg,
+          var(--primary-color) 0%,
+          var(--primary-dark) 100%
+        );
+        border-radius: 8px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        color: white;
+        font-size: 32px;
+      }
+
+      .book-info {
+        flex: 1;
+      }
+
+      .book-info h4 {
+        font-size: 18px;
+        font-weight: 600;
+        margin-bottom: 5px;
+        color: var(--gray-800);
+      }
+
+      .book-info p {
+        font-size: 14px;
+        color: var(--gray-600);
+        margin-bottom: 10px;
+      }
+
+      .book-meta {
+        display: flex;
+        gap: 20px;
+        font-size: 13px;
+        color: var(--gray-500);
+      }
+
+      /* Dashboard Quick Actions */
+      .quick-actions {
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+        gap: 15px;
+        margin-bottom: 30px;
+      }
+
+      .quick-action {
+        background: white;
+        border-radius: var(--border-radius);
+        padding: 20px;
+        box-shadow: var(--box-shadow);
+        display: flex;
+        align-items: center;
+        gap: 15px;
+        transition: var(--transition);
+        cursor: pointer;
+        border: 2px solid transparent;
+      }
+
+      .quick-action:hover {
+        transform: translateY(-3px);
+        border-color: var(--primary-color);
+      }
+
+      .quick-action i {
+        font-size: 24px;
+        color: var(--primary-color);
+      }
+
+      .quick-action h4 {
+        font-size: 14px;
+        font-weight: 600;
+        color: var(--gray-800);
+      }
+
+      .quick-action p {
+        font-size: 12px;
+        color: var(--gray-600);
+      }
+
+      /* Status Badge Styles */
+      .status-badge {
+        padding: 4px 12px;
+        border-radius: 20px;
+        font-size: 12px;
+        font-weight: 600;
+        text-transform: uppercase;
+        display: inline-block;
+      }
+
+      .status-pending {
+        background: #fff3cd;
+        color: #856404;
+      }
+
+      .status-active {
+        background: #d4edda;
+        color: #155724;
+      }
+
+      .status-suspended {
+        background: #f8d7da;
+        color: #721c24;
+      }
+
+      .status-published {
+        background: #d1ecf1;
+        color: #0c5460;
+      }
+
+      .status-draft {
+        background: #e2e3e5;
+        color: #383d41;
+      }
+
+      .status-in_production {
+        background: #cce5ff;
+        color: #004085;
+      }
+
+      .status-under_review {
+        background: #fff3cd;
+        color: #856404;
+      }
+
+      .badge-low {
+        background: #17a2b8;
+        color: white;
+        padding: 4px 12px;
+        border-radius: 20px;
+        font-size: 12px;
+        font-weight: 600;
+        text-transform: uppercase;
+        display: inline-block;
+      }
+
+      .badge-medium {
+        background: #ffc107;
+        color: #212529;
+        padding: 4px 12px;
+        border-radius: 20px;
+        font-size: 12px;
+        font-weight: 600;
+        text-transform: uppercase;
+        display: inline-block;
+      }
+
+      .badge-high {
+        background: #dc3545;
+        color: white;
+        padding: 4px 12px;
+        border-radius: 20px;
+        font-size: 12px;
+        font-weight: 600;
+        text-transform: uppercase;
+        display: inline-block;
+      }
+
+      .badge-urgent {
+        background: #dc3545;
+        color: white;
+        padding: 4px 12px;
+        border-radius: 20px;
+        font-size: 12px;
+        font-weight: 600;
+        text-transform: uppercase;
+        display: inline-block;
+        animation: pulse 1s infinite;
+      }
+
+      @keyframes pulse {
+        0% {
+          opacity: 1;
+        }
+        50% {
+          opacity: 0.7;
+        }
+        100% {
+          opacity: 1;
+        }
+      }
     </style>
   </head>
   <body>
-    <!-- Login Modal -->
-    <div id="loginModal" class="modal active">
-      <div class="modal-content login-modal-content">
-        <div class="login-container">
-          <div class="login-header">
-            <img
-              src="./babcock-logo.svg"
-              alt="Babcock Logo"
-              class="login-logo" />
-            <h2>Admin Dashboard</h2>
-          </div>
-          <form id="adminLoginForm" class="admin-form">
-            <div class="form-group">
-              <label for="adminEmail">Email</label>
-              <input
-                type="email"
-                id="adminEmail"
-                name="email"
-                required
-                placeholder="admin@babcock.edu.ng" />
-            </div>
-            <div class="form-group">
-              <label for="adminPassword">Password</label>
-              <input
-                type="password"
-                id="adminPassword"
-                name="password"
-                required
-                placeholder="Enter password" />
-            </div>
-            <button type="submit" class="btn btn-primary btn-block">
-              Login
-            </button>
-            <p class="login-note">Default: admin@babcock.edu.ng / admin123</p>
-          </form>
-        </div>
-      </div>
-    </div>
-
-    <!-- Dashboard -->
-    <div id="dashboardContainer" class="dashboard-hidden">
-      <!-- Sidebar -->
-      <aside class="sidebar">
-        <div class="sidebar-header">
-          <img
-            src="./babcock-logo.svg"
-            alt="Babcock Logo"
-            class="sidebar-logo" />
-          <h3>Admin Panel</h3>
-        </div>
-        <nav class="sidebar-nav">
-          <ul>
-            <li>
-              <a href="#" class="nav-item active" data-section="dashboard"
-                ><i class="fas fa-chart-line"></i> Dashboard</a
-              >
-            </li>
-            <li>
-              <a href="#" class="nav-item" data-section="authors"
-                ><i class="fas fa-user-graduate"></i> Author Registration</a
-              >
-            </li>
-            <li>
-              <a href="#" class="nav-item" data-section="training"
-                ><i class="fas fa-book"></i> Student Training</a
-              >
-            </li>
-            <li>
-              <a href="#" class="nav-item" data-section="books"
-                ><i class="fas fa-book-open"></i> All Books</a
-              >
-            </li>
-            <li>
-              <a href="#" class="nav-item" data-section="contacts"
-                ><i class="fas fa-envelope"></i> Contact Messages</a
-              >
-            </li>
-          </ul>
-        </nav>
-        <div class="sidebar-footer">
-          <button id="logoutBtn" class="btn btn-secondary btn-block">
-            <i class="fas fa-sign-out-alt"></i> Logout
+    <!-- Admin Dashboard -->
+    <div class="dashboard-container" id="dashboardContainer">
+      <!-- Header -->
+      <header class="dashboard-header">
+        <div class="header-left">
+          <button class="menu-toggle" id="menuToggle">
+            <i class="fas fa-bars"></i>
           </button>
+          <div class="brand">
+            <img src="./OIP.webp" alt="Logo" class="brand-logo" />
+            <div class="brand-text">
+              <h2>BU Publishing</h2>
+              <p>Administrator Panel</p>
+            </div>
+          </div>
         </div>
+        <div class="header-right">
+          <div class="search-box">
+            <i class="fas fa-search"></i>
+            <input
+              type="text"
+              id="globalSearch"
+              placeholder="Search authors, books, contracts..." />
+          </div>
+          <div class="user-menu" id="userMenu">
+            <div class="user-avatar" id="userAvatar">A</div>
+            <div class="user-info">
+              <span id="userName">Administrator</span>
+              <span id="userRole">Super Admin</span>
+            </div>
+            <i class="fas fa-chevron-down"></i>
+          </div>
+        </div>
+      </header>
+
+      <!-- Sidebar -->
+      <aside class="dashboard-sidebar" id="dashboardSidebar">
+        <nav class="sidebar-menu">
+          <div class="menu-section">
+            <h3>Dashboard</h3>
+            <a
+              href="#dashboard"
+              class="nav-item active"
+              data-section="dashboard">
+              <i class="fas fa-chart-line"></i>
+              <span>Overview</span>
+            </a>
+          </div>
+
+          <div class="menu-section">
+            <h3>Content Management</h3>
+            <a href="#authors" class="nav-item" data-section="authors">
+              <i class="fas fa-users"></i>
+              <span>Authors</span>
+              <span class="badge badge-danger" id="pendingAuthorsBadge">0</span>
+            </a>
+            <a href="#books" class="nav-item" data-section="books">
+              <i class="fas fa-book"></i>
+              <span>Books</span>
+            </a>
+            <a href="#submissions" class="nav-item" data-section="submissions">
+              <i class="fas fa-file-upload"></i>
+              <span>Submissions</span>
+              <span class="badge badge-warning" id="pendingSubmissionsBadge"
+                >0</span
+              >
+            </a>
+            <a href="#reviews" class="nav-item" data-section="reviews">
+              <i class="fas fa-star"></i>
+              <span>Reviews</span>
+            </a>
+          </div>
+
+          <div class="menu-section">
+            <h3>Publishing Process</h3>
+            <a href="#contracts" class="nav-item" data-section="contracts">
+              <i class="fas fa-file-contract"></i>
+              <span>Contracts</span>
+            </a>
+            <a href="#production" class="nav-item" data-section="production">
+              <i class="fas fa-industry"></i>
+              <span>Production</span>
+            </a>
+            <a href="#inventory" class="nav-item" data-section="inventory">
+              <i class="fas fa-warehouse"></i>
+              <span>Inventory</span>
+              <span class="badge badge-danger" id="lowStockBadge">0</span>
+            </a>
+            <a href="#royalties" class="nav-item" data-section="royalties">
+              <i class="fas fa-money-bill-wave"></i>
+              <span>Royalties</span>
+            </a>
+          </div>
+
+          <div class="menu-section">
+            <h3>Training & Events</h3>
+            <a href="#training" class="nav-item" data-section="training">
+              <i class="fas fa-graduation-cap"></i>
+              <span>Training</span>
+              <span class="badge badge-warning" id="pendingTrainingBadge"
+                >0</span
+              >
+            </a>
+            <a href="#events" class="nav-item" data-section="events">
+              <i class="fas fa-calendar-alt"></i>
+              <span>Events</span>
+            </a>
+          </div>
+
+          <div class="menu-section">
+            <h3>Sales & Marketing</h3>
+            <a href="#sales" class="nav-item" data-section="sales">
+              <i class="fas fa-shopping-cart"></i>
+              <span>Sales</span>
+            </a>
+            <a href="#reports" class="nav-item" data-section="reports">
+              <i class="fas fa-chart-bar"></i>
+              <span>Reports</span>
+            </a>
+            <a href="#analytics" class="nav-item" data-section="analytics">
+              <i class="fas fa-chart-pie"></i>
+              <span>Analytics</span>
+            </a>
+          </div>
+
+          <div class="menu-section">
+            <h3>Communication</h3>
+            <a href="#contacts" class="nav-item" data-section="contacts">
+              <i class="fas fa-envelope"></i>
+              <span>Contact Messages</span>
+              <span class="badge badge-success" id="newMessagesBadge">0</span>
+            </a>
+            <a
+              href="#announcements"
+              class="nav-item"
+              data-section="announcements">
+              <i class="fas fa-bullhorn"></i>
+              <span>Announcements</span>
+            </a>
+          </div>
+
+          <div class="menu-section">
+            <h3>System</h3>
+            <a href="#settings" class="nav-item" data-section="settings">
+              <i class="fas fa-cog"></i>
+              <span>Settings</span>
+            </a>
+            <a href="#users" class="nav-item" data-section="users">
+              <i class="fas fa-user-shield"></i>
+              <span>Admin Users</span>
+            </a>
+            <a href="#logs" class="nav-item" data-section="logs">
+              <i class="fas fa-history"></i>
+              <span>Activity Logs</span>
+            </a>
+          </div>
+        </nav>
       </aside>
 
       <!-- Main Content -->
-      <main class="main-content">
-        <div class="top-bar">
-          <h1 id="pageTitle">Dashboard</h1>
-          <div class="admin-info">
-            <span id="adminEmail" class="admin-email"></span>
-            <img src="./babcock-logo.svg" alt="Admin" class="admin-avatar" />
-          </div>
-        </div>
-
+      <main class="dashboard-main" id="dashboardMain">
         <!-- Dashboard Section -->
         <section id="dashboard" class="content-section active">
+          <div class="page-header">
+            <h1>Dashboard Overview</h1>
+            <div class="page-actions">
+              <button class="btn btn-primary" id="refreshDashboard">
+                <i class="fas fa-sync-alt"></i> Refresh
+              </button>
+              <button class="btn btn-secondary" id="exportDashboard">
+                <i class="fas fa-download"></i> Export
+              </button>
+            </div>
+          </div>
+
+          <!-- Quick Actions -->
+          <div class="quick-actions">
+            <div class="quick-action" data-action="new-author">
+              <i class="fas fa-user-plus"></i>
+              <div>
+                <h4>Approve Authors</h4>
+                <p>Review pending author registrations</p>
+              </div>
+            </div>
+            <div class="quick-action" data-action="new-submission">
+              <i class="fas fa-file-upload"></i>
+              <div>
+                <h4>Review Submissions</h4>
+                <p>Check new book submissions</p>
+              </div>
+            </div>
+            <div class="quick-action" data-action="new-training">
+              <i class="fas fa-graduation-cap"></i>
+              <div>
+                <h4>Confirm Training</h4>
+                <p>Process training registrations</p>
+              </div>
+            </div>
+            <div class="quick-action" data-action="new-message">
+              <i class="fas fa-envelope"></i>
+              <div>
+                <h4>Reply Messages</h4>
+                <p>Respond to contact inquiries</p>
+              </div>
+            </div>
+          </div>
+
+          <!-- Stats Grid -->
           <div class="stats-grid">
             <div class="stat-card">
-              <div class="stat-icon" style="background: #ffd700">
-                <i class="fas fa-clock"></i>
+              <div
+                class="stat-icon"
+                style="
+                  background: linear-gradient(135deg, #ff6b6b 0%, #ee5a52 100%);
+                ">
+                <i class="fas fa-user-clock"></i>
               </div>
-              <div class="stat-info">
+              <div class="stat-content">
                 <h3 id="pendingAuthorsCount">0</h3>
-                <p>Pending Author Approvals</p>
+                <p>Pending Authors</p>
+                <div class="stat-trend trend-up" id="authorsTrend">
+                  +2 today
+                </div>
               </div>
             </div>
             <div class="stat-card">
-              <div class="stat-icon" style="background: #006747">
-                <i class="fas fa-check-circle"></i>
-              </div>
-              <div class="stat-info">
-                <h3 id="approvedAuthorsCount">0</h3>
-                <p>Approved Authors</p>
-              </div>
-            </div>
-            <div class="stat-card">
-              <div class="stat-icon" style="background: #ff6b6b">
-                <i class="fas fa-graduation-cap"></i>
-              </div>
-              <div class="stat-info">
-                <h3 id="pendingTrainingCount">0</h3>
-                <p>Pending Training Approvals</p>
-              </div>
-            </div>
-            <div class="stat-card">
-              <div class="stat-icon" style="background: #4ecdc4">
+              <div
+                class="stat-icon"
+                style="
+                  background: linear-gradient(135deg, #006747 0%, #005035 100%);
+                ">
                 <i class="fas fa-book"></i>
               </div>
-              <div class="stat-info">
+              <div class="stat-content">
                 <h3 id="totalBooksCount">0</h3>
                 <p>Total Books</p>
+                <div class="stat-trend trend-up" id="booksTrend">
+                  +5 this week
+                </div>
               </div>
             </div>
             <div class="stat-card">
-              <div class="stat-icon" style="background: #9b59b6">
-                <i class="fas fa-envelope"></i>
+              <div
+                class="stat-icon"
+                style="
+                  background: linear-gradient(135deg, #ffd700 0%, #e6c200 100%);
+                ">
+                <i class="fas fa-file-upload"></i>
               </div>
-              <div class="stat-info">
-                <h3 id="totalContactsCount">0</h3>
-                <p>Contact Messages</p>
+              <div class="stat-content">
+                <h3 id="pendingSubmissionsCount">0</h3>
+                <p>Pending Submissions</p>
+                <div class="stat-trend trend-up" id="submissionsTrend">
+                  +3 today
+                </div>
               </div>
+            </div>
+            <div class="stat-card">
+              <div
+                class="stat-icon"
+                style="
+                  background: linear-gradient(135deg, #17a2b8 0%, #138496 100%);
+                ">
+                <i class="fas fa-money-bill-wave"></i>
+              </div>
+              <div class="stat-content">
+                <h3 id="monthlyRevenue">₦0</h3>
+                <p>Monthly Revenue</p>
+                <div class="stat-trend trend-up" id="revenueTrend">
+                  +12% this month
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <!-- Charts -->
+          <div class="charts-grid">
+            <div class="chart-card">
+              <h3>Monthly Sales Revenue</h3>
+              <canvas id="salesChart" height="300"></canvas>
+            </div>
+            <div class="chart-card">
+              <h3>Book Categories Distribution</h3>
+              <canvas id="categoriesChart" height="300"></canvas>
+            </div>
+          </div>
+
+          <!-- Recent Activities -->
+          <div class="recent-activities">
+            <div class="activity-card">
+              <h3>Recent Book Submissions</h3>
+              <ul class="activity-list" id="recentSubmissionsList">
+                <!-- Filled by JavaScript -->
+              </ul>
+            </div>
+            <div class="activity-card">
+              <h3>Recent Author Registrations</h3>
+              <ul class="activity-list" id="recentAuthorsList">
+                <!-- Filled by JavaScript -->
+              </ul>
             </div>
           </div>
         </section>
 
-        <!-- Author Registration Section -->
+        <!-- Authors Section -->
         <section id="authors" class="content-section">
-          <div class="section-header">
-            <h2>Author Registration Approvals</h2>
-            <div class="filter-buttons">
-              <button class="filter-btn active" data-filter="pending">
-                Pending
+          <div class="page-header">
+            <h1>Author Management</h1>
+            <div class="page-actions">
+              <button class="btn btn-primary" id="addAuthorBtn">
+                <i class="fas fa-user-plus"></i> Add Author
               </button>
-              <button class="filter-btn" data-filter="approved">
-                Approved
+              <button class="btn btn-secondary" id="exportAuthorsBtn">
+                <i class="fas fa-download"></i> Export
               </button>
-              <button class="filter-btn" data-filter="rejected">
-                Rejected
-              </button>
-              <button class="filter-btn" data-filter="all">All</button>
             </div>
           </div>
-          <div id="authorsTable" class="table-container">
-            <table class="data-table">
-              <thead>
-                <tr>
-                  <th>Full Name</th>
-                  <th>Email</th>
-                  <th>Faculty</th>
-                  <th>Department</th>
-                  <th>Staff ID</th>
-                  <th>Status</th>
-                  <th>Date</th>
-                  <th>Actions</th>
-                </tr>
-              </thead>
-              <tbody id="authorsTableBody">
-                <!-- Data will be populated here -->
-              </tbody>
-            </table>
-          </div>
-        </section>
 
-        <!-- Training Registration Section -->
-        <section id="training" class="content-section">
-          <div class="section-header">
-            <h2>Student Training Registration Approvals</h2>
-            <div class="filter-buttons">
-              <button class="filter-btn active" data-filter="pending">
-                Pending
-              </button>
-              <button class="filter-btn" data-filter="confirmed">
-                Confirmed
-              </button>
-              <button class="filter-btn" data-filter="completed">
-                Completed
-              </button>
-              <button class="filter-btn" data-filter="all">All</button>
+          <div class="data-table-container">
+            <div class="table-header">
+              <h3>All Authors</h3>
+              <div class="table-filters">
+                <select class="filter-select" id="authorStatusFilter">
+                  <option value="">All Status</option>
+                  <option value="pending">Pending</option>
+                  <option value="approved">Approved</option>
+                  <option value="rejected">Rejected</option>
+                  <option value="suspended">Suspended</option>
+                </select>
+                <select class="filter-select" id="authorFacultyFilter">
+                  <option value="">All Faculties</option>
+                </select>
+                <input
+                  type="text"
+                  class="form-control"
+                  id="authorSearch"
+                  placeholder="Search authors..." />
+              </div>
             </div>
-          </div>
-          <div id="trainingTable" class="table-container">
-            <table class="data-table">
-              <thead>
-                <tr>
-                  <th>Full Name</th>
-                  <th>Email</th>
-                  <th>Student ID</th>
-                  <th>Faculty</th>
-                  <th>Level</th>
-                  <th>Training Type</th>
-                  <th>Preferred Date</th>
-                  <th>Status</th>
-                  <th>Actions</th>
-                </tr>
-              </thead>
-              <tbody id="trainingTableBody">
-                <!-- Data will be populated here -->
-              </tbody>
-            </table>
+            <div class="table-responsive">
+              <table class="data-table" id="authorsTable">
+                <thead>
+                  <tr>
+                    <th>ID</th>
+                    <th>Full Name</th>
+                    <th>Email</th>
+                    <th>Faculty</th>
+                    <th>Department</th>
+                    <th>Staff ID</th>
+                    <th>Status</th>
+                    <th>Books</th>
+                    <th>Registered</th>
+                    <th>Actions</th>
+                  </tr>
+                </thead>
+                <tbody id="authorsTableBody">
+                  <!-- Filled by JavaScript -->
+                </tbody>
+              </table>
+            </div>
           </div>
         </section>
 
         <!-- Books Section -->
         <section id="books" class="content-section">
-          <div class="section-header">
-            <h2>All Books</h2>
+          <div class="page-header">
+            <h1>Book Management</h1>
+            <div class="page-actions">
+              <button class="btn btn-primary" id="addBookBtn">
+                <i class="fas fa-plus"></i> Add Book
+              </button>
+              <button class="btn btn-success" id="bulkUploadBtn">
+                <i class="fas fa-upload"></i> Bulk Upload
+              </button>
+              <button class="btn btn-secondary" id="exportBooksBtn">
+                <i class="fas fa-download"></i> Export
+              </button>
+            </div>
           </div>
-          <div id="booksContainer" class="books-container">
-            <!-- Books will be populated here -->
+
+          <div class="data-table-container">
+            <div class="table-header">
+              <h3>All Books</h3>
+              <div class="table-filters">
+                <select class="filter-select" id="bookStatusFilter">
+                  <option value="">All Status</option>
+                  <option value="draft">Draft</option>
+                  <option value="submitted">Submitted</option>
+                  <option value="under_review">Under Review</option>
+                  <option value="accepted">Accepted</option>
+                  <option value="in_production">In Production</option>
+                  <option value="published">Published</option>
+                  <option value="rejected">Rejected</option>
+                </select>
+                <select class="filter-select" id="bookCategoryFilter">
+                  <option value="">All Categories</option>
+                </select>
+                <select class="filter-select" id="bookFormatFilter">
+                  <option value="">All Formats</option>
+                  <option value="hardcover">Hardcover</option>
+                  <option value="paperback">Paperback</option>
+                  <option value="ebook">E-book</option>
+                  <option value="audiobook">Audiobook</option>
+                </select>
+              </div>
+            </div>
+            <div class="table-responsive">
+              <table class="data-table" id="booksTable">
+                <thead>
+                  <tr>
+                    <th>ISBN</th>
+                    <th>Title</th>
+                    <th>Author</th>
+                    <th>Category</th>
+                    <th>Status</th>
+                    <th>Format</th>
+                    <th>Price</th>
+                    <th>Published</th>
+                    <th>Actions</th>
+                  </tr>
+                </thead>
+                <tbody id="booksTableBody">
+                  <!-- Filled by JavaScript -->
+                </tbody>
+              </table>
+            </div>
+          </div>
+        </section>
+
+        <!-- Submissions Section -->
+        <section id="submissions" class="content-section">
+          <div class="page-header">
+            <h1>Submission Management</h1>
+            <div class="page-actions">
+              <button class="btn btn-primary" id="assignReviewerBtn">
+                <i class="fas fa-user-check"></i> Assign Reviewer
+              </button>
+              <button class="btn btn-warning" id="bulkAssignBtn">
+                <i class="fas fa-users"></i> Bulk Assign
+              </button>
+            </div>
+          </div>
+
+          <div class="data-table-container">
+            <div class="table-header">
+              <h3>All Submissions</h3>
+              <div class="table-filters">
+                <select class="filter-select" id="submissionStatusFilter">
+                  <option value="">All Status</option>
+                  <option value="pending">Pending</option>
+                  <option value="assigned">Assigned</option>
+                  <option value="in_review">In Review</option>
+                  <option value="review_completed">Review Completed</option>
+                  <option value="accepted">Accepted</option>
+                  <option value="rejected">Rejected</option>
+                </select>
+                <select class="filter-select" id="submissionTypeFilter">
+                  <option value="">All Types</option>
+                  <option value="review">Review</option>
+                  <option value="publishing">Publishing</option>
+                  <option value="reprint">Reprint</option>
+                  <option value="translation">Translation</option>
+                </select>
+                <select class="filter-select" id="submissionPriorityFilter">
+                  <option value="">All Priorities</option>
+                  <option value="low">Low</option>
+                  <option value="medium">Medium</option>
+                  <option value="high">High</option>
+                  <option value="urgent">Urgent</option>
+                </select>
+              </div>
+            </div>
+            <div class="table-responsive">
+              <table class="data-table" id="submissionsTable">
+                <thead>
+                  <tr>
+                    <th>ID</th>
+                    <th>Book Title</th>
+                    <th>Type</th>
+                    <th>Submitted</th>
+                    <th>Due Date</th>
+                    <th>Priority</th>
+                    <th>Status</th>
+                    <th>Assigned To</th>
+                    <th>Actions</th>
+                  </tr>
+                </thead>
+                <tbody id="submissionsTableBody">
+                  <!-- Filled by JavaScript -->
+                </tbody>
+              </table>
+            </div>
+          </div>
+        </section>
+
+        <!-- Contracts Section -->
+        <section id="contracts" class="content-section">
+          <div class="page-header">
+            <h1>Contract Management</h1>
+            <div class="page-actions">
+              <button class="btn btn-primary" id="newContractBtn">
+                <i class="fas fa-file-contract"></i> New Contract
+              </button>
+              <button class="btn btn-success" id="generateContractBtn">
+                <i class="fas fa-file-pdf"></i> Generate PDF
+              </button>
+            </div>
+          </div>
+
+          <div class="data-table-container">
+            <div class="table-header">
+              <h3>All Contracts</h3>
+              <div class="table-filters">
+                <select class="filter-select" id="contractStatusFilter">
+                  <option value="">All Status</option>
+                  <option value="draft">Draft</option>
+                  <option value="sent">Sent</option>
+                  <option value="signed">Signed</option>
+                  <option value="executed">Executed</option>
+                  <option value="expired">Expired</option>
+                </select>
+                <select class="filter-select" id="contractTypeFilter">
+                  <option value="">All Types</option>
+                  <option value="standard">Standard</option>
+                  <option value="royalty">Royalty</option>
+                  <option value="advance">Advance</option>
+                  <option value="work_for_hire">Work for Hire</option>
+                </select>
+              </div>
+            </div>
+            <div class="table-responsive">
+              <table class="data-table" id="contractsTable">
+                <thead>
+                  <tr>
+                    <th>Contract No.</th>
+                    <th>Book Title</th>
+                    <th>Author</th>
+                    <th>Type</th>
+                    <th>Start Date</th>
+                    <th>End Date</th>
+                    <th>Royalty %</th>
+                    <th>Status</th>
+                    <th>Actions</th>
+                  </tr>
+                </thead>
+                <tbody id="contractsTableBody">
+                  <!-- Filled by JavaScript -->
+                </tbody>
+              </table>
+            </div>
+          </div>
+        </section>
+
+        <!-- Training Section -->
+        <section id="training" class="content-section">
+          <div class="page-header">
+            <h1>Training & Workshops</h1>
+            <div class="page-actions">
+              <button class="btn btn-primary">
+                <i class="fas fa-plus"></i> New Training
+              </button>
+            </div>
+          </div>
+          <div class="content-placeholder">
+            <p>Training and workshops content coming soon</p>
+          </div>
+        </section>
+
+        <!-- Production Section -->
+        <section id="production" class="content-section">
+          <div class="page-header">
+            <h1>Production Management</h1>
+          </div>
+          <div class="content-placeholder">
+            <p>Production management content coming soon</p>
+          </div>
+        </section>
+
+        <!-- Inventory Section -->
+        <section id="inventory" class="content-section">
+          <div class="page-header">
+            <h1>Inventory Management</h1>
+          </div>
+          <div class="content-placeholder">
+            <p>Inventory management content coming soon</p>
+          </div>
+        </section>
+
+        <!-- Royalties Section -->
+        <section id="royalties" class="content-section">
+          <div class="page-header">
+            <h1>Royalty Management</h1>
+          </div>
+          <div class="content-placeholder">
+            <p>Royalty management content coming soon</p>
+          </div>
+        </section>
+
+        <!-- Sales Section -->
+        <section id="sales" class="content-section">
+          <div class="page-header">
+            <h1>Sales Management</h1>
+          </div>
+          <div class="content-placeholder">
+            <p>Sales management content coming soon</p>
+          </div>
+        </section>
+
+        <!-- Reports Section -->
+        <section id="reports" class="content-section">
+          <div class="page-header">
+            <h1>Reports</h1>
+          </div>
+          <div class="content-placeholder">
+            <p>Reports content coming soon</p>
+          </div>
+        </section>
+
+        <!-- Analytics Section -->
+        <section id="analytics" class="content-section">
+          <div class="page-header">
+            <h1>Analytics</h1>
+          </div>
+          <div class="content-placeholder">
+            <p>Analytics content coming soon</p>
+          </div>
+        </section>
+
+        <!-- Reviews Section -->
+        <section id="reviews" class="content-section">
+          <div class="page-header">
+            <h1>Reviews Management</h1>
+          </div>
+          <div class="content-placeholder">
+            <p>Reviews management content coming soon</p>
+          </div>
+        </section>
+
+        <!-- Events Section -->
+        <section id="events" class="content-section">
+          <div class="page-header">
+            <h1>Events Management</h1>
+          </div>
+          <div class="content-placeholder">
+            <p>Events management content coming soon</p>
           </div>
         </section>
 
         <!-- Contacts Section -->
         <section id="contacts" class="content-section">
-          <div class="section-header">
-            <h2>Contact Messages</h2>
+          <div class="page-header">
+            <h1>Contacts</h1>
           </div>
-          <div id="contactsContainer" class="contacts-container">
-            <!-- Contacts will be populated here -->
+          <div class="content-placeholder">
+            <p>Contacts content coming soon</p>
           </div>
         </section>
+
+        <!-- Announcements Section -->
+        <section id="announcements" class="content-section">
+          <div class="page-header">
+            <h1>Announcements</h1>
+          </div>
+          <div class="content-placeholder">
+            <p>Announcements content coming soon</p>
+          </div>
+        </section>
+
+        <!-- Settings Section -->
+        <section id="settings" class="content-section">
+          <div class="page-header">
+            <h1>Settings</h1>
+          </div>
+          <div class="content-placeholder">
+            <p>Settings content coming soon</p>
+          </div>
+        </section>
+
+        <!-- Users Section -->
+        <section id="users" class="content-section">
+          <div class="page-header">
+            <h1>Users Management</h1>
+          </div>
+          <div class="content-placeholder">
+            <p>Users management content coming soon</p>
+          </div>
+        </section>
+
+        <!-- Logs Section -->
+        <section id="logs" class="content-section">
+          <div class="page-header">
+            <h1>Activity Logs</h1>
+          </div>
+          <div class="content-placeholder">
+            <p>Activity logs content coming soon</p>
+          </div>
+        </section>
+
+        <!-- Add more sections similarly for Training, Sales, Inventory, etc. -->
       </main>
     </div>
 
-    <!-- Status Modal -->
-    <div id="statusModal" class="modal">
+    <!-- Author Modal -->
+    <div class="modal" id="authorModal">
       <div class="modal-content">
         <div class="modal-header">
-          <h3>Update Status</h3>
-          <button class="close-btn" onclick="closeStatusModal()">
+          <h3>Author Details</h3>
+          <button class="modal-close" onclick="closeModal('authorModal')">
             &times;
           </button>
         </div>
-        <div class="modal-body">
-          <div class="form-group">
-            <label for="statusSelect">Select Status</label>
-            <select id="statusSelect">
-              <option value="">-- Select Status --</option>
-            </select>
-          </div>
+        <div class="modal-body" id="authorModalBody">
+          <!-- Filled by JavaScript -->
         </div>
         <div class="modal-footer">
-          <button class="btn btn-secondary" onclick="closeStatusModal()">
+          <button class="btn btn-secondary" onclick="closeModal('authorModal')">
             Cancel
           </button>
-          <button class="btn btn-primary" onclick="updateStatus()">
-            Update
+          <button class="btn btn-primary" id="saveAuthorBtn">
+            Save Changes
           </button>
         </div>
       </div>
     </div>
 
-    <script>
-      const API_URL = "http://localhost:3001/api";
-      let currentAdminEmail = "";
-      let currentFilter = "pending";
-      let currentSection = "dashboard";
-      let currentUpdateId = null;
-      let currentUpdateType = null;
+    <!-- Book Modal -->
+    <div class="modal" id="bookModal">
+      <div class="modal-content">
+        <div class="modal-header">
+          <h3>Book Details</h3>
+          <button class="modal-close" onclick="closeModal('bookModal')">
+            &times;
+          </button>
+        </div>
+        <div class="modal-body" id="bookModalBody">
+          <!-- Filled by JavaScript -->
+        </div>
+        <div class="modal-footer">
+          <button class="btn btn-secondary" onclick="closeModal('bookModal')">
+            Cancel
+          </button>
+          <button class="btn btn-primary" id="saveBookBtn">Save Changes</button>
+        </div>
+      </div>
+    </div>
 
-      // Initialize
-      document.addEventListener("DOMContentLoaded", () => {
+    <!-- Submission Modal -->
+    <div class="modal" id="submissionModal">
+      <div class="modal-content">
+        <div class="modal-header">
+          <h3>Submission Details</h3>
+          <button class="modal-close" onclick="closeModal('submissionModal')">
+            &times;
+          </button>
+        </div>
+        <div class="modal-body" id="submissionModalBody">
+          <!-- Filled by JavaScript -->
+        </div>
+        <div class="modal-footer">
+          <button
+            class="btn btn-secondary"
+            onclick="closeModal('submissionModal')">
+            Cancel
+          </button>
+          <button class="btn btn-primary" id="saveSubmissionBtn">
+            Update Status
+          </button>
+        </div>
+      </div>
+    </div>
+
+    <!-- Contract Modal -->
+    <div class="modal" id="contractModal">
+      <div class="modal-content">
+        <div class="modal-header">
+          <h3>Contract Details</h3>
+          <button class="modal-close" onclick="closeModal('contractModal')">
+            &times;
+          </button>
+        </div>
+        <div class="modal-body" id="contractModalBody">
+          <!-- Filled by JavaScript -->
+        </div>
+        <div class="modal-footer">
+          <button
+            class="btn btn-secondary"
+            onclick="closeModal('contractModal')">
+            Cancel
+          </button>
+          <button class="btn btn-primary" id="saveContractBtn">
+            Save Contract
+          </button>
+        </div>
+      </div>
+    </div>
+
+    <!-- Loading Overlay -->
+    <div class="modal" id="loadingModal">
+      <div class="modal-content" style="max-width: 300px; text-align: center">
+        <div class="modal-body">
+          <div
+            class="spinner"
+            style="width: 40px; height: 40px; margin: 20px auto"></div>
+          <p id="loadingText">Loading...</p>
+        </div>
+      </div>
+    </div>
+
+    <!-- JavaScript -->
+    <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+    <script src="https://cdn.datatables.net/1.13.6/js/jquery.dataTables.min.js"></script>
+    <script src="https://cdn.datatables.net/buttons/2.4.1/js/dataTables.buttons.min.js"></script>
+    <script src="https://cdn.datatables.net/buttons/2.4.1/js/buttons.html5.min.js"></script>
+
+    <!-- Enhanced Sections -->
+    <script src="enhanced-sections.js"></script>
+
+    <script>
+      // Global variables
+      const API_BASE_URL = "http://localhost:3001/api";
+      let currentUser = null;
+      let salesChart = null;
+      let categoriesChart = null;
+      let currentSection = "dashboard";
+      let dataTables = {};
+
+      // Initialize when DOM is loaded
+      document.addEventListener("DOMContentLoaded", function () {
+        initializeAdminPanel();
         setupEventListeners();
-        loadDashboardStats();
+        checkSavedSession();
       });
 
-      function setupEventListeners() {
-        // Login form
-        document
-          .getElementById("adminLoginForm")
-          .addEventListener("submit", handleLogin);
+      function initializeAdminPanel() {
+        // Initialize DataTables
+        initDataTables();
 
-        // Logout button
-        document.getElementById("logoutBtn").addEventListener("click", logout);
+        // Initialize default user
+        currentUser = {
+          id: 1,
+          username: "admin",
+          email: "admin@babcock.edu.ng",
+          name: "Administrator",
+          role: "admin",
+        };
+
+        // Show dashboard directly
+        updateUserInfo();
+        loadDashboardData();
+      }
+
+      function setupEventListeners() {
+        // Menu toggle
+        $("#menuToggle").on("click", toggleSidebar);
 
         // Navigation
-        document.querySelectorAll(".nav-item").forEach((item) => {
-          item.addEventListener("click", (e) => {
-            e.preventDefault();
-            const section = item.getAttribute("data-section");
-            switchSection(section);
-          });
+        $(".nav-item").on("click", function (e) {
+          e.preventDefault();
+          const section = $(this).data("section");
+          switchSection(section);
         });
 
-        // Filter buttons
-        document.querySelectorAll(".filter-btn").forEach((btn) => {
-          btn.addEventListener("click", (e) => {
-            e.preventDefault();
-            const filter = btn.getAttribute("data-filter");
-            const parent = btn.parentElement;
-
-            parent
-              .querySelectorAll(".filter-btn")
-              .forEach((b) => b.classList.remove("active"));
-            btn.classList.add("active");
-
-            currentFilter = filter;
-
-            if (currentSection === "authors") {
-              loadAuthorRegistrations();
-            } else if (currentSection === "training") {
-              loadTrainingRegistrations();
-            }
-          });
+        // Quick actions
+        $(".quick-action").on("click", function () {
+          const action = $(this).data("action");
+          handleQuickAction(action);
         });
+
+        // Buttons
+        $("#refreshDashboard").on("click", loadDashboardData);
+        $("#addAuthorBtn").on("click", showAddAuthorModal);
+        $("#addBookBtn").on("click", showAddBookModal);
+        $("#newContractBtn").on("click", showNewContractModal);
+        $("#assignReviewerBtn").on("click", showAssignReviewerModal);
+
+        // Search
+        $("#globalSearch").on("keyup", function (e) {
+          if (e.key === "Enter") {
+            performGlobalSearch($(this).val());
+          }
+        });
+
+        // User menu
+        $("#userMenu").on("click", showUserMenu);
+
+        // Modal close buttons
+        $(".modal-close").on("click", function () {
+          $(this).closest(".modal").removeClass("active");
+        });
+
+        // Close modal on outside click
+        $(document).on("click", function (e) {
+          if ($(e.target).hasClass("modal")) {
+            $(".modal").removeClass("active");
+          }
+        });
+
+        // Keyboard shortcuts
+        $(document).on("keydown", function (e) {
+          // Ctrl + K for search
+          if (e.ctrlKey && e.key === "k") {
+            e.preventDefault();
+            $("#globalSearch").focus();
+          }
+
+          // Escape to close modals
+          if (e.key === "Escape") {
+            $(".modal").removeClass("active");
+          }
+        });
+      }
+
+      function checkSavedSession() {
+        // Session check skipped - dashboard loads automatically
       }
 
       async function handleLogin(e) {
         e.preventDefault();
 
-        const email = document.getElementById("adminEmail").value;
-        const password = document.getElementById("adminPassword").value;
+        const email = $("#loginEmail").val();
+        const password = $("#loginPassword").val();
+
+        // Show loading
+        const submitBtn = $(e.target).find('button[type="submit"]');
+        const originalText = submitBtn.html();
+        submitBtn.html('<span class="spinner"></span> Logging in...');
+        submitBtn.prop("disabled", true);
 
         try {
-          const response = await fetch(`${API_URL}/admin/login`, {
+          const response = await fetch(`${API_BASE_URL}/admin/login`, {
             method: "POST",
-            headers: { "Content-Type": "application/json" },
+            headers: {
+              "Content-Type": "application/json",
+            },
             body: JSON.stringify({ email, password }),
           });
 
           const data = await response.json();
 
           if (data.success) {
-            currentAdminEmail = email;
-            document.getElementById("loginModal").classList.remove("active");
-            document
-              .getElementById("dashboardContainer")
-              .classList.add("active");
-            document.getElementById("adminEmail").textContent = email;
-            loadDashboardStats();
+            currentUser = {
+              id: data.user.id,
+              username: data.user.username,
+              email: data.user.email,
+              name: data.user.full_name,
+              role: data.user.role,
+            };
+
+            // Store session
+            localStorage.setItem("adminUser", JSON.stringify(currentUser));
+            localStorage.setItem("authToken", data.token);
+
+            // Update UI
+            $("#loginPage").hide();
+            $("#dashboardContainer").show();
+            updateUserInfo();
+
+            // Load initial data
+            loadDashboardData();
+            showNotification("Login successful!", "success");
           } else {
-            alert(data.message || "Login failed");
+            throw new Error(data.message || "Login failed");
           }
         } catch (error) {
-          console.error("Login error:", error);
-          alert("Login error: " + error.message);
+          showNotification(`Login failed: ${error.message}`, "error");
+        } finally {
+          submitBtn.html(originalText);
+          submitBtn.prop("disabled", false);
         }
       }
 
-      function logout() {
-        currentAdminEmail = "";
-        document
-          .getElementById("dashboardContainer")
-          .classList.remove("active");
-        document.getElementById("loginModal").classList.add("active");
-        document.getElementById("adminLoginForm").reset();
+      function updateUserInfo() {
+        if (currentUser) {
+          $("#userName").text(currentUser.name);
+          $("#userRole").text(currentUser.role);
+          $("#userAvatar").text(currentUser.name.charAt(0).toUpperCase());
+        }
+      }
+
+      function toggleSidebar() {
+        $("#dashboardSidebar").toggleClass("sidebar-collapsed");
+        $("#dashboardMain").toggleClass("sidebar-collapsed");
       }
 
       function switchSection(section) {
         // Update navigation
-        document.querySelectorAll(".nav-item").forEach((item) => {
-          item.classList.remove("active");
-        });
-        document
-          .querySelector(`[data-section="${section}"]`)
-          .classList.add("active");
+        $(".nav-item").removeClass("active");
+        $(`.nav-item[data-section="${section}"]`).addClass("active");
 
         // Update content
-        document.querySelectorAll(".content-section").forEach((s) => {
-          s.classList.remove("active");
-        });
-        document.getElementById(section).classList.add("active");
-
-        // Update page title
-        const titles = {
-          dashboard: "Dashboard",
-          authors: "Author Registrations",
-          training: "Student Training",
-          books: "All Books",
-          contacts: "Contact Messages",
-        };
-        document.getElementById("pageTitle").textContent = titles[section];
+        $(".content-section").removeClass("active");
+        $(`#${section}`).addClass("active");
 
         currentSection = section;
 
         // Load section data
-        if (section === "authors") {
-          loadAuthorRegistrations();
-        } else if (section === "training") {
-          loadTrainingRegistrations();
-        } else if (section === "books") {
-          loadAllBooks();
-        } else if (section === "contacts") {
-          loadAllContacts();
+        switch (section) {
+          case "dashboard":
+            loadDashboardData();
+            break;
+          case "authors":
+            loadAuthors();
+            break;
+          case "books":
+            loadBooks();
+            break;
+          case "submissions":
+            loadSubmissions();
+            break;
+          case "reviews":
+            loadReviews();
+            break;
+          case "contracts":
+            loadContracts();
+            break;
+          case "production":
+            loadProduction();
+            break;
+          case "inventory":
+            loadInventory();
+            break;
+          case "royalties":
+            loadRoyalties();
+            break;
+          case "training":
+            loadTraining();
+            break;
+          case "events":
+            loadEvents();
+            break;
+          case "sales":
+            loadSales();
+            break;
+          case "reports":
+            loadReports();
+            break;
+          case "analytics":
+            loadAnalytics();
+            break;
+          case "contacts":
+            loadContacts();
+            break;
+          case "announcements":
+            loadAnnouncements();
+            break;
+          case "settings":
+            loadSettings();
+            break;
+          case "users":
+            loadUsers();
+            break;
+          case "logs":
+            loadLogs();
+            break;
+          default:
+            console.log("Unknown section:", section);
         }
       }
 
-      async function loadDashboardStats() {
-        try {
-          const response = await fetch(`${API_URL}/admin/dashboard/stats`);
-          const data = await response.json();
+      async function loadDashboardData() {
+        showLoading("Loading dashboard data...");
 
-          if (data.success) {
-            document.getElementById("pendingAuthorsCount").textContent =
-              data.stats.pendingAuthors;
-            document.getElementById("approvedAuthorsCount").textContent =
-              data.stats.approvedAuthors;
-            document.getElementById("pendingTrainingCount").textContent =
-              data.stats.pendingTraining;
-            document.getElementById("totalBooksCount").textContent =
-              data.stats.totalBooks;
-            document.getElementById("totalContactsCount").textContent =
-              data.stats.totalContacts;
+        try {
+          const token = localStorage.getItem("authToken");
+          const headers = {
+            Authorization: `Bearer ${token}`,
+          };
+
+          const [
+            statsRes,
+            recentBooksRes,
+            recentSubmissionsRes,
+            salesRes,
+            categoriesRes,
+          ] = await Promise.all([
+            fetch(`${API_BASE_URL}/admin/dashboard/stats`, { headers }),
+            fetch(`${API_BASE_URL}/admin/books?limit=5`, { headers }),
+            fetch(`${API_BASE_URL}/admin/submissions?limit=5`, { headers }),
+            fetch(`${API_BASE_URL}/admin/sales?limit=100`, { headers }),
+            fetch(`${API_BASE_URL}/admin/books?limit=100`, { headers }),
+          ]);
+
+          const statsData = await statsRes.json();
+          const recentBooksData = await recentBooksRes.json();
+          const recentSubmissionsData = await recentSubmissionsRes.json();
+          const salesData = await salesRes.json();
+          const categoriesData = await categoriesRes.json();
+
+          if (statsData.success) {
+            updateDashboardStats(statsData);
+          }
+
+          if (recentBooksData.success) {
+            updateRecentBooks(recentBooksData.books);
+          }
+
+          if (recentSubmissionsData.success) {
+            updateRecentSubmissions(recentSubmissionsData.submissions);
+          }
+
+          if (salesData.success) {
+            updateSalesChart(salesData.sales);
+          }
+
+          if (categoriesData.success) {
+            updateCategoriesChart(categoriesData.books);
           }
         } catch (error) {
-          console.error("Error loading stats:", error);
+          showNotification(
+            `Failed to load dashboard: ${error.message}`,
+            "error",
+          );
+        } finally {
+          hideLoading();
         }
       }
 
-      async function loadAuthorRegistrations() {
-        const endpoint =
-          currentFilter === "all"
-            ? `/api/admin/authors/all`
-            : `/api/admin/authors/pending`;
+      function updateDashboardStats(data) {
+        const stats = data.stats;
+
+        // Update counts
+        $("#pendingAuthorsCount").text(stats.authors.pending);
+        $("#totalBooksCount").text(stats.books.total);
+        $("#pendingSubmissionsCount").text(stats.submissions.pending);
+        $("#monthlyRevenue").text(formatCurrency(stats.sales.monthly_revenue));
+
+        // Update badges
+        $("#pendingAuthorsBadge").text(stats.authors.pending);
+        $("#pendingSubmissionsBadge").text(stats.submissions.pending);
+        $("#pendingTrainingBadge").text(stats.training.pending);
+        $("#newMessagesBadge").text(stats.contacts.new);
+        $("#lowStockBadge").text(stats.inventory.low_stock);
+
+        // Update recent activities
+        updateRecentActivities(data.recent);
+      }
+
+      function updateRecentActivities(recentData) {
+        const recentSubmissionsList = $("#recentSubmissionsList");
+        const recentAuthorsList = $("#recentAuthorsList");
+
+        recentSubmissionsList.empty();
+        recentAuthorsList.empty();
+
+        // Add recent submissions
+        if (recentData.submissions && recentData.submissions.length > 0) {
+          recentData.submissions.forEach((sub) => {
+            const timeAgo = getTimeAgo(new Date(sub.submission_date));
+            recentSubmissionsList.append(`
+                        <li class="activity-item">
+                            <div class="activity-icon" style="background: linear-gradient(135deg, #ffd700 0%, #e6c200 100%);">
+                                <i class="fas fa-file-upload"></i>
+                            </div>
+                            <div class="activity-content">
+                                <p><strong>${sub.book_title}</strong> submitted for ${sub.submission_type}</p>
+                                <div class="activity-time">${timeAgo}</div>
+                            </div>
+                        </li>
+                    `);
+          });
+        }
+
+        // Add recent books
+        if (recentData.books && recentData.books.length > 0) {
+          recentData.books.forEach((book) => {
+            const timeAgo = getTimeAgo(new Date(book.created_at));
+            recentAuthorsList.append(`
+                        <li class="activity-item">
+                            <div class="activity-icon" style="background: linear-gradient(135deg, #006747 0%, #005035 100%);">
+                                <i class="fas fa-book"></i>
+                            </div>
+                            <div class="activity-content">
+                                <p><strong>${book.title}</strong> by ${book.author}</p>
+                                <div class="activity-time">${timeAgo} • ${book.status}</div>
+                            </div>
+                        </li>
+                    `);
+          });
+        }
+      }
+
+      function updateRecentBooks(booksData) {
+        const recentAuthorsList = $("#recentAuthorsList");
+        recentAuthorsList.empty();
+
+        if (booksData && booksData.length > 0) {
+          booksData.forEach((book) => {
+            const timeAgo = getTimeAgo(new Date(book.created_at));
+            recentAuthorsList.append(`
+                        <li class="activity-item">
+                            <div class="activity-icon" style="background: linear-gradient(135deg, #006747 0%, #005035 100%);">
+                                <i class="fas fa-book"></i>
+                            </div>
+                            <div class="activity-content">
+                                <p><strong>${book.title}</strong> by ${book.author}</p>
+                                <div class="activity-time">${timeAgo} • ${book.status}</div>
+                            </div>
+                        </li>
+                    `);
+          });
+        }
+      }
+
+      function updateRecentSubmissions(submissionsData) {
+        const recentSubmissionsList = $("#recentSubmissionsList");
+        recentSubmissionsList.empty();
+
+        if (submissionsData && submissionsData.length > 0) {
+          submissionsData.forEach((sub) => {
+            const timeAgo = getTimeAgo(new Date(sub.submission_date));
+            recentSubmissionsList.append(`
+                        <li class="activity-item">
+                            <div class="activity-icon" style="background: linear-gradient(135deg, #ffd700 0%, #e6c200 100%);">
+                                <i class="fas fa-file-upload"></i>
+                            </div>
+                            <div class="activity-content">
+                                <p><strong>${sub.book_title}</strong> submitted for ${sub.submission_type}</p>
+                                <div class="activity-time">${timeAgo}</div>
+                            </div>
+                        </li>
+                    `);
+          });
+        }
+      }
+
+      function updateSalesChart(salesData) {
+        const ctx = document.getElementById("salesChart").getContext("2d");
+
+        // Group sales by month
+        const monthlySales = {};
+        salesData.forEach((sale) => {
+          const month = new Date(sale.sale_date).toLocaleDateString("en-US", {
+            month: "short",
+            year: "numeric",
+          });
+          if (!monthlySales[month]) {
+            monthlySales[month] = 0;
+          }
+          monthlySales[month] += parseFloat(sale.total_amount);
+        });
+
+        const labels = Object.keys(monthlySales);
+        const data = Object.values(monthlySales);
+
+        if (salesChart) {
+          salesChart.destroy();
+        }
+
+        salesChart = new Chart(ctx, {
+          type: "line",
+          data: {
+            labels: labels,
+            datasets: [
+              {
+                label: "Revenue (₦)",
+                data: data,
+                borderColor: "#006747",
+                backgroundColor: "rgba(0, 103, 71, 0.1)",
+                borderWidth: 2,
+                fill: true,
+                tension: 0.4,
+              },
+            ],
+          },
+          options: {
+            responsive: true,
+            plugins: {
+              legend: {
+                position: "top",
+              },
+              tooltip: {
+                callbacks: {
+                  label: function (context) {
+                    return `₦${context.parsed.y.toLocaleString()}`;
+                  },
+                },
+              },
+            },
+            scales: {
+              y: {
+                beginAtZero: true,
+                ticks: {
+                  callback: function (value) {
+                    return "₦" + value.toLocaleString();
+                  },
+                },
+              },
+            },
+          },
+        });
+      }
+
+      function updateCategoriesChart(booksData) {
+        const ctx = document.getElementById("categoriesChart").getContext("2d");
+
+        // Count books by category
+        const categoryCounts = {};
+        booksData.forEach((book) => {
+          const category = book.category || "Uncategorized";
+          if (!categoryCounts[category]) {
+            categoryCounts[category] = 0;
+          }
+          categoryCounts[category]++;
+        });
+
+        const labels = Object.keys(categoryCounts);
+        const data = Object.values(categoryCounts);
+
+        // Generate colors
+        const colors = generateColors(labels.length);
+
+        if (categoriesChart) {
+          categoriesChart.destroy();
+        }
+
+        categoriesChart = new Chart(ctx, {
+          type: "doughnut",
+          data: {
+            labels: labels,
+            datasets: [
+              {
+                data: data,
+                backgroundColor: colors,
+                borderWidth: 1,
+              },
+            ],
+          },
+          options: {
+            responsive: true,
+            plugins: {
+              legend: {
+                position: "right",
+              },
+            },
+          },
+        });
+      }
+
+      async function loadAuthors() {
+        showLoading("Loading authors...");
 
         try {
-          const response = await fetch(`${API_URL}${endpoint}`);
+          const token = localStorage.getItem("authToken");
+          const response = await fetch(`${API_BASE_URL}/admin/authors`, {
+            headers: {
+              Authorization: `Bearer ${token}`,
+            },
+          });
           const data = await response.json();
 
           if (data.success) {
-            const tbody = document.getElementById("authorsTableBody");
-            tbody.innerHTML = "";
-
-            let filteredAuthors = data.authors;
-            if (currentFilter !== "all") {
-              filteredAuthors = data.authors.filter(
-                (a) => a.status === currentFilter,
-              );
-            }
-
-            if (filteredAuthors.length === 0) {
-              tbody.innerHTML =
-                '<tr><td colspan="8" style="text-align: center; padding: 40px;">No registrations found</td></tr>';
-              return;
-            }
-
-            filteredAuthors.forEach((author) => {
-              const row = document.createElement("tr");
-              const createdDate = new Date(
-                author.created_at,
-              ).toLocaleDateString();
-
-              row.innerHTML = `
-          <td>${author.full_name}</td>
-          <td>${author.email}</td>
-          <td>${author.faculty || "-"}</td>
-          <td>${author.department || "-"}</td>
-          <td>${author.staff_id || "-"}</td>
-          <td>
-            <span class="status-badge status-${author.status}">
-              ${author.status}
-            </span>
-          </td>
-          <td>${createdDate}</td>
-          <td>
-            <div class="action-buttons">
-              ${
-                author.status === "pending"
-                  ? `
-                <button class="btn btn-success" onclick="openStatusModal(${author.id}, 'author', 'approved')">Approve</button>
-                <button class="btn btn-danger" onclick="openStatusModal(${author.id}, 'author', 'rejected')">Reject</button>
-              `
-                  : `<button class="btn btn-primary" onclick="openStatusModal(${author.id}, 'author')">Change Status</button>`
-              }
-            </div>
-          </td>
-        `;
-              tbody.appendChild(row);
-            });
+            updateAuthorsTable(data.authors);
           }
         } catch (error) {
-          console.error("Error loading authors:", error);
+          showNotification(`Failed to load authors: ${error.message}`, "error");
+        } finally {
+          hideLoading();
         }
       }
 
-      async function loadTrainingRegistrations() {
-        const endpoint =
-          currentFilter === "all"
-            ? `/api/admin/training/all`
-            : `/api/admin/training/pending`;
+      function updateAuthorsTable(authors) {
+        const tableBody = $("#authorsTableBody");
+
+        // Destroy existing DataTable if it exists
+        if (dataTables.authors) {
+          dataTables.authors.destroy();
+          dataTables.authors = null;
+        }
+
+        tableBody.empty();
+
+        authors.forEach((author) => {
+          const date = new Date(author.created_at).toLocaleDateString();
+          const statusClass = `status-${author.status}`;
+
+          tableBody.append(`
+                    <tr>
+                        <td>${author.id}</td>
+                        <td>
+                            <strong>${author.full_name}</strong>
+                            <br><small>${author.email}</small>
+                        </td>
+                        <td>${author.email}</td>
+                        <td>${author.faculty || "-"}</td>
+                        <td>${author.department || "-"}</td>
+                        <td>${author.staff_id || "-"}</td>
+                        <td>
+                            <span class="status-badge ${statusClass}">${author.status}</span>
+                        </td>
+                        <td>${author.bookCount || 0}</td>
+                        <td>${date}</td>
+                        <td>
+                            <div class="action-buttons">
+                                <button class="btn btn-sm btn-info" onclick="viewAuthor(${author.id})">
+                                    <i class="fas fa-eye"></i>
+                                </button>
+                                ${
+                                  author.status === "pending"
+                                    ? `
+                                    <button class="btn btn-sm btn-success" onclick="approveAuthor(${author.id})">
+                                        <i class="fas fa-check"></i>
+                                    </button>
+                                    <button class="btn btn-sm btn-danger" onclick="rejectAuthor(${author.id})">
+                                        <i class="fas fa-times"></i>
+                                    </button>
+                                `
+                                    : ""
+                                }
+                                <button class="btn btn-sm btn-warning" onclick="editAuthor(${author.id})">
+                                    <i class="fas fa-edit"></i>
+                                </button>
+                            </div>
+                        </td>
+                    </tr>
+                `);
+        });
+
+        // Initialize DataTable
+        dataTables.authors = $("#authorsTable").DataTable({
+          pageLength: 25,
+          responsive: true,
+          dom: "Bfrtip",
+          buttons: ["copy", "csv", "excel", "pdf", "print"],
+        });
+      }
+
+      async function viewAuthor(authorId) {
+        showLoading("Loading author details...");
 
         try {
-          const response = await fetch(`${API_URL}${endpoint}`);
+          const token = localStorage.getItem("authToken");
+          const response = await fetch(
+            `${API_BASE_URL}/admin/authors/${authorId}`,
+            {
+              headers: {
+                Authorization: `Bearer ${token}`,
+              },
+            },
+          );
           const data = await response.json();
 
           if (data.success) {
-            const tbody = document.getElementById("trainingTableBody");
-            tbody.innerHTML = "";
+            showAuthorModal(data.author);
+          }
+        } catch (error) {
+          showNotification(`Failed to load author: ${error.message}`, "error");
+        } finally {
+          hideLoading();
+        }
+      }
 
-            let filteredRegistrations = data.registrations;
-            if (currentFilter !== "all") {
-              filteredRegistrations = data.registrations.filter(
-                (r) => r.status === currentFilter,
-              );
+      function showAuthorModal(author) {
+        const modalBody = $("#authorModalBody");
+
+        modalBody.html(`
+                <div class="form-row">
+                    <div class="form-group">
+                        <label>Full Name</label>
+                        <input type="text" class="form-control" value="${author.full_name}" readonly>
+                    </div>
+                    <div class="form-group">
+                        <label>Email</label>
+                        <input type="email" class="form-control" value="${author.email}" readonly>
+                    </div>
+                </div>
+
+                <div class="form-row">
+                    <div class="form-group">
+                        <label>Phone</label>
+                        <input type="text" class="form-control" value="${author.phone || ""}" readonly>
+                    </div>
+                    <div class="form-group">
+                        <label>Staff ID</label>
+                        <input type="text" class="form-control" value="${author.staff_id || ""}" readonly>
+                    </div>
+                </div>
+
+                <div class="form-row">
+                    <div class="form-group">
+                        <label>Faculty</label>
+                        <input type="text" class="form-control" value="${author.faculty || ""}" readonly>
+                    </div>
+                    <div class="form-group">
+                        <label>Department</label>
+                        <input type="text" class="form-control" value="${author.department || ""}" readonly>
+                    </div>
+                </div>
+
+                <div class="form-row">
+                    <div class="form-group">
+                        <label>Status</label>
+                        <input type="text" class="form-control" value="${author.status}" readonly>
+                    </div>
+                    <div class="form-group">
+                        <label>Registered</label>
+                        <input type="text" class="form-control" value="${new Date(author.created_at).toLocaleDateString()}" readonly>
+                    </div>
+                </div>
+
+                <h4 style="margin-top: 30px; margin-bottom: 15px;">Books (${author.books.length})</h4>
+                ${
+                  author.books.length > 0
+                    ? `
+                    <div style="max-height: 200px; overflow-y: auto;">
+                        ${author.books
+                          .map(
+                            (book) => `
+                            <div class="book-preview">
+                                <div class="book-cover">
+                                    <i class="fas fa-book"></i>
+                                </div>
+                                <div class="book-info">
+                                    <h4>${book.title}</h4>
+                                    <p>Status: <span class="status-badge status-${book.status}">${book.status}</span></p>
+                                    <div class="book-meta">
+                                        <span>Created: ${new Date(book.created_at).toLocaleDateString()}</span>
+                                    </div>
+                                </div>
+                            </div>
+                        `,
+                          )
+                          .join("")}
+                    </div>
+                `
+                    : "<p>No books found.</p>"
+                }
+            `);
+
+        $("#authorModal").addClass("active");
+      }
+
+      async function approveAuthor(authorId) {
+        if (!confirm("Are you sure you want to approve this author?")) return;
+
+        try {
+          const token = localStorage.getItem("authToken");
+          const response = await fetch(
+            `${API_BASE_URL}/admin/authors/${authorId}/status`,
+            {
+              method: "PUT",
+              headers: {
+                "Content-Type": "application/json",
+                Authorization: `Bearer ${token}`,
+              },
+              body: JSON.stringify({ status: "approved" }),
+            },
+          );
+
+          const data = await response.json();
+
+          if (data.success) {
+            showNotification("Author approved successfully!", "success");
+            loadAuthors();
+            loadDashboardData();
+          } else {
+            throw new Error(data.message);
+          }
+        } catch (error) {
+          showNotification(
+            `Failed to approve author: ${error.message}`,
+            "error",
+          );
+        }
+      }
+
+      async function rejectAuthor(authorId) {
+        if (!confirm("Are you sure you want to reject this author?")) return;
+
+        try {
+          const token = localStorage.getItem("authToken");
+          const response = await fetch(
+            `${API_BASE_URL}/admin/authors/${authorId}/status`,
+            {
+              method: "PUT",
+              headers: {
+                "Content-Type": "application/json",
+                Authorization: `Bearer ${token}`,
+              },
+              body: JSON.stringify({ status: "rejected" }),
+            },
+          );
+
+          const data = await response.json();
+
+          if (data.success) {
+            showNotification("Author rejected successfully!", "success");
+            loadAuthors();
+            loadDashboardData();
+          } else {
+            throw new Error(data.message);
+          }
+        } catch (error) {
+          showNotification(
+            `Failed to reject author: ${error.message}`,
+            "error",
+          );
+        }
+      }
+
+      // Similar functions for books, submissions, contracts, etc.
+
+      function showAddAuthorModal() {
+        const modalBody = $("#authorModalBody");
+
+        modalBody.html(`
+                <form id="addAuthorForm">
+                    <div class="form-row">
+                        <div class="form-group">
+                            <label>Full Name *</label>
+                            <input type="text" class="form-control" name="full_name" required>
+                        </div>
+                        <div class="form-group">
+                            <label>Email *</label>
+                            <input type="email" class="form-control" name="email" required>
+                        </div>
+                    </div>
+
+                    <div class="form-row">
+                        <div class="form-group">
+                            <label>Phone</label>
+                            <input type="text" class="form-control" name="phone">
+                        </div>
+                        <div class="form-group">
+                            <label>Staff ID</label>
+                            <input type="text" class="form-control" name="staff_id">
+                        </div>
+                    </div>
+
+                    <div class="form-row">
+                        <div class="form-group">
+                            <label>Faculty</label>
+                            <input type="text" class="form-control" name="faculty">
+                        </div>
+                        <div class="form-group">
+                            <label>Department</label>
+                            <input type="text" class="form-control" name="department">
+                        </div>
+                    </div>
+
+                    <div class="form-row">
+                        <div class="form-group">
+                            <label>Password *</label>
+                            <input type="password" class="form-control" name="password" required>
+                        </div>
+                        <div class="form-group">
+                            <label>Author Type</label>
+                            <select class="form-control" name="author_type">
+                                <option value="staff">Staff</option>
+                                <option value="student">Student</option>
+                                <option value="external">External</option>
+                            </select>
+                        </div>
+                    </div>
+                </form>
+            `);
+
+        $("#saveAuthorBtn").off("click").on("click", saveAuthor);
+        $("#authorModal").addClass("active");
+      }
+
+      async function saveAuthor() {
+        const formData = new FormData(document.getElementById("addAuthorForm"));
+        const data = Object.fromEntries(formData);
+
+        try {
+          const response = await fetch(`${API_BASE_URL}/authors/register`, {
+            method: "POST",
+            headers: {
+              "Content-Type": "application/json",
+            },
+            body: JSON.stringify(data),
+          });
+
+          const result = await response.json();
+
+          if (result.success) {
+            showNotification("Author added successfully!", "success");
+            $("#authorModal").removeClass("active");
+            loadAuthors();
+            loadDashboardData();
+          } else {
+            throw new Error(result.message);
+          }
+        } catch (error) {
+          showNotification(`Failed to add author: ${error.message}`, "error");
+        }
+      }
+
+      // Similar modal functions for books, submissions, contracts
+
+      function handleQuickAction(action) {
+        switch (action) {
+          case "new-author":
+            switchSection("authors");
+            break;
+          case "new-submission":
+            switchSection("submissions");
+            break;
+          case "new-training":
+            switchSection("training");
+            break;
+          case "new-message":
+            switchSection("contacts");
+            break;
+        }
+      }
+
+      function performGlobalSearch(query) {
+        if (query.length < 2) return;
+
+        showLoading("Searching...");
+
+        const token = localStorage.getItem("authToken");
+        fetch(`${API_BASE_URL}/admin/search?q=${encodeURIComponent(query)}`, {
+          headers: {
+            Authorization: `Bearer ${token}`,
+          },
+        })
+          .then((response) => response.json())
+          .then((data) => {
+            if (data.success) {
+              showSearchResults(data.results);
             }
+          })
+          .catch((error) => {
+            showNotification(`Search failed: ${error.message}`, "error");
+          })
+          .finally(() => {
+            hideLoading();
+          });
+      }
 
-            if (filteredRegistrations.length === 0) {
-              tbody.innerHTML =
-                '<tr><td colspan="9" style="text-align: center; padding: 40px;">No registrations found</td></tr>';
-              return;
-            }
+      function showSearchResults(results) {
+        // Create modal for search results
+        const modalBody = `
+                <h4 style="margin-bottom: 20px;">Search Results (${results.length})</h4>
+                ${
+                  results.length > 0
+                    ? `
+                    <div style="max-height: 400px; overflow-y: auto;">
+                        ${results
+                          .map(
+                            (result) => `
+                            <div class="search-result" style="padding: 10px; border-bottom: 1px solid #eee; cursor: pointer;"
+                                 onclick="openSearchResult('${result.type}', ${result.id})">
+                                <div style="display: flex; align-items: center; gap: 10px;">
+                                    <i class="fas fa-${getIconForType(result.type)}"
+                                       style="color: ${getColorForType(result.type)}"></i>
+                                    <div>
+                                        <strong>${result.name}</strong>
+                                        <div style="font-size: 12px; color: #666;">${result.description}</div>
+                                    </div>
+                                </div>
+                            </div>
+                        `,
+                          )
+                          .join("")}
+                    </div>
+                `
+                    : "<p>No results found.</p>"
+                }
+            `;
 
-            filteredRegistrations.forEach((reg) => {
-              const row = document.createElement("tr");
-              const createdDate = new Date(reg.created_at).toLocaleDateString();
-              const preferredDate = reg.preferred_date
-                ? new Date(reg.preferred_date).toLocaleDateString()
+        showCustomModal("Search Results", modalBody);
+      }
+
+      function getIconForType(type) {
+        switch (type) {
+          case "book":
+            return "book";
+          case "author":
+            return "user";
+          case "contract":
+            return "file-contract";
+          default:
+            return "search";
+        }
+      }
+
+      function getColorForType(type) {
+        switch (type) {
+          case "book":
+            return "#006747";
+          case "author":
+            return "#17a2b8";
+          case "contract":
+            return "#ffd700";
+          default:
+            return "#6c757d";
+        }
+      }
+
+      function openSearchResult(type, id) {
+        switch (type) {
+          case "book":
+            viewBook(id);
+            break;
+          case "author":
+            viewAuthor(id);
+            break;
+          case "contract":
+            viewContract(id);
+            break;
+        }
+        $(".modal").removeClass("active");
+      }
+
+      function showUserMenu() {
+        const menuHtml = `
+                <div style="position: absolute; top: 60px; right: 20px; background: white;
+                           border-radius: 8px; box-shadow: 0 4px 20px rgba(0,0,0,0.15);
+                           width: 200px; z-index: 1000;">
+                    <div style="padding: 15px; border-bottom: 1px solid #eee;">
+                        <div style="font-weight: 600;">${currentUser.name}</div>
+                        <div style="font-size: 12px; color: #666;">${currentUser.role}</div>
+                    </div>
+                    <div style="padding: 10px 0;">
+                        <a href="#" style="display: block; padding: 10px 15px; color: #333; text-decoration: none;"
+                           onmouseover="this.style.background='#f8f9fa'">
+                            <i class="fas fa-user" style="margin-right: 10px;"></i> Profile
+                        </a>
+                        <a href="#" style="display: block; padding: 10px 15px; color: #333; text-decoration: none;"
+                           onmouseover="this.style.background='#f8f9fa'">
+                            <i class="fas fa-cog" style="margin-right: 10px;"></i> Settings
+                        </a>
+                        <a href="#" style="display: block; padding: 10px 15px; color: #333; text-decoration: none;"
+                           onmouseover="this.style.background='#f8f9fa'">
+                            <i class="fas fa-question-circle" style="margin-right: 10px;"></i> Help
+                        </a>
+                    </div>
+                    <div style="padding: 10px 0; border-top: 1px solid #eee;">
+                        <a href="#" onclick="logout()"
+                           style="display: block; padding: 10px 15px; color: #dc3545; text-decoration: none;"
+                           onmouseover="this.style.background='#f8f9fa'">
+                            <i class="fas fa-sign-out-alt" style="margin-right: 10px;"></i> Logout
+                        </a>
+                    </div>
+                </div>
+            `;
+
+        // Remove existing menu
+        $(".user-menu-dropdown").remove();
+
+        // Add new menu
+        $("body").append(`<div class="user-menu-dropdown">${menuHtml}</div>`);
+
+        // Close menu when clicking outside
+        $(document).on("click.userMenu", function (e) {
+          if (!$(e.target).closest(".user-menu, .user-menu-dropdown").length) {
+            $(".user-menu-dropdown").remove();
+            $(document).off("click.userMenu");
+          }
+        });
+      }
+
+      function logout() {
+        localStorage.removeItem("adminUser");
+        localStorage.removeItem("authToken");
+        $("#dashboardContainer").hide();
+        $("#loginPage").show();
+        $(".user-menu-dropdown").remove();
+        showNotification("Logged out successfully", "info");
+      }
+
+      function showNotification(message, type = "info") {
+        // Remove existing notifications
+        $(".notification").remove();
+
+        // Create new notification
+        const notification = $(`
+                <div class="notification ${type}">
+                    <i class="fas fa-${getNotificationIcon(type)}"></i>
+                    <span>${message}</span>
+                </div>
+            `);
+
+        $("body").append(notification);
+
+        // Auto remove after 5 seconds
+        setTimeout(() => {
+          notification.fadeOut(300, function () {
+            $(this).remove();
+          });
+        }, 5000);
+      }
+
+      function getNotificationIcon(type) {
+        switch (type) {
+          case "success":
+            return "check-circle";
+          case "error":
+            return "exclamation-circle";
+          case "warning":
+            return "exclamation-triangle";
+          default:
+            return "info-circle";
+        }
+      }
+
+      function showLoading(text = "Loading...") {
+        $("#loadingText").text(text);
+        $("#loadingModal").addClass("active");
+      }
+
+      function hideLoading() {
+        $("#loadingModal").removeClass("active");
+      }
+
+      function showCustomModal(title, content) {
+        const modal = $(`
+                <div class="modal active">
+                    <div class="modal-content" style="max-width: 600px;">
+                        <div class="modal-header">
+                            <h3>${title}</h3>
+                            <button class="modal-close" onclick="$(this).closest('.modal').remove()">&times;</button>
+                        </div>
+                        <div class="modal-body">
+                            ${content}
+                        </div>
+                    </div>
+                </div>
+            `);
+
+        $("body").append(modal);
+      }
+
+      function formatCurrency(amount) {
+        return new Intl.NumberFormat("en-NG", {
+          style: "currency",
+          currency: "NGN",
+        }).format(amount);
+      }
+
+      function getTimeAgo(date) {
+        const seconds = Math.floor((new Date() - date) / 1000);
+
+        let interval = seconds / 31536000;
+        if (interval > 1) return Math.floor(interval) + " years ago";
+
+        interval = seconds / 2592000;
+        if (interval > 1) return Math.floor(interval) + " months ago";
+
+        interval = seconds / 86400;
+        if (interval > 1) return Math.floor(interval) + " days ago";
+
+        interval = seconds / 3600;
+        if (interval > 1) return Math.floor(interval) + " hours ago";
+
+        interval = seconds / 60;
+        if (interval > 1) return Math.floor(interval) + " minutes ago";
+
+        return Math.floor(seconds) + " seconds ago";
+      }
+
+      function generateColors(count) {
+        const colors = [];
+        const hueStep = 360 / count;
+
+        for (let i = 0; i < count; i++) {
+          const hue = i * hueStep;
+          colors.push(`hsl(${hue}, 70%, 60%)`);
+        }
+
+        return colors;
+      }
+
+      function initDataTables() {
+        // Destroy existing DataTables before reinitializing
+        if ($.fn.DataTable.isDataTable("#authorsTable")) {
+          $("#authorsTable").DataTable().destroy();
+          $("#authorsTable").empty();
+        }
+
+        // Initialize DataTables with proper configuration
+        dataTables.authors = $("#authorsTable").DataTable({
+          pageLength: 25,
+          responsive: true,
+          dom: "Bfrtip",
+          buttons: ["copy", "csv", "excel", "pdf", "print"],
+          destroy: true, // This ensures it can be reinitialized
+          initComplete: function (settings, json) {
+            console.log("Authors DataTable initialized");
+          },
+        });
+      }
+
+      async function loadBooks() {
+        showLoading("Loading books...");
+        try {
+          const token = localStorage.getItem("authToken");
+          const response = await fetch(`${API_BASE_URL}/admin/books`, {
+            headers: {
+              Authorization: `Bearer ${token}`,
+            },
+          });
+          const data = await response.json();
+
+          if (data.success) {
+            const tableBody = $("#booksTableBody");
+            tableBody.empty();
+
+            data.books.forEach((book) => {
+              const statusClass = `status-${book.status}`;
+              const date = book.publication_date
+                ? new Date(book.publication_date).toLocaleDateString()
                 : "-";
 
-              row.innerHTML = `
-          <td>${reg.full_name}</td>
-          <td>${reg.email}</td>
-          <td>${reg.student_id || "-"}</td>
-          <td>${reg.faculty || "-"}</td>
-          <td>${reg.level || "-"}</td>
-          <td>${reg.training_type || "-"}</td>
-          <td>${preferredDate}</td>
-          <td>
-            <span class="status-badge status-${reg.status}">
-              ${reg.status}
-            </span>
-          </td>
-          <td>
-            <div class="action-buttons">
-              ${
-                reg.status === "pending"
-                  ? `
-                <button class="btn btn-success" onclick="openStatusModal(${reg.id}, 'training', 'confirmed')">Confirm</button>
-                <button class="btn btn-danger" onclick="openStatusModal(${reg.id}, 'training', 'rejected')">Reject</button>
-              `
-                  : `<button class="btn btn-primary" onclick="openStatusModal(${reg.id}, 'training')">Change Status</button>`
-              }
-            </div>
-          </td>
-        `;
-              tbody.appendChild(row);
+              tableBody.append(`
+                <tr>
+                  <td>${book.isbn || "-"}</td>
+                  <td>${book.title}</td>
+                  <td>${book.author_name || "-"}</td>
+                  <td>${book.category || "-"}</td>
+                  <td><span class="status-badge ${statusClass}">${book.status.replace(/_/g, " ")}</span></td>
+                  <td>${book.format || "-"}</td>
+                  <td>${book.price ? "₦" + book.price : "-"}</td>
+                  <td>${date}</td>
+                  <td>
+                    <div class="action-buttons">
+                      <button class="btn btn-sm btn-info" onclick="viewBook(${book.id})">
+                        <i class="fas fa-eye"></i>
+                      </button>
+                      <button class="btn btn-sm btn-warning" onclick="editBook(${book.id})">
+                        <i class="fas fa-edit"></i>
+                      </button>
+                      <button class="btn btn-sm btn-danger" onclick="deleteBook(${book.id})">
+                        <i class="fas fa-trash"></i>
+                      </button>
+                    </div>
+                  </td>
+                </tr>
+              `);
             });
           }
         } catch (error) {
-          console.error("Error loading training registrations:", error);
+          showNotification(`Failed to load books: ${error.message}`, "error");
+        } finally {
+          hideLoading();
         }
       }
 
-      async function loadAllBooks() {
+      async function loadSubmissions() {
+        showLoading("Loading submissions...");
         try {
-          const response = await fetch(`${API_URL}/admin/training/all`);
-          const data = await response.json();
-
-          const container = document.getElementById("booksContainer");
-          container.innerHTML = "";
-
-          if (data.registrations.length === 0) {
-            container.innerHTML =
-              '<div class="empty-state"><i class="fas fa-book"></i><p>No books found</p></div>';
-            return;
-          }
-
-          // This is a placeholder - you would typically fetch actual books data
-          data.registrations.forEach((item, index) => {
-            const card = document.createElement("div");
-            card.className = "book-card";
-            card.innerHTML = `
-        <h3>Sample Book ${index + 1}</h3>
-        <p>Author: System</p>
-        <p>Category: Publishing</p>
-        <div class="book-meta">
-          <div class="book-meta-item">
-            <span class="book-meta-label">Status:</span>
-            <span>Available</span>
-          </div>
-          <div class="book-meta-item">
-            <span class="book-meta-label">Pages:</span>
-            <span>250</span>
-          </div>
-        </div>
-        <p style="font-size: 12px; color: #999;">Feature coming soon...</p>
-      `;
-            container.appendChild(card);
+          const token = localStorage.getItem("authToken");
+          const response = await fetch(`${API_BASE_URL}/admin/submissions`, {
+            headers: {
+              Authorization: `Bearer ${token}`,
+            },
           });
-        } catch (error) {
-          console.error("Error loading books:", error);
-        }
-      }
-
-      async function loadAllContacts() {
-        const container = document.getElementById("contactsContainer");
-        container.innerHTML = "";
-
-        try {
-          // Placeholder for contacts - would typically fetch from API
-          const card = document.createElement("div");
-          card.className = "contact-card";
-          card.innerHTML = `
-      <h3>Contact Management</h3>
-      <p><strong>Feature:</strong> Display contact form submissions</p>
-      <p>Status: <span class="status-badge status-pending">Coming Soon</span></p>
-      <p style="font-size: 12px; color: #999; margin-top: 15px;">This section will display all contact form submissions with ability to mark as read and replied.</p>
-    `;
-          container.appendChild(card);
-        } catch (error) {
-          console.error("Error loading contacts:", error);
-        }
-      }
-
-      function openStatusModal(id, type, quickStatus = null) {
-        currentUpdateId = id;
-        currentUpdateType = type;
-
-        const select = document.getElementById("statusSelect");
-        select.innerHTML = '<option value="">-- Select Status --</option>';
-
-        if (type === "author") {
-          if (quickStatus) {
-            select.value = quickStatus;
-          } else {
-            select.innerHTML += `
-        <option value="pending">Pending</option>
-        <option value="approved">Approved</option>
-        <option value="rejected">Rejected</option>
-      `;
-          }
-        } else if (type === "training") {
-          if (quickStatus) {
-            select.value = quickStatus;
-          } else {
-            select.innerHTML += `
-        <option value="pending">Pending</option>
-        <option value="confirmed">Confirmed</option>
-        <option value="completed">Completed</option>
-      `;
-          }
-        }
-
-        document.getElementById("statusModal").classList.add("active");
-      }
-
-      function closeStatusModal() {
-        document.getElementById("statusModal").classList.remove("active");
-        currentUpdateId = null;
-        currentUpdateType = null;
-      }
-
-      async function updateStatus() {
-        const status = document.getElementById("statusSelect").value;
-
-        if (!status) {
-          alert("Please select a status");
-          return;
-        }
-
-        try {
-          const endpoint =
-            currentUpdateType === "author"
-              ? `/api/admin/authors/${currentUpdateId}/status`
-              : `/api/admin/training/${currentUpdateId}/status`;
-
-          const response = await fetch(`${API_URL}${endpoint}`, {
-            method: "PUT",
-            headers: { "Content-Type": "application/json" },
-            body: JSON.stringify({ status }),
-          });
-
           const data = await response.json();
 
           if (data.success) {
-            alert(data.message);
-            closeStatusModal();
+            const tableBody = $("#submissionsTableBody");
+            tableBody.empty();
 
-            // Reload the current section
-            if (currentUpdateType === "author") {
-              loadAuthorRegistrations();
-            } else if (currentUpdateType === "training") {
-              loadTrainingRegistrations();
-            }
+            data.submissions.forEach((submission) => {
+              const statusClass = `status-${submission.status}`;
+              const priorityClass = `badge-${submission.priority}`;
+              const dueDate = submission.due_date
+                ? new Date(submission.due_date).toLocaleDateString()
+                : "-";
+              const submissionDate = new Date(
+                submission.submission_date,
+              ).toLocaleDateString();
 
-            // Reload stats
-            loadDashboardStats();
-          } else {
-            alert(data.message || "Update failed");
+              tableBody.append(`
+                <tr>
+                  <td>${submission.id}</td>
+                  <td>${submission.book_title || "-"}</td>
+                  <td>${submission.submission_type.replace(/_/g, " ")}</td>
+                  <td>${submissionDate}</td>
+                  <td>${dueDate}</td>
+                  <td><span class="badge ${priorityClass}">${submission.priority}</span></td>
+                  <td><span class="status-badge ${statusClass}">${submission.status.replace(/_/g, " ")}</span></td>
+                  <td>${submission.assigned_to || "-"}</td>
+                  <td>
+                    <div class="action-buttons">
+                      <button class="btn btn-sm btn-info" onclick="viewSubmission(${submission.id})">
+                        <i class="fas fa-eye"></i>
+                      </button>
+                      <button class="btn btn-sm btn-warning" onclick="assignSubmission(${submission.id})">
+                        <i class="fas fa-user-check"></i>
+                      </button>
+                    </div>
+                  </td>
+                </tr>
+              `);
+            });
           }
         } catch (error) {
-          console.error("Error updating status:", error);
-          alert("Error: " + error.message);
+          showNotification(
+            `Failed to load submissions: ${error.message}`,
+            "error",
+          );
+        } finally {
+          hideLoading();
         }
       }
 
-      // Close modal when clicking outside
-      document.addEventListener("click", (e) => {
-        const modal = document.getElementById("statusModal");
-        if (e.target === modal) {
-          closeStatusModal();
+      async function loadContracts() {
+        showLoading("Loading contracts...");
+        try {
+          const token = localStorage.getItem("authToken");
+          const response = await fetch(`${API_BASE_URL}/admin/contracts`, {
+            headers: {
+              Authorization: `Bearer ${token}`,
+            },
+          });
+          const data = await response.json();
+
+          if (data.success) {
+            const tableBody = $("#contractsTableBody");
+            tableBody.empty();
+
+            data.contracts.forEach((contract) => {
+              const statusClass = `status-${contract.status}`;
+              const startDate = contract.start_date
+                ? new Date(contract.start_date).toLocaleDateString()
+                : "-";
+              const endDate = contract.end_date
+                ? new Date(contract.end_date).toLocaleDateString()
+                : "-";
+
+              tableBody.append(`
+                <tr>
+                  <td>${contract.contract_number || "-"}</td>
+                  <td>${contract.book_title || "-"}</td>
+                  <td>${contract.author_name || "-"}</td>
+                  <td>${contract.contract_type.replace(/_/g, " ")}</td>
+                  <td>${startDate}</td>
+                  <td>${endDate}</td>
+                  <td>${contract.royalty_percentage ? contract.royalty_percentage + "%" : "-"}</td>
+                  <td><span class="status-badge ${statusClass}">${contract.status}</span></td>
+                  <td>
+                    <div class="action-buttons">
+                      <button class="btn btn-sm btn-info" onclick="viewContract(${contract.id})">
+                        <i class="fas fa-eye"></i>
+                      </button>
+                      <button class="btn btn-sm btn-warning" onclick="editContract(${contract.id})">
+                        <i class="fas fa-edit"></i>
+                      </button>
+                      <button class="btn btn-sm btn-success" onclick="downloadContract(${contract.id})">
+                        <i class="fas fa-download"></i>
+                      </button>
+                    </div>
+                  </td>
+                </tr>
+              `);
+            });
+          }
+        } catch (error) {
+          showNotification(
+            `Failed to load contracts: ${error.message}`,
+            "error",
+          );
+        } finally {
+          hideLoading();
         }
-      });
+      }
+
+      // Placeholder functions for other sections
+      async function loadReviews() {
+        console.log("Loading reviews...");
+      }
+
+      async function loadProduction() {
+        console.log("Loading production...");
+      }
+
+      async function loadRoyalties() {
+        console.log("Loading royalties...");
+      }
+
+      async function loadEvents() {
+        console.log("Loading events...");
+      }
+
+      async function loadAnalytics() {
+        console.log("Loading analytics...");
+      }
+
+      async function loadContacts() {
+        console.log("Loading contacts...");
+      }
+
+      async function loadAnnouncements() {
+        console.log("Loading announcements...");
+      }
+
+      async function loadSettings() {
+        console.log("Loading settings...");
+      }
+
+      async function loadUsers() {
+        console.log("Loading users...");
+      }
+
+      async function loadLogs() {
+        console.log("Loading activity logs...");
+      }
+
+      // ============== ENHANCED SECTIONS ==============
+
+      // Enhanced sections implementation
+      const enhancedSections = {
+        training: {
+          title: "Training & Workshops",
+          description: "Manage training programs, workshops, and seminars",
+          features: [
+            "Create and manage training sessions",
+            "Track participant registrations",
+            "Generate certificates",
+            "Collect feedback and evaluations",
+          ],
+        },
+
+        production: {
+          title: "Production Management",
+          description: "Track and manage book production workflow",
+          features: [
+            "Production task assignment",
+            "Progress tracking",
+            "Quality control checks",
+            "Deadline management",
+          ],
+        },
+
+        inventory: {
+          title: "Inventory Management",
+          description: "Manage book inventory and stock levels",
+          features: [
+            "Real-time stock tracking",
+            "Low stock alerts",
+            "Inventory valuation",
+            "Supplier management",
+          ],
+        },
+
+        royalties: {
+          title: "Royalty Management",
+          description: "Track and process author royalty payments",
+          features: [
+            "Royalty calculation",
+            "Payment tracking",
+            "Statement generation",
+            "Dispute resolution",
+          ],
+        },
+
+        sales: {
+          title: "Sales Management",
+          description: "Manage book sales and customer orders",
+          features: [
+            "Order processing",
+            "Sales analytics",
+            "Customer management",
+            "Revenue tracking",
+          ],
+        },
+
+        reports: {
+          title: "Reports",
+          description: "Generate comprehensive business reports",
+          features: [
+            "Financial reports",
+            "Sales reports",
+            "Inventory reports",
+            "Custom report builder",
+          ],
+        },
+
+        analytics: {
+          title: "Analytics",
+          description: "Data analysis and visualization",
+          features: [
+            "Performance dashboards",
+            "Trend analysis",
+            "Predictive analytics",
+            "Export capabilities",
+          ],
+        },
+
+        reviews: {
+          title: "Reviews Management",
+          description: "Manage book reviews and ratings",
+          features: [
+            "Review moderation",
+            "Rating analysis",
+            "Reviewer management",
+            "Feedback collection",
+          ],
+        },
+
+        events: {
+          title: "Events Management",
+          description: "Organize and manage publishing events",
+          features: [
+            "Event planning",
+            "Registration management",
+            "Venue booking",
+            "Attendance tracking",
+          ],
+        },
+
+        contacts: {
+          title: "Contacts",
+          description: "Manage customer and author communications",
+          features: [
+            "Contact database",
+            "Communication history",
+            "Follow-up tracking",
+            "Email integration",
+          ],
+        },
+
+        announcements: {
+          title: "Announcements",
+          description: "Create and publish announcements",
+          features: [
+            "Announcement scheduling",
+            "Targeted messaging",
+            "Notification system",
+            "Archive management",
+          ],
+        },
+
+        settings: {
+          title: "Settings",
+          description: "System configuration and preferences",
+          features: [
+            "User management",
+            "System configuration",
+            "Email templates",
+            "Backup and restore",
+          ],
+        },
+
+        users: {
+          title: "Users Management",
+          description: "Manage system users and permissions",
+          features: [
+            "User registration",
+            "Role management",
+            "Permission control",
+            "Activity monitoring",
+          ],
+        },
+
+        logs: {
+          title: "Activity Logs",
+          description: "System activity and audit trails",
+          features: [
+            "User activity tracking",
+            "System event logging",
+            "Audit reports",
+            "Security monitoring",
+          ],
+        },
+      };
+
+      // Load enhanced section
+      function loadEnhancedSection(section) {
+        const content = enhancedSections[section];
+        const container = document.getElementById(section);
+
+        if (!content || !container) return;
+
+        container.innerHTML = `
+          <div class="page-header">
+              <h1>${content.title}</h1>
+              <div class="page-actions">
+                  <button class="btn btn-primary" onclick="showSectionModal('${section}')">
+                      <i class="fas fa-plus"></i> Add New
+                  </button>
+                  <button class="btn btn-secondary" onclick="exportSectionData('${section}')">
+                      <i class="fas fa-download"></i> Export
+                  </button>
+              </div>
+          </div>
+
+          <div style="background: white; border-radius: var(--border-radius); padding: 30px; box-shadow: var(--box-shadow);">
+              <div style="text-align: center; margin-bottom: 30px;">
+                  <div style="width: 80px; height: 80px; background: linear-gradient(135deg, var(--primary-color) 0%, var(--primary-dark) 100%);
+                        border-radius: 50%; display: flex; align-items: center; justify-content: center; margin: 0 auto 20px;">
+                      <i class="fas fa-cogs" style="font-size: 32px; color: white;"></i>
+                  </div>
+                  <h2 style="color: var(--gray-800); margin-bottom: 10px;">${content.title}</h2>
+                  <p style="color: var(--gray-600); max-width: 600px; margin: 0 auto;">${content.description}</p>
+              </div>
+
+              <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(250px, 1fr)); gap: 20px; margin-bottom: 30px;">
+                  ${content.features
+                    .map(
+                      (feature) => `
+                      <div style="background: var(--gray-100); padding: 20px; border-radius: var(--border-radius);">
+                          <div style="display: flex; align-items: center; gap: 10px; margin-bottom: 10px;">
+                              <i class="fas fa-check-circle" style="color: var(--success-color);"></i>
+                              <h4 style="margin: 0; color: var(--gray-700);">${feature}</h4>
+                          </div>
+                      </div>
+                  `,
+                    )
+                    .join("")}
+              </div>
+
+              <div style="text-align: center;">
+                  <button class="btn btn-primary" onclick="showSectionModal('${section}')">
+                      <i class="fas fa-play-circle"></i> Get Started with ${content.title}
+                  </button>
+              </div>
+          </div>
+        `;
+      }
+
+      // Show section modal
+      function showSectionModal(section) {
+        const content = enhancedSections[section];
+
+        const modalHtml = `
+          <div class="modal active">
+              <div class="modal-content" style="max-width: 600px;">
+                  <div class="modal-header">
+                      <h3>Add New \${content.title}</h3>
+                      <button class="modal-close" onclick="closeEnhancedModal()">&times;</button>
+                  </div>
+                  <div class="modal-body">
+                      <form id="\${section}Form">
+                          <div class="form-group">
+                              <label>Title *</label>
+                              <input type="text" class="form-control" required>
+                          </div>
+                          <div class="form-group">
+                              <label>Description</label>
+                              <textarea class="form-control" rows="3"></textarea>
+                          </div>
+                          <div class="form-group">
+                              <label>Category</label>
+                              <select class="form-control">
+                                  <option value="general">General</option>
+                                  <option value="urgent">Urgent</option>
+                                  <option value="important">Important</option>
+                              </select>
+                          </div>
+                          <div class="form-group">
+                              <label>Priority</label>
+                              <select class="form-control">
+                                  <option value="low">Low</option>
+                                  <option value="medium">Medium</option>
+                                  <option value="high">High</option>
+                              </select>
+                          </div>
+                          <button type="submit" class="btn btn-primary btn-block">Create</button>
+                      </form>
+                  </div>
+              </div>
+          </div>
+        `;
+
+        document.body.insertAdjacentHTML("beforeend", modalHtml);
+      }
+
+      // Close enhanced modal
+      function closeEnhancedModal() {
+        document.querySelector(".modal.active")?.remove();
+      }
+
+      // Export section data
+      function exportSectionData(section) {
+        alert(`Exporting \${section} data...`);
+        // Implementation for data export
+      }
+
+      // Export functions for other sections
+      window.viewAuthor = viewAuthor;
+      window.approveAuthor = approveAuthor;
+      window.rejectAuthor = rejectAuthor;
+      window.editAuthor = editAuthor;
+      window.viewBook = viewBook;
+      window.viewContract = viewContract;
+      window.closeModal = function (modalId) {
+        $(`#${modalId}`).removeClass("active");
+      };
+      window.logout = logout;
     </script>
-    <!-- <script src="admin-script.js"></script> -->
   </body>
 </html>

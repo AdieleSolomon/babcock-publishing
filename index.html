@@ -3,25 +3,45 @@
   <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>Babcock University Publishing Company</title>
+    <title>
+      Babcock University Publishing Company - Academic Excellence in Print
+    </title>
+
+    <!-- Fonts & Icons -->
     <link
       rel="stylesheet"
       href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" />
     <link
-      href="https://fonts.googleapis.com/css2?family=Montserrat:wght@300;400;500;600;700&family=Playfair+Display:wght@400;500;600;700&display=swap"
+      href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700&family=Playfair+Display:wght@400;500;600;700&display=swap"
       rel="stylesheet" />
-    <!-- <link rel="stylesheet" href="styles.css" /> -->
+
+    <!-- DataTables for Featured Publications -->
+    <link
+      rel="stylesheet"
+      type="text/css"
+      href="https://cdn.datatables.net/1.13.6/css/jquery.dataTables.min.css" />
+
     <style>
-      /* Color Scheme based on Babcock University */
       :root {
-        --primary-color: #006747; /* Babcock Green */
-        --secondary-color: #f2a900; /* Babcock Gold */
-        --accent-color: #8b0000; /* Dark Red */
+        --primary-color: #006747;
+        --primary-dark: #005035;
+        --primary-light: #007c59;
+        --secondary-color: #ffd700;
+        --accent-color: #8b0000;
         --light-color: #f8f9fa;
         --dark-color: #343a40;
-        --gray-color: #6c757d;
-        --white: #ffffff;
-        --shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+        --gray-100: #f8f9fa;
+        --gray-200: #e9ecef;
+        --gray-300: #dee2e6;
+        --gray-400: #ced4da;
+        --gray-500: #adb5bd;
+        --gray-600: #6c757d;
+        --gray-700: #495057;
+        --gray-800: #343a40;
+        --gray-900: #212529;
+
+        --border-radius: 8px;
+        --box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
         --transition: all 0.3s ease;
       }
 
@@ -32,9 +52,10 @@
       }
 
       body {
-        font-family: "Montserrat", sans-serif;
+        font-family: "Poppins", sans-serif;
         line-height: 1.6;
-        color: var(--dark-color);
+        color: var(--gray-800);
+        background-color: #ffffff;
       }
 
       .container {
@@ -43,634 +64,797 @@
         padding: 0 20px;
       }
 
-      /* Navigation */
-      .navbar {
-        background-color: var(--white);
-        box-shadow: var(--shadow);
+      /* Header & Navigation */
+      .site-header {
+        background-color: white;
+        box-shadow: var(--box-shadow);
         position: fixed;
         width: 100%;
         top: 0;
         z-index: 1000;
+        padding: 15px 0;
       }
 
-      .nav-container {
+      .header-container {
         display: flex;
         justify-content: space-between;
         align-items: center;
-        padding: 1rem 2rem;
       }
 
-      .logo {
+      .logo-area {
         display: flex;
         align-items: center;
-        gap: 1rem;
+        gap: 15px;
       }
 
-      .logo img {
+      .logo-img {
+        width: 60px;
+        height: 60px;
         border-radius: 8px;
+        display: block;
+        object-fit: contain;
       }
 
       .logo-text h1 {
-        font-size: 1.2rem;
-        color: var(--primary-color);
+        font-size: 24px;
         font-weight: 700;
+        color: var(--primary-color);
+        line-height: 1.2;
       }
 
       .logo-text p {
-        font-size: 0.9rem;
-        color: var(--gray-color);
+        font-size: 14px;
+        color: var(--gray-600);
+        font-weight: 500;
       }
 
-      .nav-menu {
+      .main-nav {
+        display: flex;
+        gap: 30px;
+        align-items: center;
+      }
+
+      .nav-links {
         display: flex;
         list-style: none;
-        gap: 2rem;
+        gap: 25px;
       }
 
-      .nav-menu a {
+      .nav-links a {
         text-decoration: none;
-        color: var(--dark-color);
+        color: var(--gray-700);
         font-weight: 500;
+        font-size: 15px;
+        padding: 8px 0;
+        position: relative;
         transition: var(--transition);
-        padding: 0.5rem 0;
       }
 
-      .nav-menu a:hover {
+      .nav-links a:hover {
         color: var(--primary-color);
       }
 
-      .dropdown {
-        position: relative;
-      }
-
-      .dropdown-content {
-        display: none;
+      .nav-links a:after {
+        content: "";
         position: absolute;
-        background-color: var(--white);
-        min-width: 200px;
-        box-shadow: var(--shadow);
-        border-radius: 4px;
-        z-index: 1;
-      }
-
-      .dropdown-content a {
-        display: block;
-        padding: 1rem;
-        border-bottom: 1px solid #eee;
-      }
-
-      .dropdown-content a:last-child {
-        border-bottom: none;
-      }
-
-      .dropdown:hover .dropdown-content {
-        display: block;
-      }
-
-      .auth-buttons .btn-login {
-        background-color: var(--primary-color);
-        color: var(--white);
-        border: none;
-        padding: 0.75rem 1.5rem;
-        border-radius: 4px;
-        cursor: pointer;
-        font-weight: 600;
+        bottom: 0;
+        left: 0;
+        width: 0;
+        height: 2px;
+        background: var(--primary-color);
         transition: var(--transition);
       }
 
-      .btn-login:hover {
-        background-color: #00563a;
+      .nav-links a:hover:after {
+        width: 100%;
       }
 
-      .auth-buttons .btn-admin-login {
-        background-color: #ffd700;
+      .auth-buttons {
+        display: flex;
+        gap: 10px;
+      }
+
+      .btn {
+        padding: 10px 20px;
+        border-radius: var(--border-radius);
+        font-weight: 600;
+        font-size: 14px;
+        cursor: pointer;
+        transition: var(--transition);
+        border: none;
+        text-decoration: none;
+        display: inline-flex;
+        align-items: center;
+        gap: 8px;
+      }
+
+      .btn-primary {
+        background: var(--primary-color);
+        color: white;
+      }
+
+      .btn-primary:hover {
+        background: var(--primary-dark);
+        transform: translateY(-2px);
+        box-shadow: 0 4px 12px rgba(0, 103, 71, 0.3);
+      }
+
+      .btn-secondary {
+        background: var(--secondary-color);
+        color: var(--gray-800);
+      }
+
+      .btn-secondary:hover {
+        background: #e6c200;
+        transform: translateY(-2px);
+      }
+
+      .btn-outline {
+        background: transparent;
         color: var(--primary-color);
         border: 2px solid var(--primary-color);
-        padding: 0.75rem 1.5rem;
-        border-radius: 4px;
-        cursor: pointer;
-        font-weight: 600;
-        transition: var(--transition);
-        text-decoration: none;
-        display: inline-block;
-        margin-left: 0.5rem;
       }
 
-      .btn-admin-login:hover {
-        background-color: #ffc700;
-        transform: translateY(-2px);
-        box-shadow: 0 4px 12px rgba(255, 215, 0, 0.3);
+      .btn-outline:hover {
+        background: var(--primary-color);
+        color: white;
       }
 
-      .hamburger {
-        display: flex;
+      /* Hamburger Menu Styles */
+      .hamburger-menu {
+        display: none !important;
         flex-direction: column;
+        justify-content: space-between;
+        width: 30px;
+        height: 21px;
+        background: transparent;
+        border: none;
         cursor: pointer;
-        gap: 6px;
+        padding: 10px;
+        z-index: 1001;
+        margin: 0;
       }
 
-      .hamburger span {
-        width: 28px;
+      .hamburger-menu span {
+        width: 100%;
         height: 3px;
         background-color: var(--primary-color);
-        border-radius: 2px;
-        transition: all 0.3s ease;
+        border-radius: 3px;
+        transition: var(--transition);
       }
 
-      .hamburger.active span:nth-child(1) {
-        transform: rotate(45deg) translate(10px, 10px);
+      .hamburger-menu.active span:nth-child(1) {
+        transform: translateY(9px) rotate(45deg);
       }
 
-      .hamburger.active span:nth-child(2) {
+      .hamburger-menu.active span:nth-child(2) {
         opacity: 0;
       }
 
-      .hamburger.active span:nth-child(3) {
-        transform: rotate(-45deg) translate(7px, -7px);
+      .hamburger-menu.active span:nth-child(3) {
+        transform: translateY(-9px) rotate(-45deg);
       }
 
-      /* Sidebar Navigation */
-      .sidebar-overlay {
-        display: none;
+      /* Mobile Menu Overlay */
+      .mobile-menu-overlay {
         position: fixed;
         top: 0;
         left: 0;
         width: 100%;
-        height: 100%;
-        background: rgba(0, 0, 0, 0.5);
-        z-index: 999;
-      }
-
-      .sidebar-overlay.active {
-        display: block;
-      }
-
-      .sidebar {
-        position: fixed;
-        right: -300px; /* Changed from left to right */
-        top: 0;
-        width: 300px;
         height: 100vh;
+        background: rgba(0, 0, 0, 0.9);
+        z-index: 999;
+        opacity: 0;
+        visibility: hidden;
+        transition: var(--transition);
+      }
+
+      .mobile-menu-overlay.active {
+        opacity: 1;
+        visibility: visible;
+      }
+
+      .mobile-menu {
+        position: fixed;
+        top: 0;
+        right: -100%;
+        width: 320px;
+        height: 100vh;
+        background: white;
+        z-index: 1000;
+        padding: 80px 30px 30px;
+        overflow-y: auto;
+        transition: var(--transition);
+        box-shadow: -5px 0 20px rgba(0, 0, 0, 0.1);
+      }
+
+      .mobile-menu.active {
+        right: 0;
+      }
+
+      .mobile-nav-links {
+        list-style: none;
+        margin-bottom: 30px;
+      }
+
+      .mobile-nav-links li {
+        margin-bottom: 15px;
+      }
+
+      .mobile-nav-links a {
+        text-decoration: none;
+        color: var(--gray-800);
+        font-size: 16px;
+        font-weight: 500;
+        padding: 10px 0;
+        display: block;
+        border-bottom: 1px solid var(--gray-200);
+        transition: var(--transition);
+      }
+
+      .mobile-nav-links a:hover {
+        color: var(--primary-color);
+        padding-left: 10px;
+      }
+
+      .mobile-auth-buttons {
+        display: flex;
+        flex-direction: column;
+        gap: 10px;
+        margin-bottom: 30px;
+      }
+
+      .mobile-auth-buttons .btn {
+        width: 100%;
+        justify-content: center;
+      }
+
+      .mobile-user-menu {
+        padding: 20px 0;
+        border-top: 1px solid var(--gray-200);
+        border-bottom: 1px solid var(--gray-200);
+        margin-bottom: 20px;
+      }
+
+      .mobile-user-info {
+        display: flex;
+        align-items: center;
+        gap: 15px;
+        margin-bottom: 15px;
+      }
+
+      .mobile-user-avatar {
+        width: 40px;
+        height: 40px;
+        border-radius: 50%;
         background: linear-gradient(
           135deg,
           var(--primary-color) 0%,
-          #005035 100%
+          var(--primary-dark) 100%
         );
         color: white;
-        z-index: 1001;
-        overflow-y: auto;
-        transition: right 0.3s ease; /* Changed from left to right */
-        display: flex;
-        flex-direction: column;
-      }
-
-      .sidebar.active {
-        right: 0; /* Changed from left to right */
-      }
-
-      .sidebar-header {
-        display: flex;
-        justify-content: space-between;
-        align-items: center;
-        padding: 20px;
-        border-bottom: 2px solid rgba(255, 255, 255, 0.2);
-      }
-
-      .logo-small {
-        display: flex;
-        align-items: center;
-        gap: 10px;
-        font-size: 18px;
-        font-weight: 700;
-      }
-
-      .logo-small img {
-        width: 40px;
-        height: 40px;
-      }
-
-      .close-sidebar {
-        background: none;
-        border: none;
-        color: white;
-        font-size: 24px;
-        cursor: pointer;
-        transition: transform 0.3s ease;
-      }
-
-      .close-sidebar:hover {
-        transform: scale(1.2);
-      }
-
-      .sidebar-menu {
-        flex: 1;
-        padding: 20px 0;
-      }
-
-      .sidebar-menu ul {
-        list-style: none;
-      }
-
-      .sidebar-menu > ul > li {
-        margin: 0;
-      }
-
-      .sidebar-menu a {
-        display: block;
-        padding: 15px 25px;
-        color: white;
-        text-decoration: none;
-        transition: all 0.3s ease;
-        font-size: 15px;
-        font-weight: 500;
-      }
-
-      .sidebar-menu a:hover {
-        background: rgba(255, 255, 255, 0.1);
-        padding-right: 35px; /* Changed from left to right */
-      }
-
-      .sidebar-menu i {
-        margin-right: 12px;
-        width: 20px;
-        text-align: center;
-      }
-
-      .dropdown-menu {
-        display: none;
-        list-style: none;
-        background: rgba(0, 0, 0, 0.2);
-      }
-
-      .dropdown-menu.active {
-        display: block;
-      }
-
-      .dropdown-menu li {
-        margin: 0;
-      }
-
-      .dropdown-menu a {
-        padding-right: 50px; /* Changed from left to right */
-        font-size: 14px;
-      }
-
-      .dropdown-menu a:hover {
-        padding-right: 60px; /* Changed from left to right */
-      }
-
-      .sidebar-auth {
-        padding: 20px;
-        border-top: 2px solid rgba(255, 255, 255, 0.2);
-        display: flex;
-        flex-direction: column;
-        gap: 10px;
-      }
-
-      .btn-sidebar-login,
-      .btn-sidebar-admin {
-        padding: 12px 20px;
-        border: 2px solid white;
-        background: transparent;
-        color: white;
-        border-radius: 6px;
-        cursor: pointer;
-        font-weight: 600;
-        text-decoration: none;
-        transition: all 0.3s ease;
-        font-size: 14px;
         display: flex;
         align-items: center;
         justify-content: center;
-        gap: 8px;
+        font-weight: 600;
+        font-size: 18px;
       }
 
-      .btn-sidebar-login:hover {
-        background: var(--secondary-color);
-        color: var(--primary-color);
-        border-color: var(--secondary-color);
+      .mobile-user-details h4 {
+        color: var(--gray-800);
+        margin-bottom: 5px;
       }
 
-      .btn-sidebar-admin:hover {
-        background: var(--secondary-color);
-        color: var(--primary-color);
-        border-color: var(--secondary-color);
+      .mobile-user-details p {
+        color: var(--gray-600);
+        font-size: 12px;
       }
 
       /* Hero Section */
-      .hero {
+      .hero-section {
         background:
           linear-gradient(rgba(0, 103, 71, 0.9), rgba(0, 103, 71, 0.8)),
           url("https://images.unsplash.com/photo-1562813733-b31f71025d54?ixlib=rb-4.0.3&auto=format&fit=crop&w=1600&q=80");
         background-size: cover;
         background-position: center;
-        color: var(--white);
+        color: white;
+        padding: 180px 0 100px;
+        margin-top: 90px;
         text-align: center;
-        padding: 10rem 2rem 6rem;
-        margin-top: 70px;
       }
 
-      .hero-content h2 {
-        font-size: 3rem;
+      .hero-content {
+        max-width: 800px;
+        margin: 0 auto;
+      }
+
+      .hero-title {
+        font-family: "Playfair Display", serif;
+        font-size: 3.5rem;
         font-weight: 700;
-        margin-bottom: 1rem;
-        font-family: "Playfair Display", serif;
+        margin-bottom: 20px;
+        line-height: 1.2;
       }
 
-      .hero-content p {
+      .hero-subtitle {
         font-size: 1.2rem;
-        max-width: 600px;
-        margin: 0 auto 2rem;
         opacity: 0.9;
+        margin-bottom: 40px;
+        max-width: 600px;
+        margin-left: auto;
+        margin-right: auto;
       }
 
-      .hero-buttons {
+      .hero-stats {
         display: flex;
-        gap: 1rem;
         justify-content: center;
+        gap: 40px;
+        margin-top: 60px;
         flex-wrap: wrap;
       }
 
-      .btn-primary,
-      .btn-secondary {
-        padding: 1rem 2rem;
-        border: none;
-        border-radius: 4px;
-        font-size: 1rem;
-        font-weight: 600;
-        cursor: pointer;
-        transition: var(--transition);
-      }
-
-      .btn-primary {
-        background-color: var(--secondary-color);
-        color: var(--dark-color);
-      }
-
-      .btn-primary:hover {
-        background-color: #e09a00;
-        transform: translateY(-2px);
-      }
-
-      .btn-secondary {
-        background-color: transparent;
-        color: var(--white);
-        border: 2px solid var(--white);
-      }
-
-      .btn-secondary:hover {
-        background-color: rgba(255, 255, 255, 0.1);
-      }
-
-      /* Sections */
-      .section-title {
+      .stat-item {
         text-align: center;
+      }
+
+      .stat-number {
         font-size: 2.5rem;
-        margin-bottom: 3rem;
-        color: var(--primary-color);
-        font-family: "Playfair Display", serif;
-      }
-
-      .services {
-        padding: 5rem 2rem;
-        background-color: var(--light-color);
-      }
-
-      .services-grid {
-        display: grid;
-        grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
-        gap: 2rem;
-      }
-
-      .service-card {
-        background: var(--white);
-        padding: 2rem;
-        border-radius: 8px;
-        text-align: center;
-        box-shadow: var(--shadow);
-        transition: var(--transition);
-      }
-
-      .service-card:hover {
-        transform: translateY(-5px);
-      }
-
-      .service-card i {
-        font-size: 3rem;
-        color: var(--primary-color);
-        margin-bottom: 1rem;
-      }
-
-      .service-card h3 {
-        margin-bottom: 1rem;
-        color: var(--dark-color);
-      }
-
-      .about {
-        padding: 5rem 2rem;
-      }
-
-      .about-content {
-        display: grid;
-        grid-template-columns: 1fr 1fr;
-        gap: 4rem;
-        align-items: center;
-      }
-
-      .about-text p {
-        margin-bottom: 1.5rem;
-        font-size: 1.1rem;
-      }
-
-      .about-features {
-        display: flex;
-        gap: 2rem;
-        margin-top: 2rem;
-        flex-wrap: wrap;
-      }
-
-      .feature {
-        display: flex;
-        align-items: center;
-        gap: 0.5rem;
-      }
-
-      .feature i {
+        font-weight: 700;
+        margin-bottom: 5px;
         color: var(--secondary-color);
       }
 
-      .about-image img {
-        width: 100%;
-        border-radius: 8px;
-        box-shadow: var(--shadow);
+      .stat-label {
+        font-size: 0.9rem;
+        opacity: 0.9;
+        text-transform: uppercase;
+        letter-spacing: 1px;
       }
 
-      .catalog {
-        padding: 5rem 2rem;
-        background-color: var(--light-color);
+      /* Features Section */
+      .features-section {
+        padding: 80px 0;
+        background: var(--gray-100);
       }
 
-      .catalog-grid {
+      .section-header {
+        text-align: center;
+        margin-bottom: 50px;
+      }
+
+      .stats-section .section-header {
+        margin-bottom: 80px;
+      }
+
+      .section-title {
+        font-family: "Playfair Display", serif;
+        font-size: 2.5rem;
+        color: var(--primary-color);
+        margin-bottom: 15px;
+      }
+
+      .stats-section .section-title {
+        font-size: 3.5rem;
+        color: white;
+        margin-bottom: 20px;
+        text-shadow: 0 2px 10px rgba(0, 0, 0, 0.3);
+        letter-spacing: 1px;
+      }
+
+      .section-subtitle {
+        color: var(--gray-600);
+        max-width: 600px;
+        margin: 0 auto;
+        font-size: 1.1rem;
+      }
+
+      .stats-section .section-subtitle {
+        color: rgba(255, 255, 255, 0.95);
+        font-size: 1.3rem;
+        max-width: 700px;
+      }
+
+      .features-grid {
         display: grid;
-        grid-template-columns: repeat(auto-fill, minmax(250px, 1fr));
-        gap: 2rem;
+        grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+        gap: 30px;
+        margin-top: 50px;
+      }
+
+      .feature-card {
+        background: white;
+        border-radius: var(--border-radius);
+        padding: 40px 30px;
+        text-align: center;
+        box-shadow: var(--box-shadow);
+        transition: var(--transition);
+        border: 1px solid var(--gray-200);
+      }
+
+      .feature-card:hover {
+        transform: translateY(-10px);
+        box-shadow: 0 15px 30px rgba(0, 0, 0, 0.1);
+      }
+
+      .feature-icon {
+        width: 80px;
+        height: 80px;
+        background: linear-gradient(
+          135deg,
+          var(--primary-color) 0%,
+          var(--primary-dark) 100%
+        );
+        border-radius: 50%;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        margin: 0 auto 25px;
+        color: white;
+        font-size: 32px;
+      }
+
+      .feature-title {
+        font-size: 1.5rem;
+        color: var(--gray-800);
+        margin-bottom: 15px;
+        font-weight: 600;
+      }
+
+      /* Publications Section */
+      .publications-section {
+        padding: 80px 0;
+      }
+
+      .publications-filter {
+        display: flex;
+        justify-content: center;
+        gap: 15px;
+        margin-bottom: 40px;
+        flex-wrap: wrap;
+      }
+
+      .filter-btn {
+        padding: 10px 25px;
+        background: var(--gray-200);
+        border: none;
+        border-radius: 30px;
+        cursor: pointer;
+        font-weight: 500;
+        transition: var(--transition);
+      }
+
+      .filter-btn.active {
+        background: var(--primary-color);
+        color: white;
+      }
+
+      .publications-grid {
+        display: grid;
+        grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+        gap: 30px;
+        margin-bottom: 50px;
       }
 
       .publication-card {
-        background: var(--white);
-        border-radius: 8px;
+        background: white;
+        border-radius: var(--border-radius);
         overflow: hidden;
-        box-shadow: var(--shadow);
+        box-shadow: var(--box-shadow);
+        transition: var(--transition);
+      }
+
+      .publication-card:hover {
+        transform: translateY(-5px);
+        box-shadow: 0 10px 25px rgba(0, 0, 0, 0.15);
       }
 
       .publication-image {
         height: 200px;
         background: linear-gradient(
-          45deg,
-          var(--primary-color),
-          var(--secondary-color)
+          135deg,
+          var(--primary-color) 0%,
+          var(--primary-dark) 100%
         );
         display: flex;
         align-items: center;
         justify-content: center;
+        color: white;
+        font-size: 48px;
       }
 
-      .publication-image i {
-        font-size: 4rem;
-        color: var(--white);
-        opacity: 0.8;
+      .publication-content {
+        padding: 25px;
       }
 
-      .publication-info {
-        padding: 1.5rem;
+      .publication-category {
+        display: inline-block;
+        padding: 5px 15px;
+        background: var(--gray-100);
+        color: var(--gray-700);
+        border-radius: 30px;
+        font-size: 12px;
+        font-weight: 600;
+        margin-bottom: 15px;
       }
 
-      .publication-info h3 {
-        margin-bottom: 0.5rem;
-        color: var(--primary-color);
+      .publication-title {
+        font-size: 1.2rem;
+        color: var(--gray-800);
+        margin-bottom: 10px;
+        font-weight: 600;
+        line-height: 1.4;
       }
 
-      .publication-info .author {
-        color: var(--gray-color);
+      .publication-author {
+        color: var(--gray-600);
         font-size: 0.9rem;
-        margin-bottom: 1rem;
-      }
-
-      .contact {
-        padding: 5rem 2rem;
-      }
-
-      .contact-content {
-        display: grid;
-        grid-template-columns: 1fr 1fr;
-        gap: 4rem;
-      }
-
-      .contact-info {
+        margin-bottom: 15px;
         display: flex;
-        flex-direction: column;
-        gap: 2rem;
+        align-items: center;
+        gap: 8px;
       }
 
-      .info-item {
+      .publication-meta {
         display: flex;
-        gap: 1rem;
-        align-items: flex-start;
+        justify-content: space-between;
+        align-items: center;
+        margin-top: 20px;
+        padding-top: 20px;
+        border-top: 1px solid var(--gray-200);
       }
 
-      .info-item i {
+      .publication-price {
+        font-size: 1.3rem;
+        font-weight: 700;
         color: var(--primary-color);
-        font-size: 1.5rem;
-        margin-top: 0.5rem;
       }
 
-      .contact-form .form-group {
-        margin-bottom: 1.5rem;
+      /* Statistics Section */
+      .stats-section {
+        background: linear-gradient(
+          135deg,
+          var(--primary-color) 0%,
+          var(--primary-dark) 100%
+        );
+        color: white;
+        padding: 120px 0;
+        text-align: center;
+        position: relative;
+        overflow: hidden;
       }
 
-      .contact-form input,
-      .contact-form textarea,
-      .contact-form select {
-        width: 100%;
-        padding: 1rem;
-        border: 1px solid #ddd;
-        border-radius: 4px;
-        font-family: "Montserrat", sans-serif;
+      .stats-section::before {
+        content: "";
+        position: absolute;
+        top: 0;
+        left: 0;
+        right: 0;
+        bottom: 0;
+        background: rgba(255, 255, 255, 0.05);
+        pointer-events: none;
       }
 
-      .contact-form input:focus,
-      .contact-form textarea:focus,
-      .contact-form select:focus {
-        outline: none;
-        border-color: var(--primary-color);
+      .section-header {
+        position: relative;
+        z-index: 1;
+      }
+
+      .stats-grid {
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+        gap: 60px;
+        margin-top: 80px;
+        position: relative;
+        z-index: 1;
+      }
+
+      .stats-item {
+        text-align: center;
+        padding: 40px 30px;
+        background: rgba(255, 255, 255, 0.1);
+        border-radius: 15px;
+        -webkit-backdrop-filter: blur(10px);
+        backdrop-filter: blur(10px);
+        border: 1px solid rgba(255, 255, 255, 0.2);
+        transition: all 0.3s ease;
+      }
+
+      .stats-item:hover {
+        background: rgba(255, 255, 255, 0.15);
+        transform: translateY(-10px);
+        box-shadow: 0 10px 30px rgba(0, 0, 0, 0.2);
+      }
+
+      .stats-number {
+        font-size: 4.5rem;
+        font-weight: 700;
+        color: var(--secondary-color);
+        margin-bottom: 15px;
+        font-family: "Playfair Display", serif;
+        letter-spacing: 2px;
+      }
+
+      .stats-label {
+        font-size: 1.2rem;
+        opacity: 0.95;
+        font-weight: 500;
+      }
+
+      /* Testimonials */
+      .testimonials-section {
+        padding: 80px 0;
+        background: var(--gray-100);
+      }
+
+      .testimonials-slider {
+        max-width: 800px;
+        margin: 50px auto 0;
+      }
+
+      .testimonial-card {
+        background: white;
+        padding: 40px;
+        border-radius: var(--border-radius);
+        box-shadow: var(--box-shadow);
+        text-align: center;
+      }
+
+      .testimonial-text {
+        font-size: 1.1rem;
+        color: var(--gray-700);
+        font-style: italic;
+        margin-bottom: 30px;
+        line-height: 1.8;
+      }
+
+      .testimonial-author {
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        gap: 15px;
+      }
+
+      .author-avatar {
+        width: 60px;
+        height: 60px;
+        border-radius: 50%;
+        background: var(--primary-color);
+        color: white;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-weight: 600;
+        font-size: 24px;
+      }
+
+      .author-info h4 {
+        color: var(--gray-800);
+        margin-bottom: 5px;
+      }
+
+      .author-info p {
+        color: var(--gray-600);
+        font-size: 0.9rem;
+      }
+
+      /* CTA Section */
+      .cta-section {
+        padding: 80px 0;
+        background:
+          linear-gradient(rgba(0, 103, 71, 0.95), rgba(0, 103, 71, 0.95)),
+          url("https://images.unsplash.com/photo-1516979187457-637abb4f9353?ixlib=rb-4.0.3&auto=format&fit=crop&w=1600&q=80");
+        background-size: cover;
+        background-position: center;
+        color: white;
+        text-align: center;
+      }
+
+      .cta-content {
+        max-width: 700px;
+        margin: 0 auto;
+      }
+
+      .cta-title {
+        font-size: 2.5rem;
+        margin-bottom: 20px;
+        font-weight: 700;
+      }
+
+      .cta-buttons {
+        display: flex;
+        gap: 20px;
+        justify-content: center;
+        margin-top: 40px;
+        flex-wrap: wrap;
       }
 
       /* Footer */
-      .footer {
-        background-color: var(--primary-color);
-        color: var(--white);
-        padding: 3rem 2rem 1rem;
+      .site-footer {
+        background: var(--gray-900);
+        color: white;
+        padding: 60px 0 30px;
       }
 
-      .footer-content {
+      .footer-grid {
         display: grid;
         grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
-        gap: 3rem;
-        margin-bottom: 2rem;
+        gap: 40px;
+        margin-bottom: 40px;
       }
 
-      .footer-section h3,
-      .footer-section h4 {
-        margin-bottom: 1rem;
+      .footer-column h3 {
+        font-size: 1.2rem;
+        margin-bottom: 25px;
+        color: var(--secondary-color);
+        position: relative;
+        padding-bottom: 10px;
       }
 
-      .footer-section ul {
+      .footer-column h3:after {
+        content: "";
+        position: absolute;
+        bottom: 0;
+        left: 0;
+        width: 50px;
+        height: 2px;
+        background: var(--secondary-color);
+      }
+
+      .footer-links {
         list-style: none;
       }
 
-      .footer-section ul li {
-        margin-bottom: 0.5rem;
+      .footer-links li {
+        margin-bottom: 12px;
       }
 
-      .footer-section a {
-        color: rgba(255, 255, 255, 0.8);
+      .footer-links a {
+        color: var(--gray-400);
         text-decoration: none;
         transition: var(--transition);
+        display: flex;
+        align-items: center;
+        gap: 10px;
       }
 
-      .footer-section a:hover {
-        color: var(--white);
+      .footer-links a:hover {
+        color: white;
+        transform: translateX(5px);
       }
 
       .social-links {
         display: flex;
-        gap: 1rem;
+        gap: 15px;
+        margin-top: 20px;
       }
 
       .social-links a {
-        display: inline-flex;
-        align-items: center;
-        justify-content: center;
         width: 40px;
         height: 40px;
-        background-color: rgba(255, 255, 255, 0.1);
+        background: var(--gray-800);
         border-radius: 50%;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        color: white;
+        text-decoration: none;
         transition: var(--transition);
       }
 
       .social-links a:hover {
-        background-color: var(--secondary-color);
-        color: var(--dark-color);
+        background: var(--primary-color);
+        transform: translateY(-3px);
       }
 
       .footer-bottom {
         text-align: center;
-        padding-top: 2rem;
-        border-top: 1px solid rgba(255, 255, 255, 0.1);
-        color: rgba(255, 255, 255, 0.7);
+        padding-top: 30px;
+        border-top: 1px solid var(--gray-800);
+        color: var(--gray-500);
+        font-size: 0.9rem;
       }
 
-      /* Modals */
+      /* Modal Styles */
       .modal {
         display: none;
         position: fixed;
@@ -678,19 +862,24 @@
         left: 0;
         width: 100%;
         height: 100%;
-        background-color: rgba(0, 0, 0, 0.5);
+        background: rgba(0, 0, 0, 0.5);
         z-index: 2000;
-        overflow-y: auto;
+        align-items: center;
+        justify-content: center;
+        padding: 20px;
+      }
+
+      .modal.active {
+        display: flex;
       }
 
       .modal-content {
-        background-color: var(--white);
-        margin: 5% auto;
-        padding: 2rem;
-        border-radius: 8px;
+        background: white;
+        border-radius: var(--border-radius);
         max-width: 500px;
-        width: 90%;
-        position: relative;
+        width: 100%;
+        max-height: 90vh;
+        overflow-y: auto;
         animation: modalSlide 0.3s ease;
       }
 
@@ -705,1012 +894,1711 @@
         }
       }
 
-      .close {
-        position: absolute;
-        right: 1rem;
-        top: 1rem;
-        font-size: 1.5rem;
-        cursor: pointer;
-        color: var(--gray-color);
+      .modal-header {
+        padding: 25px;
+        border-bottom: 1px solid var(--gray-200);
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
       }
 
-      .modal h2 {
-        color: var(--primary-color);
-        margin-bottom: 1.5rem;
-        text-align: center;
+      .modal-header h3 {
+        color: var(--gray-800);
+        font-size: 1.5rem;
+      }
+
+      .modal-close {
+        background: none;
+        border: none;
+        font-size: 24px;
+        color: var(--gray-600);
+        cursor: pointer;
+        padding: 5px;
+        border-radius: 4px;
+        transition: var(--transition);
+      }
+
+      .modal-close:hover {
+        background: var(--gray-200);
+        color: var(--danger-color);
+      }
+
+      .modal-body {
+        padding: 25px;
       }
 
       .form-group {
-        margin-bottom: 1rem;
+        margin-bottom: 20px;
       }
 
       .form-group label {
         display: block;
-        margin-bottom: 0.5rem;
-        font-weight: 500;
+        margin-bottom: 8px;
+        font-weight: 600;
+        color: var(--gray-700);
+        font-size: 14px;
       }
 
-      .success-modal {
-        text-align: center;
-        padding: 3rem 2rem;
+      .form-control {
+        width: 100%;
+        padding: 12px 16px;
+        border: 2px solid var(--gray-300);
+        border-radius: 6px;
+        font-size: 14px;
+        font-family: "Poppins", sans-serif;
+        transition: var(--transition);
       }
 
-      .success-modal i {
-        font-size: 4rem;
-        color: var(--primary-color);
-        margin-bottom: 1rem;
+      .form-control:focus {
+        outline: none;
+        border-color: var(--primary-color);
+        box-shadow: 0 0 0 3px rgba(0, 103, 71, 0.1);
+      }
+
+      .modal-footer {
+        padding: 25px;
+        border-top: 1px solid var(--gray-200);
+        display: flex;
+        justify-content: flex-end;
+        gap: 10px;
+      }
+
+      /* Loading Spinner */
+      .spinner {
+        display: inline-block;
+        width: 20px;
+        height: 20px;
+        border: 3px solid rgba(0, 103, 71, 0.3);
+        border-radius: 50%;
+        border-top-color: var(--primary-color);
+        animation: spin 0.8s linear infinite;
+      }
+
+      @keyframes spin {
+        to {
+          transform: rotate(360deg);
+        }
       }
 
       /* Responsive Design */
-      @media (max-width: 768px) {
-        .hamburger {
-          display: flex;
+      @media (max-width: 992px) {
+        .main-nav {
+          display: none;
         }
 
-        .nav-container {
-          padding: 1rem;
+        .hamburger-menu {
+          display: flex !important;
         }
 
-        .hero {
-          padding: 8rem 1.5rem 4rem;
-          margin-top: 70px;
-        }
-
-        .hero-content h2 {
-          font-size: 2rem;
-        }
-
-        .about-content,
-        .contact-content {
-          grid-template-columns: 1fr;
-          gap: 2rem;
+        .hero-title {
+          font-size: 2.5rem;
         }
 
         .section-title {
           font-size: 2rem;
         }
+      }
 
-        .modal-dialog {
-          width: 90%;
+      @media (max-width: 768px) {
+        .hero-section {
+          padding: 150px 0 80px;
         }
+
+        .hero-stats {
+          gap: 30px;
+        }
+
+        .stat-number {
+          font-size: 2rem;
+        }
+
+        .cta-buttons {
+          flex-direction: column;
+          align-items: center;
+        }
+
+        .cta-buttons .btn {
+          width: 100%;
+          max-width: 300px;
+        }
+
+        .mobile-menu {
+          width: 100%;
+          max-width: 320px;
+        }
+      }
+
+      @media (max-width: 576px) {
+        .container {
+          padding: 0 15px;
+        }
+
+        .hero-title {
+          font-size: 2rem;
+        }
+
+        .hero-subtitle {
+          font-size: 1rem;
+        }
+
+        .features-grid,
+        .publications-grid {
+          grid-template-columns: 1fr;
+        }
+
+        .stats-grid {
+          grid-template-columns: repeat(2, 1fr);
+          gap: 30px;
+        }
+      }
+
+      /* Notification */
+      .notification {
+        position: fixed;
+        top: 20px;
+        right: 20px;
+        padding: 16px 24px;
+        border-radius: var(--border-radius);
+        box-shadow: var(--box-shadow);
+        display: flex;
+        align-items: center;
+        gap: 12px;
+        z-index: 2001;
+        animation: slideIn 0.3s ease;
+        background: var(--success-color);
+        color: white;
+      }
+
+      .notification.error {
+        background: var(--danger-color);
+      }
+
+      @keyframes slideIn {
+        from {
+          transform: translateX(100%);
+          opacity: 0;
+        }
+        to {
+          transform: translateX(0);
+          opacity: 1;
+        }
+      }
+
+      /* Auth Tabs */
+      .auth-tabs {
+        display: flex;
+        border-bottom: 2px solid var(--gray-200);
+        margin-bottom: 20px;
+      }
+
+      .auth-tab-btn {
+        flex: 1;
+        padding: 12px;
+        background: none;
+        border: none;
+        border-bottom: 2px solid transparent;
+        font-weight: 500;
+        color: var(--gray-600);
+        cursor: pointer;
+        transition: var(--transition);
+      }
+
+      .auth-tab-btn.active {
+        color: var(--primary-color);
+        border-bottom-color: var(--primary-color);
+      }
+
+      .auth-tab-content {
+        display: none;
+      }
+
+      .auth-tab-content.active {
+        display: block;
       }
     </style>
   </head>
   <body>
-    <!-- Sidebar Navigation -->
-    <div class="sidebar-overlay" id="sidebarOverlay"></div>
-    <aside class="sidebar" id="sidebar">
-      <div class="sidebar-header">
-        <div class="logo-small">
-          <img src="./babcock-logo.svg" alt="Babcock Logo" />
-          <span>BUPC</span>
-        </div>
-        <button class="close-sidebar" id="closeSidebar">
-          <i class="fas fa-times"></i>
-        </button>
-      </div>
-
-      <nav class="sidebar-menu">
-        <ul>
-          <li>
-            <a href="#home"><i class="fas fa-home"></i> Home</a>
-          </li>
-          <li>
-            <a href="#" class="dropdown-toggle"
-              ><i class="fas fa-user-graduate"></i> Authors</a
-            >
-            <ul class="dropdown-menu">
-              <li>
-                <a href="#" onclick="showModal('registerModal')"
-                  ><i class="fas fa-pen"></i> Register as Author</a
-                >
-              </li>
-              <li>
-                <a href="#" onclick="showModal('uploadModal')"
-                  ><i class="fas fa-upload"></i> Upload Books for Review</a
-                >
-              </li>
-              <li>
-                <a href="#" onclick="showModal('submitModal')"
-                  ><i class="fas fa-file-contract"></i> Submit Work for
-                  Publishing</a
-                >
-              </li>
-            </ul>
-          </li>
-          <li>
-            <a href="#" onclick="showModal('trainingModal')"
-              ><i class="fas fa-book"></i> Student Training</a
-            >
-          </li>
-          <li>
-            <a href="#about"><i class="fas fa-info-circle"></i> About Us</a>
-          </li>
-          <li>
-            <a href="#contact"><i class="fas fa-envelope"></i> Contact Us</a>
-          </li>
-          <li>
-            <a href="#services"><i class="fas fa-cogs"></i> Services</a>
-          </li>
-          <li>
-            <a href="#catalog"><i class="fas fa-book-open"></i> Catalog</a>
-          </li>
-        </ul>
-      </nav>
-
-      <div class="sidebar-auth">
-        <button class="btn-sidebar-login" onclick="showModal('loginModal')">
-          <i class="fas fa-sign-in-alt"></i> Author Login
-        </button>
-        <a href="admin.html" class="btn-sidebar-admin">
-          <i class="fas fa-shield-alt"></i> Admin Panel
-        </a>
-      </div>
-    </aside>
-
-    <!-- Navigation -->
-    <nav class="navbar">
-      <div class="nav-container">
-        <div class="logo">
+    <!-- Header & Navigation -->
+    <header class="site-header">
+      <div class="container header-container">
+        <div class="logo-area">
           <img
-            src="./babcock-logo.svg"
+            src="./OIP.webp"
             alt="Babcock University Logo"
-            style="width: 50px; height: 50px" />
+            class="logo-img" />
           <div class="logo-text">
             <h1>Babcock University</h1>
             <p>Publishing Company</p>
           </div>
         </div>
 
-        <div class="hamburger" id="hamburgerBtn">
+        <!-- Desktop Navigation -->
+        <nav class="main-nav">
+          <ul class="nav-links">
+            <li><a href="#home">Home</a></li>
+            <li><a href="#publications">Publications</a></li>
+            <li><a href="#services">Services</a></li>
+            <li><a href="#about">About</a></li>
+            <li><a href="#contact">Contact</a></li>
+          </ul>
+
+          <div class="auth-buttons" id="authButtons">
+            <!-- Dynamic content will be loaded here -->
+            <button class="btn btn-outline" onclick="showLoginModal()">
+              <i class="fas fa-sign-in-alt"></i> Login
+            </button>
+            <button class="btn btn-primary" onclick="showRegisterModal()">
+              <i class="fas fa-user-plus"></i> Register
+            </button>
+          </div>
+        </nav>
+
+        <!-- Hamburger Menu Button -->
+        <button class="hamburger-menu" id="hamburgerMenu">
           <span></span>
           <span></span>
           <span></span>
-        </div>
+        </button>
       </div>
-    </nav>
+    </header>
+
+    <!-- Mobile Menu Overlay -->
+    <div class="mobile-menu-overlay" id="mobileMenuOverlay"></div>
+
+    <!-- Mobile Menu -->
+    <div class="mobile-menu" id="mobileMenu">
+      <div class="mobile-user-menu" id="mobileUserMenu" style="display: none">
+        <div class="mobile-user-info">
+          <div class="mobile-user-avatar" id="mobileUserAvatar">A</div>
+          <div class="mobile-user-details">
+            <h4 id="mobileUserName">Author Name</h4>
+            <p id="mobileUserRole">Author</p>
+          </div>
+        </div>
+        <button class="btn btn-outline" onclick="logout()">
+          <i class="fas fa-sign-out-alt"></i> Logout
+        </button>
+      </div>
+
+      <ul class="mobile-nav-links">
+        <li><a href="#home" onclick="closeMobileMenu()">Home</a></li>
+        <li>
+          <a href="#publications" onclick="closeMobileMenu()">Publications</a>
+        </li>
+        <li><a href="#services" onclick="closeMobileMenu()">Services</a></li>
+        <li><a href="#about" onclick="closeMobileMenu()">About</a></li>
+        <li><a href="#contact" onclick="closeMobileMenu()">Contact</a></li>
+      </ul>
+
+      <div class="mobile-auth-buttons" id="mobileAuthButtons">
+        <button
+          class="btn btn-outline"
+          onclick="
+            showLoginModal();
+            closeMobileMenu();
+          ">
+          <i class="fas fa-sign-in-alt"></i> Login
+        </button>
+        <button
+          class="btn btn-primary"
+          onclick="
+            showRegisterModal();
+            closeMobileMenu();
+          ">
+          <i class="fas fa-user-plus"></i> Register
+        </button>
+        <button
+          class="btn btn-secondary"
+          onclick="
+            showAdminLogin();
+            closeMobileMenu();
+          ">
+          <i class="fas fa-shield-alt"></i> Admin Login
+        </button>
+        <button
+          class="btn btn-outline"
+          onclick="
+            showAuthorLogin();
+            closeMobileMenu();
+          ">
+          <i class="fas fa-user-edit"></i> Author Login
+        </button>
+        <button
+          class="btn btn-outline"
+          onclick="
+            showAuthorRegistration();
+            closeMobileMenu();
+          ">
+          <i class="fas fa-user-plus"></i> Become an Author
+        </button>
+      </div>
+
+      <div class="mobile-user-actions">
+        <button
+          class="btn btn-primary"
+          onclick="
+            window.location.href = 'author.html';
+            closeMobileMenu();
+          ">
+          <i class="fas fa-book"></i> Author Dashboard
+        </button>
+        <button
+          class="btn btn-secondary"
+          onclick="
+            window.location.href = 'admin.html';
+            closeMobileMenu();
+          ">
+          <i class="fas fa-shield-alt"></i> Admin Panel
+        </button>
+      </div>
+    </div>
 
     <!-- Hero Section -->
-    <section id="home" class="hero">
-      <div class="hero-content">
-        <h2>Excellence in Academic Publishing</h2>
-        <p>
-          Babcock University Publishing Company - Your gateway to scholarly
-          publishing and printing excellence
-        </p>
-        <div class="hero-buttons">
-          <button class="btn-primary" onclick="showModal('registerModal')">
-            Become an Author
+    <section class="hero-section" id="home">
+      <div class="container">
+        <div class="hero-content">
+          <h1 class="hero-title">Excellence in Academic Publishing</h1>
+          <p class="hero-subtitle">
+            Babcock University Publishing Company provides world-class
+            publishing services, connecting scholars with global audiences
+            through rigorous academic standards and innovative publishing
+            solutions.
+          </p>
+
+          <div class="hero-buttons">
+            <button
+              class="btn btn-secondary"
+              onclick="showAuthorRegistration()">
+              <i class="fas fa-user-plus"></i> Become an Author
+            </button>
+            <button
+              class="btn btn-outline"
+              style="
+                background: rgba(255, 255, 255, 0.1);
+                border-color: white;
+                color: white;
+              "
+              onclick="showModal('trainingModal')">
+              <i class="fas fa-graduation-cap"></i> Student Training
+            </button>
+          </div>
+
+          <div class="hero-stats">
+            <div class="stat-item">
+              <div class="stat-number" id="publishedBooks">0</div>
+              <div class="stat-label">Published Books</div>
+            </div>
+            <div class="stat-item">
+              <div class="stat-number" id="activeAuthors">0</div>
+              <div class="stat-label">Active Authors</div>
+            </div>
+            <div class="stat-item">
+              <div class="stat-number" id="studentsTrained">0</div>
+              <div class="stat-label">Students Trained</div>
+            </div>
+            <div class="stat-item">
+              <div class="stat-number" id="yearsExperience">15+</div>
+              <div class="stat-label">Years Experience</div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- Features/Services Section -->
+    <section class="features-section" id="services">
+      <div class="container">
+        <div class="section-header">
+          <h2 class="section-title">Our Publishing Services</h2>
+          <p class="section-subtitle">
+            Comprehensive publishing solutions from manuscript review to global
+            distribution
+          </p>
+        </div>
+
+        <div class="features-grid">
+          <div class="feature-card">
+            <div class="feature-icon">
+              <i class="fas fa-book-open"></i>
+            </div>
+            <h3 class="feature-title">Academic Publishing</h3>
+            <p>
+              Professional publishing of textbooks, research papers, and
+              academic journals with rigorous peer-review process.
+            </p>
+          </div>
+
+          <div class="feature-card">
+            <div class="feature-icon">
+              <i class="fas fa-print"></i>
+            </div>
+            <h3 class="feature-title">Printing Services</h3>
+            <p>
+              High-quality offset and digital printing with various binding
+              options for all academic materials.
+            </p>
+          </div>
+
+          <div class="feature-card">
+            <div class="feature-icon">
+              <i class="fas fa-edit"></i>
+            </div>
+            <h3 class="feature-title">Editing & Proofreading</h3>
+            <p>
+              Comprehensive editing services including copyediting, substantive
+              editing, and proofreading by subject experts.
+            </p>
+          </div>
+
+          <div class="feature-card">
+            <div class="feature-icon">
+              <i class="fas fa-graduation-cap"></i>
+            </div>
+            <h3 class="feature-title">Student Training</h3>
+            <p>
+              Workshops and training programs in publishing, editing, copyright,
+              and academic writing for students.
+            </p>
+          </div>
+
+          <div class="feature-card">
+            <div class="feature-icon">
+              <i class="fas fa-globe"></i>
+            </div>
+            <h3 class="feature-title">Global Distribution</h3>
+            <p>
+              Worldwide distribution through major academic channels and online
+              platforms for maximum reach.
+            </p>
+          </div>
+
+          <div class="feature-card">
+            <div class="feature-icon">
+              <i class="fas fa-file-contract"></i>
+            </div>
+            <h3 class="feature-title">Copyright Management</h3>
+            <p>
+              Expert guidance on copyright, licensing, and intellectual property
+              protection for authors.
+            </p>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- Featured Publications Section -->
+    <section class="publications-section" id="publications">
+      <div class="container">
+        <div class="section-header">
+          <h2 class="section-title">Featured Publications</h2>
+          <p class="section-subtitle">
+            Discover our latest academic publications from Babcock University
+            scholars
+          </p>
+        </div>
+
+        <div class="publications-filter">
+          <button class="filter-btn active" data-category="all">
+            All Publications
           </button>
-          <button class="btn-secondary" onclick="showModal('trainingModal')">
-            Student Training
+          <button class="filter-btn" data-category="textbook">Textbooks</button>
+          <button class="filter-btn" data-category="research">Research</button>
+          <button class="filter-btn" data-category="journal">Journals</button>
+          <button class="filter-btn" data-category="monograph">
+            Monographs
           </button>
         </div>
+
+        <div class="publications-grid" id="publicationsGrid">
+          <!-- Publications loaded from database -->
+        </div>
+
+        <div style="text-align: center; margin-top: 30px">
+          <a href="#" class="btn btn-primary" onclick="loadMorePublications()">
+            <i class="fas fa-book-open"></i> View All Publications
+          </a>
+        </div>
       </div>
     </section>
 
-    <!-- Services Section -->
-    <section id="services" class="services">
+    <!-- Statistics Section -->
+    <section class="stats-section">
       <div class="container">
-        <h2 class="section-title">Our Services</h2>
-        <div class="services-grid">
-          <div class="service-card">
-            <i class="fas fa-book-open"></i>
-            <h3>Academic Publishing</h3>
-            <p>
-              Professional publishing of textbooks, journals, and research
-              papers
-            </p>
+        <div class="section-header" style="color: white">
+          <h2 class="section-title">Our Impact in Numbers</h2>
+          <p class="section-subtitle">
+            Building academic excellence through quality publishing
+          </p>
+        </div>
+
+        <div class="stats-grid">
+          <div class="stats-item">
+            <div class="stats-number" id="totalBooksPublished">0</div>
+            <div class="stats-label">Books Published</div>
           </div>
-          <div class="service-card">
-            <i class="fas fa-print"></i>
-            <h3>Printing Services</h3>
-            <p>
-              High-quality printing for books, journals, and academic materials
-            </p>
+          <div class="stats-item">
+            <div class="stats-number" id="authorsPublished">0</div>
+            <div class="stats-label">Authors Published</div>
           </div>
-          <div class="service-card">
-            <i class="fas fa-user-graduate"></i>
-            <h3>Student Training</h3>
-            <p>
-              Training programs in publishing, editing, and printing
-              technologies
-            </p>
+          <div class="stats-item">
+            <div class="stats-number" id="countriesReached">25+</div>
+            <div class="stats-label">Countries Reached</div>
           </div>
-          <div class="service-card">
-            <i class="fas fa-edit"></i>
-            <h3>Editing & Proofreading</h3>
-            <p>Professional editing services for academic works</p>
+          <div class="stats-item">
+            <div class="stats-number" id="satisfactionRate">98%</div>
+            <div class="stats-label">Author Satisfaction</div>
           </div>
         </div>
       </div>
     </section>
 
-    <!-- About Section -->
-    <section id="about" class="about">
+    <!-- Testimonials Section -->
+    <section class="testimonials-section">
       <div class="container">
-        <h2 class="section-title">
-          About Babcock University Publishing Company
-        </h2>
-        <div class="about-content">
-          <div class="about-text">
-            <p>
-              Established as part of Babcock University's commitment to academic
-              excellence, our publishing company serves as a premier platform
-              for scholarly works, textbooks, and research publications.
+        <div class="section-header">
+          <h2 class="section-title">What Our Authors Say</h2>
+          <p class="section-subtitle">
+            Testimonials from scholars who have published with us
+          </p>
+        </div>
+
+        <div class="testimonials-slider">
+          <div class="testimonial-card">
+            <p class="testimonial-text">
+              "Publishing with Babcock University Press was a seamless
+              experience. Their editorial team provided invaluable feedback that
+              significantly improved my manuscript. The professional standards
+              are exceptional."
             </p>
-            <p>
-              We combine traditional publishing expertise with modern digital
-              solutions to provide comprehensive publishing services to our
-              academic community.
-            </p>
-            <div class="about-features">
-              <div class="feature">
-                <i class="fas fa-award"></i>
-                <span>Quality Assurance</span>
-              </div>
-              <div class="feature">
-                <i class="fas fa-university"></i>
-                <span>Academic Excellence</span>
-              </div>
-              <div class="feature">
-                <i class="fas fa-globe"></i>
-                <span>Global Standards</span>
+            <div class="testimonial-author">
+              <div class="author-avatar">PO</div>
+              <div class="author-info">
+                <h4>Prof. Patience Okon</h4>
+                <p>Department of Computer Science</p>
               </div>
             </div>
-          </div>
-          <div class="about-image">
-            <img
-              src="https://images.unsplash.com/photo-1589829085413-56de8ae18c73?ixlib=rb-4.0.3&auto=format&fit=crop&w=600&q=80"
-              alt="University Publishing" />
           </div>
         </div>
       </div>
     </section>
 
-    <!-- Catalog Section -->
-    <section id="catalog" class="catalog">
+    <!-- Call to Action Section -->
+    <section class="cta-section">
       <div class="container">
-        <h2 class="section-title">Our Publications</h2>
-        <div class="catalog-grid" id="publicationsList">
-          <!-- Publications will be loaded here -->
-        </div>
-      </div>
-    </section>
+        <div class="cta-content">
+          <h2 class="cta-title">Ready to Publish Your Work?</h2>
+          <p style="font-size: 1.2rem; opacity: 0.9; margin-bottom: 30px">
+            Join our community of scholars and share your research with the
+            world. Our team is ready to guide you through every step of the
+            publishing process.
+          </p>
 
-    <!-- Contact Section -->
-    <section id="contact" class="contact">
-      <div class="container">
-        <h2 class="section-title">Contact Us</h2>
-        <div class="contact-content">
-          <div class="contact-info">
-            <div class="info-item">
-              <i class="fas fa-map-marker-alt"></i>
-              <div>
-                <h4>Location</h4>
-                <p>Babcock University<br />Ilishan-Remo, Ogun State, Nigeria</p>
-              </div>
-            </div>
-            <div class="info-item">
-              <i class="fas fa-phone"></i>
-              <div>
-                <h4>Phone</h4>
-                <p>+234 (0) 803 123 4567</p>
-              </div>
-            </div>
-            <div class="info-item">
-              <i class="fas fa-envelope"></i>
-              <div>
-                <h4>Email</h4>
-                <p>publishing@babcock.edu.ng</p>
-              </div>
-            </div>
-            <div class="info-item">
-              <i class="fas fa-clock"></i>
-              <div>
-                <h4>Working Hours</h4>
-                <p>Monday - Friday: 8:00 AM - 5:00 PM</p>
-              </div>
-            </div>
-          </div>
-          <div class="contact-form">
-            <form id="contactForm">
-              <div class="form-group">
-                <input
-                  type="text"
-                  id="contactName"
-                  placeholder="Full Name"
-                  required />
-              </div>
-              <div class="form-group">
-                <input
-                  type="email"
-                  id="contactEmail"
-                  placeholder="Email Address"
-                  required />
-              </div>
-              <div class="form-group">
-                <input
-                  type="text"
-                  id="contactSubject"
-                  placeholder="Subject"
-                  required />
-              </div>
-              <div class="form-group">
-                <textarea
-                  id="contactMessage"
-                  placeholder="Your Message"
-                  rows="5"
-                  required></textarea>
-              </div>
-              <button type="submit" class="btn-primary">Send Message</button>
-            </form>
+          <div class="cta-buttons">
+            <button
+              class="btn btn-secondary"
+              onclick="showAuthorRegistration()">
+              <i class="fas fa-pen-alt"></i> Submit Manuscript
+            </button>
+            <button
+              class="btn btn-outline"
+              style="
+                background: rgba(255, 255, 255, 0.1);
+                border-color: white;
+                color: white;
+              "
+              onclick="showModal('contactModal')">
+              <i class="fas fa-envelope"></i> Contact Our Team
+            </button>
           </div>
         </div>
       </div>
     </section>
 
     <!-- Footer -->
-    <footer class="footer">
+    <footer class="site-footer" id="contact">
       <div class="container">
-        <div class="footer-content">
-          <div class="footer-section">
+        <div class="footer-grid">
+          <div class="footer-column">
             <h3>Babcock University Publishing</h3>
-            <p>Excellence in academic publishing and printing services.</p>
-          </div>
-          <div class="footer-section">
-            <h4>Quick Links</h4>
-            <ul>
-              <li><a href="#home">Home</a></li>
-              <li><a href="#services">Services</a></li>
-              <li><a href="#about">About Us</a></li>
-              <li><a href="#contact">Contact</a></li>
-            </ul>
-          </div>
-          <div class="footer-section">
-            <h4>Connect With Us</h4>
+            <p style="color: var(--gray-400); margin-bottom: 20px">
+              Excellence in academic publishing since 2009. Committed to
+              advancing scholarship through quality publications.
+            </p>
             <div class="social-links">
-              <a href="#"><i class="fab fa-facebook"></i></a>
+              <a href="#"><i class="fab fa-facebook-f"></i></a>
               <a href="#"><i class="fab fa-twitter"></i></a>
-              <a href="#"><i class="fab fa-linkedin"></i></a>
+              <a href="#"><i class="fab fa-linkedin-in"></i></a>
               <a href="#"><i class="fab fa-instagram"></i></a>
+              <a href="#"><i class="fab fa-youtube"></i></a>
             </div>
           </div>
+
+          <div class="footer-column">
+            <h3>Quick Links</h3>
+            <ul class="footer-links">
+              <li>
+                <a href="#home"><i class="fas fa-chevron-right"></i> Home</a>
+              </li>
+              <li>
+                <a href="#publications"
+                  ><i class="fas fa-chevron-right"></i> Publications</a
+                >
+              </li>
+              <li>
+                <a href="#services"
+                  ><i class="fas fa-chevron-right"></i> Services</a
+                >
+              </li>
+              <li>
+                <a href="#about"
+                  ><i class="fas fa-chevron-right"></i> About Us</a
+                >
+              </li>
+              <li>
+                <a href="#contact"
+                  ><i class="fas fa-chevron-right"></i> Contact</a
+                >
+              </li>
+            </ul>
+          </div>
+
+          <div class="footer-column">
+            <h3>Author Services</h3>
+            <ul class="footer-links">
+              <li>
+                <a href="#" onclick="showAuthorRegistration()"
+                  ><i class="fas fa-chevron-right"></i> Register as Author</a
+                >
+              </li>
+              <li>
+                <a href="#" onclick="showAuthorLogin()"
+                  ><i class="fas fa-chevron-right"></i> Author Login</a
+                >
+              </li>
+              <li>
+                <a href="#" onclick="showModal('uploadModal')"
+                  ><i class="fas fa-chevron-right"></i> Submit Manuscript</a
+                >
+              </li>
+              <li>
+                <a href="#" onclick="showModal('trainingModal')"
+                  ><i class="fas fa-chevron-right"></i> Training Programs</a
+                >
+              </li>
+              <li>
+                <a href="#" onclick="showModal('faqModal')"
+                  ><i class="fas fa-chevron-right"></i> Author Guidelines</a
+                >
+              </li>
+            </ul>
+          </div>
+
+          <div class="footer-column">
+            <h3>Contact Info</h3>
+            <ul class="footer-links">
+              <li>
+                <a href="#"
+                  ><i class="fas fa-map-marker-alt"></i> Babcock University,
+                  Ilishan-Remo, Ogun State</a
+                >
+              </li>
+              <li>
+                <a href="tel:+2348031234567"
+                  ><i class="fas fa-phone"></i> +234 (0) 803 123 4567</a
+                >
+              </li>
+              <li>
+                <a href="mailto:publishing@babcock.edu.ng"
+                  ><i class="fas fa-envelope"></i> publishing@babcock.edu.ng</a
+                >
+              </li>
+              <li>
+                <a href="#"
+                  ><i class="fas fa-clock"></i> Mon-Fri: 8:00 AM - 5:00 PM</a
+                >
+              </li>
+            </ul>
+          </div>
         </div>
+
         <div class="footer-bottom">
           <p>
-            &copy; 2024 Babcock University Publishing Company. All rights
-            reserved.
+            &copy; 2024 Babcock University Publishing Company. All Rights
+            Reserved.
+          </p>
+          <p style="margin-top: 10px; font-size: 0.85rem">
+            <a href="#" style="color: var(--gray-400); margin: 0 10px"
+              >Privacy Policy</a
+            >
+            |
+            <a href="#" style="color: var(--gray-400); margin: 0 10px"
+              >Terms of Service</a
+            >
+            |
+            <a href="#" style="color: var(--gray-400); margin: 0 10px"
+              >Copyright Information</a
+            >
           </p>
         </div>
       </div>
     </footer>
 
     <!-- Modals -->
-    <div id="registerModal" class="modal">
+    <!-- Unified Login Modal -->
+    <div class="modal" id="loginModal">
       <div class="modal-content">
-        <span class="close" onclick="closeModal('registerModal')">&times;</span>
-        <h2>Register as Author</h2>
-        <form id="authorRegisterForm">
-          <div class="form-group">
-            <input type="text" id="fullName" placeholder="Full Name" required />
-          </div>
-          <div class="form-group">
-            <input
-              type="email"
-              id="authorEmail"
-              placeholder="Email Address"
-              required />
-          </div>
-          <div class="form-group">
-            <input
-              type="tel"
-              id="authorPhone"
-              placeholder="Phone Number"
-              required />
-          </div>
-          <div class="form-group">
-            <input type="text" id="faculty" placeholder="Faculty" required />
-          </div>
-          <div class="form-group">
-            <input
-              type="text"
-              id="department"
-              placeholder="Department"
-              required />
-          </div>
-          <div class="form-group">
-            <input type="text" id="staffId" placeholder="Staff ID" required />
-          </div>
-          <div class="form-group">
-            <input
-              type="password"
-              id="authorPassword"
-              placeholder="Password"
-              required />
-          </div>
-          <button type="submit" class="btn-primary">Register</button>
-        </form>
-      </div>
-    </div>
-
-    <div id="loginModal" class="modal">
-      <div class="modal-content">
-        <span class="close" onclick="closeModal('loginModal')">&times;</span>
-        <h2>Author Login</h2>
-        <form id="authorLoginForm">
-          <div class="form-group">
-            <input
-              type="email"
-              id="loginEmail"
-              placeholder="Email Address"
-              required />
-          </div>
-          <div class="form-group">
-            <input
-              type="password"
-              id="loginPassword"
-              placeholder="Password"
-              required />
-          </div>
-          <button type="submit" class="btn-primary">Login</button>
-        </form>
-      </div>
-    </div>
-
-    <div id="uploadModal" class="modal">
-      <div class="modal-content">
-        <span class="close" onclick="closeModal('uploadModal')">&times;</span>
-        <h2>Upload Book for Review</h2>
-        <form id="uploadBookForm">
-          <div class="form-group">
-            <input
-              type="text"
-              id="bookTitle"
-              placeholder="Book Title"
-              required />
-          </div>
-          <div class="form-group">
-            <textarea
-              id="bookDescription"
-              placeholder="Book Description"
-              rows="4"
-              required></textarea>
-          </div>
-          <div class="form-group">
-            <select id="bookCategory" required>
-              <option value="">Select Category</option>
-              <option value="textbook">Textbook</option>
-              <option value="research">Research Paper</option>
-              <option value="journal">Journal Article</option>
-              <option value="monograph">Monograph</option>
-              <option value="other">Other</option>
-            </select>
-          </div>
-          <div class="form-group">
-            <label for="manuscriptFile">Upload Manuscript (PDF/DOC)</label>
-            <input
-              type="file"
-              id="manuscriptFile"
-              accept=".pdf,.doc,.docx"
-              required />
-          </div>
-          <div class="form-group">
-            <label for="coverImage">Cover Image (Optional)</label>
-            <input type="file" id="coverImage" accept="image/*" />
-          </div>
-          <button type="submit" class="btn-primary">Upload for Review</button>
-        </form>
-      </div>
-    </div>
-
-    <div id="submitModal" class="modal">
-      <div class="modal-content">
-        <span class="close" onclick="closeModal('submitModal')">&times;</span>
-        <h2>Submit for Publishing & Printing</h2>
-        <form id="submitPublishingForm">
-          <div class="form-group">
-            <select id="bookSelect" required>
-              <option value="">Select Your Book</option>
-            </select>
-          </div>
-          <div class="form-group">
-            <select id="submissionType" required>
-              <option value="">Submission Type</option>
-              <option value="publishing">Publishing Only</option>
-              <option value="printing">Printing Only</option>
-              <option value="both">Publishing & Printing</option>
-            </select>
-          </div>
-          <div class="form-group">
-            <textarea
-              id="specialInstructions"
-              placeholder="Special Instructions (Optional)"
-              rows="4"></textarea>
-          </div>
-          <button type="submit" class="btn-primary">
-            Submit for Processing
+        <div class="modal-header">
+          <h3>Login</h3>
+          <button class="modal-close" onclick="closeModal('loginModal')">
+            &times;
           </button>
-        </form>
+        </div>
+        <div class="modal-body">
+          <div class="auth-tabs">
+            <button
+              class="auth-tab-btn active"
+              onclick="switchAuthTab('userLogin')">
+              User Login
+            </button>
+            <button class="auth-tab-btn" onclick="switchAuthTab('authorLogin')">
+              Author Login
+            </button>
+            <button class="auth-tab-btn" onclick="switchAuthTab('adminLogin')">
+              Admin Login
+            </button>
+          </div>
+
+          <div id="userLogin" class="auth-tab-content active">
+            <form id="userLoginForm">
+              <div class="form-group">
+                <label for="userLoginEmail">Email Address *</label>
+                <input
+                  type="email"
+                  id="userLoginEmail"
+                  class="form-control"
+                  required />
+              </div>
+              <div class="form-group">
+                <label for="userLoginPassword">Password *</label>
+                <input
+                  type="password"
+                  id="userLoginPassword"
+                  class="form-control"
+                  required />
+              </div>
+              <button type="submit" class="btn btn-primary btn-block">
+                Login as User
+              </button>
+            </form>
+          </div>
+
+          <div id="authorLogin" class="auth-tab-content">
+            <form id="authorLoginForm">
+              <div class="form-group">
+                <label for="authorLoginEmail">Email Address *</label>
+                <input
+                  type="email"
+                  id="authorLoginEmail"
+                  class="form-control"
+                  required />
+              </div>
+              <div class="form-group">
+                <label for="authorLoginPassword">Password *</label>
+                <input
+                  type="password"
+                  id="authorLoginPassword"
+                  class="form-control"
+                  required />
+              </div>
+              <button type="submit" class="btn btn-primary btn-block">
+                Login as Author
+              </button>
+            </form>
+          </div>
+
+          <div id="adminLogin" class="auth-tab-content">
+            <form id="adminLoginForm">
+              <div class="form-group">
+                <label for="adminLoginEmail">Email Address *</label>
+                <input
+                  type="email"
+                  id="adminLoginEmail"
+                  class="form-control"
+                  required />
+              </div>
+              <div class="form-group">
+                <label for="adminLoginPassword">Password *</label>
+                <input
+                  type="password"
+                  id="adminLoginPassword"
+                  class="form-control"
+                  required />
+              </div>
+              <button type="submit" class="btn btn-primary btn-block">
+                Login as Admin
+              </button>
+            </form>
+          </div>
+        </div>
       </div>
     </div>
 
-    <div id="trainingModal" class="modal">
+    <!-- Unified Register Modal -->
+    <div class="modal" id="registerModal">
       <div class="modal-content">
-        <span class="close" onclick="closeModal('trainingModal')">&times;</span>
-        <h2>Student Training Registration</h2>
-        <form id="trainingRegistrationForm">
-          <div class="form-group">
-            <input
-              type="text"
-              id="studentName"
-              placeholder="Full Name"
-              required />
-          </div>
-          <div class="form-group">
-            <input
-              type="email"
-              id="studentEmail"
-              placeholder="Email Address"
-              required />
-          </div>
-          <div class="form-group">
-            <input
-              type="text"
-              id="studentId"
-              placeholder="Student ID"
-              required />
-          </div>
-          <div class="form-group">
-            <input
-              type="text"
-              id="studentFaculty"
-              placeholder="Faculty"
-              required />
-          </div>
-          <div class="form-group">
-            <input
-              type="text"
-              id="studentDepartment"
-              placeholder="Department"
-              required />
-          </div>
-          <div class="form-group">
-            <select id="studentLevel" required>
-              <option value="">Select Level</option>
-              <option value="100">100 Level</option>
-              <option value="200">200 Level</option>
-              <option value="300">300 Level</option>
-              <option value="400">400 Level</option>
-              <option value="500">500 Level</option>
-              <option value="postgraduate">Postgraduate</option>
-            </select>
-          </div>
-          <div class="form-group">
-            <select id="trainingType" required>
-              <option value="">Select Training Type</option>
-              <option value="publishing_basics">Publishing Basics</option>
-              <option value="editing_proofreading">
-                Editing & Proofreading
-              </option>
-              <option value="printing_technology">Printing Technology</option>
-              <option value="digital_publishing">Digital Publishing</option>
-              <option value="all">Complete Publishing Course</option>
-            </select>
-          </div>
-          <div class="form-group">
-            <label for="preferredDate">Preferred Training Date</label>
-            <input type="date" id="preferredDate" required />
-          </div>
-          <button type="submit" class="btn-primary">
-            Register for Training
+        <div class="modal-header">
+          <h3>Register</h3>
+          <button class="modal-close" onclick="closeModal('registerModal')">
+            &times;
           </button>
-        </form>
+        </div>
+        <div class="modal-body">
+          <div class="auth-tabs">
+            <button
+              class="auth-tab-btn active"
+              onclick="switchRegisterTab('userRegister')">
+              User Registration
+            </button>
+            <button
+              class="auth-tab-btn"
+              onclick="switchRegisterTab('authorRegister')">
+              Author Registration
+            </button>
+          </div>
+
+          <div id="userRegister" class="auth-tab-content active">
+            <form id="userRegisterForm">
+              <div class="form-group">
+                <label for="userRegFullName">Full Name *</label>
+                <input
+                  type="text"
+                  id="userRegFullName"
+                  class="form-control"
+                  required />
+              </div>
+              <div class="form-group">
+                <label for="userRegEmail">Email Address *</label>
+                <input
+                  type="email"
+                  id="userRegEmail"
+                  class="form-control"
+                  required />
+              </div>
+              <div class="form-group">
+                <label for="userRegUsername">Username *</label>
+                <input
+                  type="text"
+                  id="userRegUsername"
+                  class="form-control"
+                  required />
+              </div>
+              <div class="form-group">
+                <label for="userRegPassword">Password *</label>
+                <input
+                  type="password"
+                  id="userRegPassword"
+                  class="form-control"
+                  required />
+              </div>
+              <button type="submit" class="btn btn-primary btn-block">
+                Register as User
+              </button>
+            </form>
+          </div>
+
+          <div id="authorRegister" class="auth-tab-content">
+            <form id="authorRegisterForm">
+              <div class="form-group">
+                <label for="regFullName">Full Name *</label>
+                <input
+                  type="text"
+                  id="regFullName"
+                  class="form-control"
+                  required />
+              </div>
+              <div class="form-group">
+                <label for="regEmail">Email Address *</label>
+                <input
+                  type="email"
+                  id="regEmail"
+                  class="form-control"
+                  required />
+              </div>
+              <div class="form-group">
+                <label for="regPhone">Phone Number *</label>
+                <input type="tel" id="regPhone" class="form-control" required />
+              </div>
+              <div class="form-group">
+                <label for="regFaculty">Faculty *</label>
+                <input
+                  type="text"
+                  id="regFaculty"
+                  class="form-control"
+                  required />
+              </div>
+              <div class="form-group">
+                <label for="regDepartment">Department *</label>
+                <input
+                  type="text"
+                  id="regDepartment"
+                  class="form-control"
+                  required />
+              </div>
+              <div class="form-group">
+                <label for="regStaffId">Staff/Student ID *</label>
+                <input
+                  type="text"
+                  id="regStaffId"
+                  class="form-control"
+                  required />
+              </div>
+              <div class="form-group">
+                <label for="regPassword">Password *</label>
+                <input
+                  type="password"
+                  id="regPassword"
+                  class="form-control"
+                  required />
+              </div>
+              <button type="submit" class="btn btn-primary btn-block">
+                Register as Author
+              </button>
+            </form>
+          </div>
+        </div>
       </div>
     </div>
 
-    <div id="successModal" class="modal">
-      <div class="modal-content success-modal">
-        <span class="close" onclick="closeModal('successModal')">&times;</span>
-        <i class="fas fa-check-circle"></i>
-        <h2>Success!</h2>
-        <p id="successMessage"></p>
-        <button class="btn-primary" onclick="closeModal('successModal')">
-          OK
-        </button>
+    <!-- Training Registration Modal -->
+    <div class="modal" id="trainingModal">
+      <div class="modal-content">
+        <div class="modal-header">
+          <h3>Student Training Registration</h3>
+          <button class="modal-close" onclick="closeModal('trainingModal')">
+            &times;
+          </button>
+        </div>
+        <div class="modal-body">
+          <form id="trainingForm">
+            <div class="form-group">
+              <label for="trainFullName">Full Name *</label>
+              <input
+                type="text"
+                id="trainFullName"
+                class="form-control"
+                required />
+            </div>
+            <div class="form-group">
+              <label for="trainEmail">Email Address *</label>
+              <input
+                type="email"
+                id="trainEmail"
+                class="form-control"
+                required />
+            </div>
+            <div class="form-group">
+              <label for="trainStudentId">Student ID *</label>
+              <input
+                type="text"
+                id="trainStudentId"
+                class="form-control"
+                required />
+            </div>
+            <div class="form-group">
+              <label for="trainFaculty">Faculty *</label>
+              <input
+                type="text"
+                id="trainFaculty"
+                class="form-control"
+                required />
+            </div>
+            <div class="form-group">
+              <label for="trainDepartment">Department *</label>
+              <input
+                type="text"
+                id="trainDepartment"
+                class="form-control"
+                required />
+            </div>
+            <div class="form-group">
+              <label for="trainLevel">Level *</label>
+              <select id="trainLevel" class="form-control" required>
+                <option value="">Select Level</option>
+                <option value="100">100 Level</option>
+                <option value="200">200 Level</option>
+                <option value="300">300 Level</option>
+                <option value="400">400 Level</option>
+                <option value="500">500 Level</option>
+                <option value="postgraduate">Postgraduate</option>
+              </select>
+            </div>
+            <div class="form-group">
+              <label for="trainType">Training Type *</label>
+              <select id="trainType" class="form-control" required>
+                <option value="">Select Training</option>
+                <option value="publishing_basics">Publishing Basics</option>
+                <option value="editing_proofreading">
+                  Editing & Proofreading
+                </option>
+                <option value="copyright_law">Copyright Law</option>
+                <option value="digital_publishing">Digital Publishing</option>
+              </select>
+            </div>
+          </form>
+        </div>
+        <div class="modal-footer">
+          <button
+            class="btn btn-secondary"
+            onclick="closeModal('trainingModal')">
+            Cancel
+          </button>
+          <button class="btn btn-primary" onclick="registerTraining()">
+            Register
+          </button>
+        </div>
       </div>
     </div>
+
+    <!-- Contact Modal -->
+    <div class="modal" id="contactModal">
+      <div class="modal-content">
+        <div class="modal-header">
+          <h3>Contact Us</h3>
+          <button class="modal-close" onclick="closeModal('contactModal')">
+            &times;
+          </button>
+        </div>
+        <div class="modal-body">
+          <form id="contactForm">
+            <div class="form-group">
+              <label for="contactName">Your Name *</label>
+              <input
+                type="text"
+                id="contactName"
+                class="form-control"
+                required />
+            </div>
+            <div class="form-group">
+              <label for="contactEmail">Email Address *</label>
+              <input
+                type="email"
+                id="contactEmail"
+                class="form-control"
+                required />
+            </div>
+            <div class="form-group">
+              <label for="contactSubject">Subject *</label>
+              <input
+                type="text"
+                id="contactSubject"
+                class="form-control"
+                required />
+            </div>
+            <div class="form-group">
+              <label for="contactMessage">Message *</label>
+              <textarea
+                id="contactMessage"
+                class="form-control"
+                rows="4"
+                required></textarea>
+            </div>
+          </form>
+        </div>
+        <div class="modal-footer">
+          <button
+            class="btn btn-secondary"
+            onclick="closeModal('contactModal')">
+            Cancel
+          </button>
+          <button class="btn btn-primary" onclick="submitContact()">
+            Send Message
+          </button>
+        </div>
+      </div>
+    </div>
+
+    <!-- Loading Overlay -->
+    <div class="modal" id="loadingModal">
+      <div class="modal-content" style="max-width: 300px; text-align: center">
+        <div class="modal-body">
+          <div
+            class="spinner"
+            style="width: 40px; height: 40px; margin: 20px auto"></div>
+          <p id="loadingText">Loading...</p>
+        </div>
+      </div>
+    </div>
+
+    <!-- JavaScript Libraries -->
+    <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+    <script src="https://cdn.datatables.net/1.13.6/js/jquery.dataTables.min.js"></script>
+
     <script>
-      // API Base URL - Fallback to relative path if localhost fails
-      const API_BASE_URL = window.location.origin + "/api";
-
-      // DOM Elements
-      let currentAuthor = null;
+      // Global variables
+      const API_BASE_URL = "http://localhost:3001/api";
+      let currentUser = null;
+      let publications = [];
+      let currentPage = 1;
+      const itemsPerPage = 6;
 
       // Initialize when DOM is loaded
       document.addEventListener("DOMContentLoaded", function () {
-        loadPublications();
+        loadHomepageData();
         setupEventListeners();
-        setupForms();
-
-        // Check for saved session
-        const savedAuthor = localStorage.getItem("currentAuthor");
-        if (savedAuthor) {
-          try {
-            currentAuthor = JSON.parse(savedAuthor);
-            updateAuthUI();
-          } catch (e) {
-            localStorage.removeItem("currentAuthor");
-          }
-        }
+        checkAuth();
       });
 
-      // Setup Event Listeners
+      // Setup event listeners
       function setupEventListeners() {
-        // Sidebar toggle
-        const hamburger = document.querySelector(".hamburger");
-        const sidebar = document.querySelector(".sidebar");
-        const sidebarOverlay = document.querySelector(".sidebar-overlay");
-        const closeSidebar = document.querySelector(".close-sidebar");
+        const hamburgerMenu = document.getElementById("hamburgerMenu");
+        const mobileMenuOverlay = document.getElementById("mobileMenuOverlay");
 
-        if (hamburger) {
-          hamburger.addEventListener("click", () => {
-            sidebar.classList.add("active");
-            sidebarOverlay.classList.add("active");
-            hamburger.classList.add("active");
-          });
+        // Mobile menu toggle
+        if (hamburgerMenu) {
+          hamburgerMenu.addEventListener("click", toggleMobileMenu);
         }
 
-        if (closeSidebar) {
-          closeSidebar.addEventListener("click", () => {
-            sidebar.classList.remove("active");
-            sidebarOverlay.classList.remove("active");
-            hamburger.classList.remove("active");
-          });
+        // Close mobile menu when clicking overlay
+        if (mobileMenuOverlay) {
+          mobileMenuOverlay.addEventListener("click", closeMobileMenu);
         }
 
-        if (sidebarOverlay) {
-          sidebarOverlay.addEventListener("click", () => {
-            sidebar.classList.remove("active");
-            sidebarOverlay.classList.remove("active");
-            hamburger.classList.remove("active");
-          });
-        }
-
-        // Handle dropdown menus in sidebar
-        const dropdownToggles = document.querySelectorAll(".dropdown-toggle");
-        dropdownToggles.forEach((toggle) => {
-          toggle.addEventListener("click", (e) => {
-            e.preventDefault();
-            const dropdownMenu = toggle.nextElementSibling;
-            dropdownMenu.classList.toggle("active");
+        // Publication filter buttons
+        document.querySelectorAll(".filter-btn").forEach((btn) => {
+          btn.addEventListener("click", function () {
+            document
+              .querySelectorAll(".filter-btn")
+              .forEach((b) => b.classList.remove("active"));
+            this.classList.add("active");
+            filterPublications(this.dataset.category);
           });
         });
 
-        // Close sidebar when clicking on a link
-        const sidebarLinks = document.querySelectorAll(".sidebar-menu a");
-        sidebarLinks.forEach((link) => {
-          link.addEventListener("click", () => {
-            setTimeout(() => {
-              sidebar.classList.remove("active");
-              sidebarOverlay.classList.remove("active");
-              hamburger.classList.remove("active");
-            }, 200);
-          });
+        // Close modals on outside click
+        document.addEventListener("click", function (e) {
+          if (e.target.classList.contains("modal")) {
+            closeModal(e.target.id);
+          }
         });
-      }
 
-      // Modal Functions
-      function showModal(modalId) {
-        const modal = document.getElementById(modalId);
-        if (modal) {
-          modal.style.display = "block";
-          document.body.style.overflow = "hidden";
-
-          // If it's the submission modal and author is logged in, load their books
-          if (modalId === "submitModal" && currentAuthor) {
-            loadAuthorBooks();
-          }
-        }
-      }
-
-      function closeModal(modalId) {
-        const modal = document.getElementById(modalId);
-        if (modal) {
-          modal.style.display = "none";
-          document.body.style.overflow = "auto";
-
-          // Reset forms when closing
-          const form = modal.querySelector("form");
-          if (form) {
-            form.reset();
-          }
-        }
-      }
-
-      // Close modal when clicking outside
-      window.onclick = function (event) {
-        if (event.target.classList.contains("modal")) {
-          event.target.style.display = "none";
-          document.body.style.overflow = "auto";
-        }
-      };
-
-      // Setup Form Submissions
-      function setupForms() {
-        // Author Registration
-        const registerForm = document.getElementById("authorRegisterForm");
-        if (registerForm) {
-          registerForm.addEventListener("submit", handleAuthorRegistration);
-        }
-
-        // Author Login
-        const loginForm = document.getElementById("authorLoginForm");
-        if (loginForm) {
-          loginForm.addEventListener("submit", handleAuthorLogin);
-        }
-
-        // Book Upload
-        const uploadForm = document.getElementById("uploadBookForm");
-        if (uploadForm) {
-          uploadForm.addEventListener("submit", handleBookUpload);
-        }
-
-        // Submission for Publishing
-        const submitForm = document.getElementById("submitPublishingForm");
-        if (submitForm) {
-          submitForm.addEventListener("submit", handleSubmission);
-        }
-
-        // Training Registration
-        const trainingForm = document.getElementById(
-          "trainingRegistrationForm",
-        );
-        if (trainingForm) {
-          trainingForm.addEventListener("submit", handleTrainingRegistration);
-        }
-
-        // Contact Form
-        const contactForm = document.getElementById("contactForm");
-        if (contactForm) {
-          contactForm.addEventListener("submit", handleContactForm);
-        }
-      }
-
-      // Form Handlers
-      async function handleAuthorRegistration(e) {
-        e.preventDefault();
-
-        const formData = {
-          full_name: document.getElementById("fullName").value,
-          email: document.getElementById("authorEmail").value,
-          phone: document.getElementById("authorPhone").value,
-          faculty: document.getElementById("faculty").value,
-          department: document.getElementById("department").value,
-          staff_id: document.getElementById("staffId").value,
-          password: document.getElementById("authorPassword").value,
-        };
-
-        try {
-          const response = await fetch(`${API_BASE_URL}/authors/register`, {
-            method: "POST",
-            headers: {
-              "Content-Type": "application/json",
-            },
-            body: JSON.stringify(formData),
-          });
-
-          if (!response.ok) {
-            throw new Error(`HTTP error! status: ${response.status}`);
-          }
-
-          const data = await response.json();
-
-          if (data.success) {
-            showSuccess(
-              "Registration successful! Please wait for admin approval.",
-            );
-            closeModal("registerModal");
-          } else {
-            throw new Error(data.message || "Registration failed");
-          }
-        } catch (error) {
-          showError(
-            "Cannot connect to server. Please try again later or contact support.",
-          );
-          console.error("Registration error:", error);
-        }
-      }
-
-      async function handleAuthorLogin(e) {
-        e.preventDefault();
-
-        const formData = {
-          email: document.getElementById("loginEmail").value,
-          password: document.getElementById("loginPassword").value,
-        };
-
-        try {
-          const response = await fetch(`${API_BASE_URL}/authors/login`, {
-            method: "POST",
-            headers: {
-              "Content-Type": "application/json",
-            },
-            body: JSON.stringify(formData),
-          });
-
-          if (!response.ok) {
-            throw new Error(`HTTP error! status: ${response.status}`);
-          }
-
-          const data = await response.json();
-
-          if (data.success) {
-            currentAuthor = data.author;
-            localStorage.setItem(
-              "currentAuthor",
-              JSON.stringify(currentAuthor),
-            );
-            updateAuthUI();
-            showSuccess("Login successful!");
-            closeModal("loginModal");
-          } else {
-            throw new Error(data.message || "Login failed");
-          }
-        } catch (error) {
-          showError(
-            "Cannot connect to server. Please check if the server is running and try again.",
-          );
-          console.error("Login error:", error);
-        }
-      }
-
-      async function handleBookUpload(e) {
-        e.preventDefault();
-
-        if (!currentAuthor) {
-          showError("Please login first");
-          showModal("loginModal");
-          return;
-        }
-
-        try {
-          const formData = new FormData();
-          formData.append("author_id", currentAuthor.id);
-          formData.append("title", document.getElementById("bookTitle").value);
-          formData.append(
-            "description",
-            document.getElementById("bookDescription").value,
-          );
-          formData.append(
-            "category",
-            document.getElementById("bookCategory").value,
-          );
-
-          const manuscriptFile =
-            document.getElementById("manuscriptFile").files[0];
-          if (manuscriptFile) {
-            formData.append("manuscript_file", manuscriptFile);
-          }
-
-          const coverImage = document.getElementById("coverImage").files[0];
-          if (coverImage) {
-            formData.append("cover_image", coverImage);
-          }
-
-          const response = await fetch(`${API_BASE_URL}/books/upload`, {
-            method: "POST",
-            body: formData,
-          });
-
-          if (!response.ok) {
-            throw new Error(`HTTP error! status: ${response.status}`);
-          }
-
-          const data = await response.json();
-
-          if (data.success) {
-            showSuccess("Book uploaded successfully for review!");
-            closeModal("uploadModal");
-          } else {
-            throw new Error(data.message || "Upload failed");
-          }
-        } catch (error) {
-          showError("Cannot connect to server. Please try again later.");
-          console.error("Upload error:", error);
-        }
-      }
-
-      async function loadAuthorBooks() {
-        if (!currentAuthor) return;
-
-        try {
-          const response = await fetch(
-            `${API_BASE_URL}/authors/${currentAuthor.id}/books`,
-          );
-
-          if (!response.ok) {
-            throw new Error(`HTTP error! status: ${response.status}`);
-          }
-
-          const data = await response.json();
-
-          const bookSelect = document.getElementById("bookSelect");
-          if (bookSelect && data.success) {
-            bookSelect.innerHTML = '<option value="">Select Your Book</option>';
-
-            data.books.forEach((book) => {
-              if (book.status === "approved") {
-                const option = document.createElement("option");
-                option.value = book.id;
-                option.textContent = book.title;
-                bookSelect.appendChild(option);
-              }
+        // Close modals with Escape key
+        document.addEventListener("keydown", function (e) {
+          if (e.key === "Escape") {
+            document.querySelectorAll(".modal").forEach((modal) => {
+              modal.classList.remove("active");
             });
+            closeMobileMenu();
+          }
+        });
+      }
+
+      // Toggle mobile menu
+      function toggleMobileMenu() {
+        const hamburgerMenu = document.getElementById("hamburgerMenu");
+        const mobileMenu = document.getElementById("mobileMenu");
+        const overlay = document.getElementById("mobileMenuOverlay");
+
+        hamburgerMenu.classList.toggle("active");
+        mobileMenu.classList.toggle("active");
+        overlay.classList.toggle("active");
+        document.body.style.overflow = mobileMenu.classList.contains("active")
+          ? "hidden"
+          : "auto";
+      }
+
+      // Close mobile menu
+      function closeMobileMenu() {
+        const hamburgerMenu = document.getElementById("hamburgerMenu");
+        const mobileMenu = document.getElementById("mobileMenu");
+        const overlay = document.getElementById("mobileMenuOverlay");
+
+        hamburgerMenu.classList.remove("active");
+        mobileMenu.classList.remove("active");
+        overlay.classList.remove("active");
+        document.body.style.overflow = "auto";
+      }
+
+      // Load homepage data from database
+      async function loadHomepageData() {
+        try {
+          showLoading("Loading publications...");
+
+          // Load published books
+          const booksResponse = await fetch(`${API_BASE_URL}/books/published`);
+          const booksData = await booksResponse.json();
+
+          if (booksData.success) {
+            publications = booksData.books;
+            displayPublications(publications.slice(0, itemsPerPage));
+
+            // Update stats
+            document.getElementById("publishedBooks").textContent =
+              booksData.count || publications.length;
+            document.getElementById("totalBooksPublished").textContent =
+              booksData.count || publications.length;
+          }
+
+          // Load authors count
+          const authorsResponse = await fetch(`${API_BASE_URL}/authors/count`);
+          const authorsData = await authorsResponse.json();
+
+          if (authorsData.success) {
+            document.getElementById("activeAuthors").textContent =
+              authorsData.count;
+            document.getElementById("authorsPublished").textContent =
+              authorsData.count;
+          }
+
+          // Load training count
+          const trainingResponse = await fetch(
+            `${API_BASE_URL}/training/count`,
+          );
+          const trainingData = await trainingResponse.json();
+
+          if (trainingData.success) {
+            document.getElementById("studentsTrained").textContent =
+              trainingData.count;
           }
         } catch (error) {
-          console.error("Error loading books:", error);
+          console.error("Error loading homepage data:", error);
+          // Fallback to sample data if API fails
+          loadSampleData();
+        } finally {
+          hideLoading();
         }
       }
 
-      async function handleSubmission(e) {
-        e.preventDefault();
+      // Display publications in grid
+      function displayPublications(books) {
+        const grid = document.getElementById("publicationsGrid");
+        if (!grid) return;
 
-        if (!currentAuthor) {
-          showError("Please login first");
-          showModal("loginModal");
+        grid.innerHTML = "";
+
+        if (books.length === 0) {
+          grid.innerHTML =
+            '<p style="grid-column: 1 / -1; text-align: center; color: var(--gray-600); padding: 40px;">No publications found.</p>';
           return;
         }
 
-        const formData = {
-          book_id: document.getElementById("bookSelect").value,
-          submission_type: document.getElementById("submissionType").value,
-        };
+        books.forEach((book) => {
+          const card = document.createElement("div");
+          card.className = "publication-card";
+          card.innerHTML = `
+                    <div class="publication-image">
+                        <i class="fas fa-book"></i>
+                    </div>
+                    <div class="publication-content">
+                        <span class="publication-category">${book.category || "Academic"}</span>
+                        <h3 class="publication-title">${book.title}</h3>
+                        <p class="publication-author">
+                            <i class="fas fa-user"></i> ${book.author_name || "Babcock Author"}
+                        </p>
+                        <p style="color: var(--gray-600); font-size: 0.9rem; margin-bottom: 15px;">
+                            ${book.description ? book.description.substring(0, 100) + "..." : "Academic publication from Babcock University"}
+                        </p>
+                        <div class="publication-meta">
+                            <span style="color: var(--gray-500); font-size: 0.9rem;">
+                                <i class="far fa-calendar"></i> ${new Date(book.publication_date || book.created_at).getFullYear()}
+                            </span>
+                            <div class="publication-price">
+                                ${book.price ? "₦" + book.price : "Available"}
+                            </div>
+                        </div>
+                    </div>
+                `;
+          grid.appendChild(card);
+        });
+      }
 
-        try {
-          const response = await fetch(`${API_BASE_URL}/submissions/create`, {
-            method: "POST",
-            headers: {
-              "Content-Type": "application/json",
-            },
-            body: JSON.stringify(formData),
-          });
-
-          if (!response.ok) {
-            throw new Error(`HTTP error! status: ${response.status}`);
-          }
-
-          const data = await response.json();
-
-          if (data.success) {
-            showSuccess(
-              "Submission successful! Our team will contact you soon.",
-            );
-            closeModal("submitModal");
-          } else {
-            throw new Error(data.message || "Submission failed");
-          }
-        } catch (error) {
-          showError("Cannot connect to server. Please try again later.");
-          console.error("Submission error:", error);
+      // Filter publications by category
+      function filterPublications(category) {
+        if (category === "all") {
+          displayPublications(publications.slice(0, itemsPerPage));
+        } else {
+          const filtered = publications.filter(
+            (book) =>
+              book.category &&
+              book.category.toLowerCase().includes(category.toLowerCase()),
+          );
+          displayPublications(filtered.slice(0, itemsPerPage));
         }
       }
 
-      async function handleTrainingRegistration(e) {
-        e.preventDefault();
+      // Load more publications
+      function loadMorePublications() {
+        currentPage++;
+        const startIndex = (currentPage - 1) * itemsPerPage;
+        const endIndex = startIndex + itemsPerPage;
 
+        displayPublications(publications.slice(0, endIndex));
+      }
+
+      // Check authentication
+      async function checkAuth() {
+        const token = localStorage.getItem("authToken");
+        if (token) {
+          try {
+            const response = await fetch(`${API_BASE_URL}/auth/verify`, {
+              headers: {
+                Authorization: `Bearer ${token}`,
+              },
+            });
+
+            const data = await response.json();
+            if (data.success) {
+              currentUser = data.user;
+              updateAuthUI();
+              updateMobileMenu();
+            }
+          } catch (error) {
+            localStorage.removeItem("authToken");
+          }
+        }
+      }
+
+      // Update authentication UI
+      function updateAuthUI() {
+        const authButtons = document.getElementById("authButtons");
+        if (authButtons && currentUser) {
+          authButtons.innerHTML = `
+                    <div style="display: flex; align-items: center; gap: 15px;">
+                        <span style="color: var(--primary-color); font-weight: 600;">
+                            <i class="fas fa-user"></i> ${currentUser.full_name.split(" ")[0]}
+                        </span>
+                        ${
+                          currentUser.role === "admin"
+                            ? '<a href="admin.html" class="btn btn-primary"><i class="fas fa-shield-alt"></i> Admin</a>'
+                            : ""
+                        }
+                        ${
+                          currentUser.role === "author"
+                            ? '<a href="author.html" class="btn btn-primary"><i class="fas fa-book"></i> Dashboard</a>'
+                            : ""
+                        }
+                        <button class="btn btn-outline" onclick="logout()">
+                            <i class="fas fa-sign-out-alt"></i> Logout
+                        </button>
+                    </div>
+                `;
+        }
+      }
+
+      // Update mobile menu based on authentication
+      function updateMobileMenu() {
+        const mobileUserMenu = document.getElementById("mobileUserMenu");
+        const mobileAuthButtons = document.getElementById("mobileAuthButtons");
+
+        if (currentUser) {
+          // Show user menu, hide auth buttons
+          mobileUserMenu.style.display = "block";
+          mobileAuthButtons.style.display = "none";
+
+          // Update user info
+          document.getElementById("mobileUserName").textContent =
+            currentUser.full_name;
+          document.getElementById("mobileUserRole").textContent =
+            currentUser.role;
+          document.getElementById("mobileUserAvatar").textContent =
+            currentUser.full_name.charAt(0).toUpperCase();
+        } else {
+          // Show auth buttons, hide user menu
+          mobileUserMenu.style.display = "none";
+          mobileAuthButtons.style.display = "flex";
+        }
+      }
+
+      // Login functions
+      function showLoginModal() {
+        showModal("loginModal");
+        switchAuthTab("userLogin");
+      }
+
+      function showAuthorLogin() {
+        showModal("loginModal");
+        switchAuthTab("authorLogin");
+      }
+
+      function showAdminLogin() {
+        showModal("loginModal");
+        switchAuthTab("adminLogin");
+      }
+
+      function showRegisterModal() {
+        showModal("registerModal");
+        switchRegisterTab("userRegister");
+      }
+
+      function showAuthorRegistration() {
+        showModal("registerModal");
+        switchRegisterTab("authorRegister");
+      }
+
+      // Switch auth tabs
+      function switchAuthTab(tabName) {
+        // Remove active class from all tabs
+        document.querySelectorAll(".auth-tab-btn").forEach((btn) => {
+          btn.classList.remove("active");
+        });
+
+        document.querySelectorAll(".auth-tab-content").forEach((tab) => {
+          tab.classList.remove("active");
+        });
+
+        // Add active class to selected tab
+        document
+          .querySelector(`[onclick="switchAuthTab('${tabName}')"]`)
+          .classList.add("active");
+        document.getElementById(tabName).classList.add("active");
+      }
+
+      // Switch register tabs
+      function switchRegisterTab(tabName) {
+        // Remove active class from all tabs
+        document.querySelectorAll(".auth-tab-btn").forEach((btn) => {
+          btn.classList.remove("active");
+        });
+
+        document.querySelectorAll(".auth-tab-content").forEach((tab) => {
+          tab.classList.remove("active");
+        });
+
+        // Add active class to selected tab
+        document
+          .querySelector(`[onclick="switchRegisterTab('${tabName}')"]`)
+          .classList.add("active");
+        document.getElementById(tabName).classList.add("active");
+      }
+
+      // User registration
+      document
+        .getElementById("userRegisterForm")
+        ?.addEventListener("submit", async function (e) {
+          e.preventDefault();
+
+          const formData = {
+            full_name: document.getElementById("userRegFullName").value,
+            email: document.getElementById("userRegEmail").value,
+            username: document.getElementById("userRegUsername").value,
+            password: document.getElementById("userRegPassword").value,
+          };
+
+          try {
+            showLoading("Registering user...");
+            const response = await fetch(`${API_BASE_URL}/users/register`, {
+              method: "POST",
+              headers: {
+                "Content-Type": "application/json",
+              },
+              body: JSON.stringify(formData),
+            });
+
+            const data = await response.json();
+
+            if (data.success) {
+              showNotification("User registration successful!", "success");
+              localStorage.setItem("authToken", data.token);
+              currentUser = data.user;
+              updateAuthUI();
+              updateMobileMenu();
+              closeModal("registerModal");
+            } else {
+              throw new Error(data.message || "Registration failed");
+            }
+          } catch (error) {
+            showNotification(`Registration failed: ${error.message}`, "error");
+          } finally {
+            hideLoading();
+          }
+        });
+
+      // User login
+      document
+        .getElementById("userLoginForm")
+        ?.addEventListener("submit", async function (e) {
+          e.preventDefault();
+
+          const formData = {
+            email: document.getElementById("userLoginEmail").value,
+            password: document.getElementById("userLoginPassword").value,
+          };
+
+          try {
+            showLoading("Logging in...");
+            const response = await fetch(`${API_BASE_URL}/users/login`, {
+              method: "POST",
+              headers: {
+                "Content-Type": "application/json",
+              },
+              body: JSON.stringify(formData),
+            });
+
+            const data = await response.json();
+
+            if (data.success) {
+              showNotification("Login successful!", "success");
+              localStorage.setItem("authToken", data.token);
+              currentUser = data.user;
+              updateAuthUI();
+              updateMobileMenu();
+              closeModal("loginModal");
+            } else {
+              throw new Error(data.message || "Login failed");
+            }
+          } catch (error) {
+            showNotification(`Login failed: ${error.message}`, "error");
+          } finally {
+            hideLoading();
+          }
+        });
+
+      // Author login
+      document
+        .getElementById("authorLoginForm")
+        ?.addEventListener("submit", async function (e) {
+          e.preventDefault();
+
+          const formData = {
+            email: document.getElementById("authorLoginEmail").value,
+            password: document.getElementById("authorLoginPassword").value,
+          };
+
+          try {
+            showLoading("Logging in...");
+            const response = await fetch(`${API_BASE_URL}/authors/login`, {
+              method: "POST",
+              headers: {
+                "Content-Type": "application/json",
+              },
+              body: JSON.stringify(formData),
+            });
+
+            const data = await response.json();
+
+            if (data.success) {
+              showNotification("Author login successful!", "success");
+              localStorage.setItem("authToken", data.token);
+              currentUser = data.user;
+              updateAuthUI();
+              updateMobileMenu();
+              closeModal("loginModal");
+
+              // Redirect to author dashboard after a short delay
+              setTimeout(() => {
+                window.location.href = "author.html";
+              }, 1000);
+            } else {
+              throw new Error(data.message || "Login failed");
+            }
+          } catch (error) {
+            showNotification(`Login failed: ${error.message}`, "error");
+          } finally {
+            hideLoading();
+          }
+        });
+
+      // Admin login
+      document
+        .getElementById("adminLoginForm")
+        ?.addEventListener("submit", async function (e) {
+          e.preventDefault();
+
+          const formData = {
+            email: document.getElementById("adminLoginEmail").value,
+            password: document.getElementById("adminLoginPassword").value,
+          };
+
+          try {
+            showLoading("Logging in...");
+            const response = await fetch(`${API_BASE_URL}/admin/login`, {
+              method: "POST",
+              headers: {
+                "Content-Type": "application/json",
+              },
+              body: JSON.stringify(formData),
+            });
+
+            const data = await response.json();
+
+            if (data.success) {
+              showNotification("Admin login successful!", "success");
+              localStorage.setItem("authToken", data.token);
+              currentUser = data.user;
+              updateAuthUI();
+              updateMobileMenu();
+              closeModal("loginModal");
+
+              // Redirect to admin panel
+              window.location.href = "admin.html";
+            } else {
+              throw new Error(data.message || "Login failed");
+            }
+          } catch (error) {
+            showNotification(`Login failed: ${error.message}`, "error");
+          } finally {
+            hideLoading();
+          }
+        });
+
+      // Author registration
+      document
+        .getElementById("authorRegisterForm")
+        ?.addEventListener("submit", async function (e) {
+          e.preventDefault();
+
+          const formData = {
+            full_name: document.getElementById("regFullName").value,
+            email: document.getElementById("regEmail").value,
+            phone: document.getElementById("regPhone").value,
+            faculty: document.getElementById("regFaculty").value,
+            department: document.getElementById("regDepartment").value,
+            staff_id: document.getElementById("regStaffId").value,
+            password: document.getElementById("regPassword").value,
+            author_type: "staff",
+          };
+
+          try {
+            showLoading("Registering author...");
+            const response = await fetch(`${API_BASE_URL}/authors/register`, {
+              method: "POST",
+              headers: {
+                "Content-Type": "application/json",
+              },
+              body: JSON.stringify(formData),
+            });
+
+            const data = await response.json();
+
+            if (data.success) {
+              showNotification(
+                "Author registration successful! Please wait for admin approval.",
+                "success",
+              );
+              closeModal("registerModal");
+            } else {
+              throw new Error(data.message || "Registration failed");
+            }
+          } catch (error) {
+            showNotification(`Registration failed: ${error.message}`, "error");
+          } finally {
+            hideLoading();
+          }
+        });
+
+      // Training registration
+      async function registerTraining() {
         const formData = {
-          full_name: document.getElementById("studentName").value,
-          email: document.getElementById("studentEmail").value,
-          student_id: document.getElementById("studentId").value,
-          faculty: document.getElementById("studentFaculty").value,
-          department: document.getElementById("studentDepartment").value,
-          level: document.getElementById("studentLevel").value,
-          training_type: document.getElementById("trainingType").value,
-          preferred_date: document.getElementById("preferredDate").value,
+          full_name: document.getElementById("trainFullName").value,
+          email: document.getElementById("trainEmail").value,
+          student_id: document.getElementById("trainStudentId").value,
+          faculty: document.getElementById("trainFaculty").value,
+          department: document.getElementById("trainDepartment").value,
+          level: document.getElementById("trainLevel").value,
+          training_type: document.getElementById("trainType").value,
         };
 
         try {
+          showLoading("Registering for training...");
           const response = await fetch(`${API_BASE_URL}/training/register`, {
             method: "POST",
             headers: {
@@ -1719,29 +2607,26 @@
             body: JSON.stringify(formData),
           });
 
-          if (!response.ok) {
-            throw new Error(`HTTP error! status: ${response.status}`);
-          }
-
           const data = await response.json();
 
           if (data.success) {
-            showSuccess(
+            showNotification(
               "Training registration successful! We will contact you with details.",
+              "success",
             );
             closeModal("trainingModal");
           } else {
             throw new Error(data.message || "Registration failed");
           }
         } catch (error) {
-          showError("Cannot connect to server. Please try again later.");
-          console.error("Training registration error:", error);
+          showNotification(`Registration failed: ${error.message}`, "error");
+        } finally {
+          hideLoading();
         }
       }
 
-      async function handleContactForm(e) {
-        e.preventDefault();
-
+      // Contact form submission
+      async function submitContact() {
         const formData = {
           name: document.getElementById("contactName").value,
           email: document.getElementById("contactEmail").value,
@@ -1750,6 +2635,7 @@
         };
 
         try {
+          showLoading("Sending message...");
           const response = await fetch(`${API_BASE_URL}/contact`, {
             method: "POST",
             headers: {
@@ -1758,116 +2644,160 @@
             body: JSON.stringify(formData),
           });
 
-          if (!response.ok) {
-            throw new Error(`HTTP error! status: ${response.status}`);
-          }
-
           const data = await response.json();
 
           if (data.success) {
-            showSuccess("Message sent successfully! We will respond shortly.");
-            document.getElementById("contactForm").reset();
+            showNotification(
+              "Message sent successfully! We will respond shortly.",
+              "success",
+            );
+            closeModal("contactModal");
           } else {
             throw new Error(data.message || "Message sending failed");
           }
         } catch (error) {
-          showError("Cannot connect to server. Please try again later.");
-          console.error("Contact form error:", error);
-        }
-      }
-
-      // Load Sample Publications
-      async function loadPublications() {
-        const publicationsList = document.getElementById("publicationsList");
-        if (!publicationsList) return;
-
-        // Sample publications data
-        const publications = [
-          {
-            id: 1,
-            title: "Introduction to Computer Science",
-            author: "Dr. John Adebayo",
-            category: "Textbook",
-            year: "2023",
-          },
-          {
-            id: 2,
-            title: "Research Methods in Social Sciences",
-            author: "Prof. Mary Johnson",
-            category: "Research",
-            year: "2022",
-          },
-          {
-            id: 3,
-            title: "Business Ethics and Corporate Governance",
-            author: "Dr. Samuel Ojo",
-            category: "Textbook",
-            year: "2023",
-          },
-          {
-            id: 4,
-            title: "Advances in Medical Research",
-            author: "Various Authors",
-            category: "Journal",
-            year: "2024",
-          },
-        ];
-
-        publicationsList.innerHTML = "";
-
-        publications.forEach((pub) => {
-          const card = document.createElement("div");
-          card.className = "publication-card";
-          card.innerHTML = `
-        <div class="publication-image">
-            <i class="fas fa-book"></i>
-        </div>
-        <div class="publication-info">
-            <h3>${pub.title}</h3>
-            <p class="author">By ${pub.author}</p>
-            <div class="publication-details">
-                <span class="category">${pub.category}</span>
-                <span class="year">${pub.year}</span>
-            </div>
-        </div>
-      `;
-          publicationsList.appendChild(card);
-        });
-      }
-
-      // Update UI based on authentication state
-      function updateAuthUI() {
-        const authButtons = document.querySelector(".auth-buttons");
-        if (authButtons && currentAuthor) {
-          authButtons.innerHTML = `
-        <div class="user-menu" style="display: flex; align-items: center; gap: 10px;">
-            <span style="color: var(--primary-color); font-weight: 600;">Welcome, ${currentAuthor.full_name.split(" ")[0]}</span>
-            <button class="btn-login" onclick="logout()" style="background: var(--danger-color);">Logout</button>
-        </div>
-      `;
+          showNotification(`Message failed to send: ${error.message}`, "error");
+        } finally {
+          hideLoading();
         }
       }
 
       // Logout function
-      function logout() {
-        currentAuthor = null;
-        localStorage.removeItem("currentAuthor");
-        location.reload();
-      }
-
-      // Success and Error Messages
-      function showSuccess(message) {
-        const successMessage = document.getElementById("successMessage");
-        if (successMessage) {
-          successMessage.textContent = message;
-          showModal("successModal");
+      async function logout() {
+        try {
+          const token = localStorage.getItem("authToken");
+          if (token) {
+            await fetch(`${API_BASE_URL}/auth/logout`, {
+              method: "POST",
+              headers: {
+                Authorization: `Bearer ${token}`,
+              },
+            });
+          }
+        } catch (error) {
+          console.error("Logout error:", error);
+        } finally {
+          localStorage.removeItem("authToken");
+          currentUser = null;
+          updateAuthUI();
+          updateMobileMenu();
+          location.reload();
         }
       }
 
-      function showError(message) {
-        alert("Error: " + message);
+      // Modal functions
+      function showModal(modalId) {
+        document.getElementById(modalId).classList.add("active");
+        document.body.style.overflow = "hidden";
       }
+
+      function closeModal(modalId) {
+        document.getElementById(modalId).classList.remove("active");
+        document.body.style.overflow = "auto";
+      }
+
+      // Loading functions
+      function showLoading(text) {
+        document.getElementById("loadingText").textContent = text;
+        document.getElementById("loadingModal").classList.add("active");
+      }
+
+      function hideLoading() {
+        document.getElementById("loadingModal").classList.remove("active");
+      }
+
+      // Notification system
+      function showNotification(message, type = "success") {
+        // Remove existing notifications
+        const existing = document.querySelector(".notification");
+        if (existing) existing.remove();
+
+        const notification = document.createElement("div");
+        notification.className = `notification ${type}`;
+        notification.innerHTML = `
+                <i class="fas fa-${type === "success" ? "check-circle" : "exclamation-circle"}"></i>
+                <span>${message}</span>
+            `;
+
+        document.body.appendChild(notification);
+
+        // Auto remove after 5 seconds
+        setTimeout(() => {
+          notification.remove();
+        }, 5000);
+      }
+
+      // Sample data for fallback
+      function loadSampleData() {
+        const sampleBooks = [
+          {
+            id: 1,
+            title: "Introduction to Computer Science",
+            author_name: "Dr. John Adebayo",
+            category: "Textbook",
+            description: "Comprehensive guide to computer science fundamentals",
+            publication_date: "2023-01-15",
+            price: "4500",
+          },
+          {
+            id: 2,
+            title: "Research Methods in Social Sciences",
+            author_name: "Prof. Mary Johnson",
+            category: "Research",
+            description: "Advanced methodologies for social science research",
+            publication_date: "2022-08-20",
+            price: "5200",
+          },
+          {
+            id: 3,
+            title: "Business Ethics and Corporate Governance",
+            author_name: "Dr. Samuel Ojo",
+            category: "Textbook",
+            description: "Ethical frameworks for modern business practices",
+            publication_date: "2023-03-10",
+            price: "3800",
+          },
+          {
+            id: 4,
+            title: "Advances in Medical Research",
+            author_name: "Various Authors",
+            category: "Journal",
+            description: "Latest developments in medical science research",
+            publication_date: "2024-01-05",
+            price: "2800",
+          },
+        ];
+
+        publications = sampleBooks;
+        displayPublications(sampleBooks);
+
+        // Update stats with sample data
+        document.getElementById("publishedBooks").textContent = "150+";
+        document.getElementById("activeAuthors").textContent = "85+";
+        document.getElementById("studentsTrained").textContent = "1200+";
+        document.getElementById("totalBooksPublished").textContent = "150+";
+        document.getElementById("authorsPublished").textContent = "85+";
+      }
+
+      // Export functions for global use
+      window.showModal = showModal;
+      window.closeModal = closeModal;
+      window.registerAuthor = registerAuthor;
+      window.loginAuthor = loginAuthor;
+      window.registerTraining = registerTraining;
+      window.submitContact = submitContact;
+      window.logout = logout;
+      window.loadMorePublications = loadMorePublications;
+      window.filterPublications = filterPublications;
+      window.showLoginModal = showLoginModal;
+      window.showRegisterModal = showRegisterModal;
+      window.showAuthorLogin = showAuthorLogin;
+      window.showAdminLogin = showAdminLogin;
+      window.showAuthorRegistration = showAuthorRegistration;
+      window.switchAuthTab = switchAuthTab;
+      window.switchRegisterTab = switchRegisterTab;
+      window.toggleMobileMenu = toggleMobileMenu;
+      window.closeMobileMenu = closeMobileMenu;
     </script>
-    <!-- <script src="script.js"></script> -->
   </body>
 </html>
