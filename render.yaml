@@ -1,0 +1,56 @@
+services:
+  - type: web
+    name: babcock-publishing-backend
+    runtime: node
+    rootDir: backend
+    plan: free
+    buildCommand: npm install
+    startCommand: npm start
+    healthCheckPath: /api/health
+    envVars:
+      - key: NODE_ENV
+        value: production
+      - key: HOST
+        value: 0.0.0.0
+      - key: PORT
+        value: 3001
+      - key: FRONTEND_URL
+        value: https://your-vercel-app.vercel.app
+      - key: CORS_ORIGIN
+        value: https://your-vercel-app.vercel.app
+      - key: DB_CLIENT
+        value: mysql
+      - key: DB_HOST
+        sync: false
+      - key: DB_PORT
+        value: 3306
+      - key: DB_USER
+        sync: false
+      - key: DB_PASSWORD
+        sync: false
+      - key: DB_NAME
+        value: babcock_publishing
+      - key: DB_SSL
+        value: "false"
+      - key: JWT_SECRET
+        sync: false
+      - key: SESSION_SECRET
+        sync: false
+      - key: ADMIN_EMAIL
+        value: admin@babcock.edu.ng
+      - key: ADMIN_PASSWORD
+        sync: false
+      - key: UPLOAD_DIR
+        value: uploads
+      - key: MAX_FILE_SIZE
+        value: 10485760
+      - key: SMTP_HOST
+        value: smtp.gmail.com
+      - key: SMTP_PORT
+        value: 587
+      - key: SMTP_USER
+        sync: false
+      - key: SMTP_PASSWORD
+        sync: false
+      - key: SENDER_EMAIL
+        sync: false
