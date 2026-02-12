@@ -3,11 +3,11 @@
   "rewrites": [
     {
       "source": "/api/(.*)",
-      "destination": "https://babcock-publishing-backend.onrender.com/api/$1"
+      "destination": "https://babcock-publishing.onrender.com/api/$1"
     },
     {
       "source": "/uploads/(.*)",
-      "destination": "https://babcock-publishing-backend.onrender.com/uploads/$1"
+      "destination": "https://babcock-publishing.onrender.com/uploads/$1"
     },
     {
       "source": "/(.*)",
@@ -15,3 +15,4 @@
     }
   ]
 }
+

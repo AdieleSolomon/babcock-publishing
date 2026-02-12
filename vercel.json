@@ -1,15 +1,13 @@
 {
-  "buildCommand": "echo \"Static frontend build: skipped\"",
-  "outputDirectory": "frontend",
   "cleanUrls": true,
   "rewrites": [
     {
       "source": "/api/:match*",
-      "destination": "https://babcock-publishing-backend.onrender.com/api/:match*"
+      "destination": "https://babcock-publishing.onrender.com/api/:match*"
     },
     {
       "source": "/uploads/:match*",
-      "destination": "https://babcock-publishing-backend.onrender.com/uploads/:match*"
+      "destination": "https://babcock-publishing.onrender.com/uploads/:match*"
     },
     {
       "source": "/(.*)",
@@ -17,3 +15,4 @@
     }
   ]
 }
+
