@@ -1,18 +1,4 @@
 {
-  "cleanUrls": true,
-  "rewrites": [
-    {
-      "source": "/api/:match*",
-      "destination": "https://babcock-publishing.onrender.com/api/:match*"
-    },
-    {
-      "source": "/uploads/:match*",
-      "destination": "https://babcock-publishing.onrender.com/uploads/:match*"
-    },
-    {
-      "source": "/(.*)",
-      "destination": "/index.html"
-    }
-  ]
+  "cleanUrls": true
 }
 
