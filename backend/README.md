@@ -12,8 +12,9 @@ This directory is the Node.js backend API.
 - `render.yaml`
 - `scripts/mysql-to-postgres-migrate.js`
 - `migrations/mysql_to_postgres/README.md`
+- `migrations/supabase_reset_public_schema.sql`
 
-## 1. Deploy backend to Render (current MySQL mode)
+## 1. Deploy backend to Render
 
 1. In Render, create a new **Web Service** from this repo.
 2. Use repo root `render.yaml` (Blueprint deploy) or set manually:
@@ -24,7 +25,8 @@ This directory is the Node.js backend API.
 4. Replace placeholder values:
    - `FRONTEND_URL`
    - `CORS_ORIGIN`
-   - DB credentials
+   - `DB_CLIENT` (`postgres` for Supabase, `mysql` for legacy local MySQL)
+   - DB credentials / `DATABASE_URL`
    - secrets (`JWT_SECRET`, `SESSION_SECRET`, SMTP)
 5. Deploy and verify health:
    - `GET /api/health`
@@ -58,13 +60,13 @@ npm run migrate:mysql-to-pg
 npm run migrate:mysql-to-pg:apply
 ```
 
-## 4. Switch backend to Postgres mode (after query migration)
+## 4. Switch backend to Postgres mode
 
 - Set `DB_CLIENT=postgres`
 - Set `DATABASE_URL` (Supabase pooler URL)
 - Keep `DB_SSL=true`
 
-Note: current app query layer is MySQL-oriented. Full Postgres cutover requires query/driver migration in code.
+Note: `server.js` now uses a cross-DB query adapter for MySQL/Postgres with `DB_CLIENT`.
 
 ## 5. Smoke tests after deploy
 

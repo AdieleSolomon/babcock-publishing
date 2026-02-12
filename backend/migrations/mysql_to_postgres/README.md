@@ -12,7 +12,8 @@ This folder stores generated migration artifacts from `scripts/mysql-to-postgres
 ## Required env
 
 - MySQL source:
-  - `DB_HOST`, `DB_PORT`, `DB_USER`, `DB_PASSWORD`, `DB_NAME`
+  - `MYSQL_MIGRATION_HOST`, `MYSQL_MIGRATION_PORT`, `MYSQL_MIGRATION_DB`, `MYSQL_MIGRATION_USER`, `MYSQL_MIGRATION_PASSWORD`
+  - or fallback `DB_HOST`, `DB_PORT`, `DB_USER`, `DB_PASSWORD`, `DB_NAME`
 - Postgres target (Supabase):
   - `DATABASE_URL`
   - `DB_SSL=true` (recommended for Supabase)
@@ -23,4 +24,4 @@ This folder stores generated migration artifacts from `scripts/mysql-to-postgres
 - Type mapping uses generic conversions (e.g. MySQL `enum` -> Postgres `TEXT`).
 - Review generated schema before apply:
   - `migrations/mysql_to_postgres/generated_schema.sql`
-- After migration, update backend query layer from MySQL syntax to Postgres syntax.
+- Backend runtime supports both `mysql` and `postgres` via `DB_CLIENT`; validate endpoints after migration.

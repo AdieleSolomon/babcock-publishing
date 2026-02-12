@@ -1,5 +1,6 @@
 import express from "express";
 import mysql from "mysql2";
+import pg from "pg";
 import cors from "cors";
 import bodyParser from "body-parser";
 import dotenv from "dotenv";
@@ -126,7 +127,11 @@ app.use("/uploads", express.static(path.join(__dirname, "uploads")));
 app.use(express.static(FRONTEND_DIR));
 app.use(express.static(FRONTEND_PUBLIC_DIR));
 
-// MySQL Connection
+const DB_CLIENT = (process.env.DB_CLIENT || "mysql").toLowerCase();
+const isPostgres = DB_CLIENT === "postgres";
+const { Pool: PgPool } = pg;
+
+// Database connection configuration
 const dbConfig = {
   host: process.env.DB_HOST || "localhost",
   user: process.env.DB_USER || "root",
@@ -139,11 +144,133 @@ const dbConfig = {
   charset: "utf8mb4",
 };
 
-const pool = mysql.createPool(dbConfig);
+const mysqlPool = isPostgres ? null : mysql.createPool(dbConfig);
+const pgPool = isPostgres
+  ? new PgPool({
+      connectionString: process.env.DATABASE_URL,
+      ssl:
+        process.env.DB_SSL === "true"
+          ? { rejectUnauthorized: false }
+          : undefined,
+    })
+  : null;
+
+function convertQuestionParams(sql) {
+  let idx = 0;
+  let inSingle = false;
+  let inDouble = false;
+  let output = "";
+
+  for (let i = 0; i < sql.length; i += 1) {
+    const ch = sql[i];
+    const prev = i > 0 ? sql[i - 1] : "";
+
+    if (ch === "'" && !inDouble && prev !== "\\") {
+      inSingle = !inSingle;
+      output += ch;
+      continue;
+    }
+    if (ch === '"' && !inSingle && prev !== "\\") {
+      inDouble = !inDouble;
+      output += ch;
+      continue;
+    }
+
+    if (!inSingle && !inDouble && ch === "?") {
+      idx += 1;
+      output += `$${idx}`;
+      continue;
+    }
+
+    output += ch;
+  }
+
+  return output;
+}
+
+function normalizeSqlForPostgres(sql) {
+  let normalized = sql;
+  normalized = normalized.replace(
+    /DATE_SUB\s*\(\s*CURDATE\(\)\s*,\s*INTERVAL\s+(\d+)\s+DAY\s*\)/gi,
+    "CURRENT_DATE - INTERVAL '$1 day'",
+  );
+  normalized = normalized.replace(
+    /DATE_SUB\s*\(\s*CURDATE\(\)\s*,\s*INTERVAL\s+(\d+)\s+MONTH\s*\)/gi,
+    "CURRENT_DATE - INTERVAL '$1 month'",
+  );
+  normalized = normalized.replace(/CURDATE\(\)/gi, "CURRENT_DATE");
+  normalized = normalized.replace(
+    /YEAR\s*\(\s*([^)]+)\s*\)/gi,
+    "EXTRACT(YEAR FROM $1)",
+  );
+  normalized = normalized.replace(
+    /MONTH\s*\(\s*([^)]+)\s*\)/gi,
+    "EXTRACT(MONTH FROM $1)",
+  );
+  normalized = normalized.replace(
+    /DATEDIFF\s*\(\s*([^,]+)\s*,\s*CURRENT_DATE\s*\)/gi,
+    "($1::date - CURRENT_DATE)",
+  );
+  return normalized;
+}
+
+async function dbQuery(sql, params = []) {
+  if (!isPostgres) {
+    return mysqlPool.promise().query(sql, params);
+  }
+
+  const transformedSql = convertQuestionParams(normalizeSqlForPostgres(sql));
+  const trimmedSql = transformedSql.trim().toLowerCase();
+  const isInsert = /^insert\s+into\s+/i.test(trimmedSql);
+  const hasReturning = /\breturning\b/i.test(trimmedSql);
+  const executableSql =
+    isInsert && !hasReturning
+      ? `${transformedSql} RETURNING id`
+      : transformedSql;
+
+  const result = await pgPool.query(executableSql, params);
+
+  if (
+    /^select\s+/i.test(trimmedSql) ||
+    /^with\s+/i.test(trimmedSql) ||
+    /^show\s+/i.test(trimmedSql)
+  ) {
+    return [result.rows];
+  }
+
+  if (isInsert) {
+    return [
+      {
+        affectedRows: result.rowCount || 0,
+        insertId: result.rows?.[0]?.id ?? null,
+        rows: result.rows,
+      },
+    ];
+  }
+
+  return [
+    {
+      affectedRows: result.rowCount || 0,
+      rowCount: result.rowCount || 0,
+      rows: result.rows,
+    },
+  ];
+}
 
 async function getTableColumns(tableName) {
-  const [rows] = await pool.promise().query(`SHOW COLUMNS FROM ${tableName}`);
-  return new Set(rows.map((row) => row.Field));
+  if (isPostgres) {
+    const [rows] = await dbQuery(
+      `SELECT column_name
+       FROM information_schema.columns
+       WHERE table_schema = 'public' AND table_name = ?
+       ORDER BY ordinal_position`,
+      [tableName],
+    );
+    return new Set(rows.map((row) => row.column_name));
+  }
+
+  const [rows] = await dbQuery(`SHOW COLUMNS FROM ${tableName}`);
+  return new Set(rows.map((row) => row.Field || row.field));
 }
 
 function toNullable(value) {
@@ -169,9 +296,7 @@ async function ensureAuthorProfileColumns() {
     userAlterStatements.push("ADD COLUMN phone VARCHAR(20)");
   }
   if (userAlterStatements.length > 0) {
-    await pool
-      .promise()
-      .query(`ALTER TABLE users ${userAlterStatements.join(", ")}`);
+    await dbQuery(`ALTER TABLE users ${userAlterStatements.join(", ")}`);
   }
 
   const authorAlterStatements = [];
@@ -195,13 +320,13 @@ async function ensureAuthorProfileColumns() {
   }
   if (!authorColumns.has("status")) {
     authorAlterStatements.push(
-      "ADD COLUMN status ENUM('pending', 'approved', 'rejected') DEFAULT 'pending'",
+      isPostgres
+        ? "ADD COLUMN status TEXT DEFAULT 'pending'"
+        : "ADD COLUMN status ENUM('pending', 'approved', 'rejected') DEFAULT 'pending'",
     );
   }
   if (authorAlterStatements.length > 0) {
-    await pool
-      .promise()
-      .query(`ALTER TABLE authors ${authorAlterStatements.join(", ")}`);
+    await dbQuery(`ALTER TABLE authors ${authorAlterStatements.join(", ")}`);
   }
 }
 
@@ -739,12 +864,12 @@ const initDatabase = async () => {
 
   try {
     for (const query of queries) {
-      await pool.promise().query(query);
+      await dbQuery(query);
     }
     console.log("✓ Database tables created successfully");
 
     // Ensure books.publication_date exists for legacy databases
-    const [[{ count: publicationDateCount }]] = await pool.promise().query(
+    const [[{ count: publicationDateCount }]] = await dbQuery(
       `SELECT COUNT(*) as count
          FROM INFORMATION_SCHEMA.COLUMNS
          WHERE TABLE_SCHEMA = ?
@@ -754,29 +879,21 @@ const initDatabase = async () => {
     );
 
     if (publicationDateCount === 0) {
-      await pool
-        .promise()
-        .query("ALTER TABLE books ADD COLUMN publication_date DATE");
+      await dbQuery("ALTER TABLE books ADD COLUMN publication_date DATE");
       console.log("✓ Added books.publication_date column");
     }
 
     // Backfill publication_date for already published books if missing
-    await pool
-      .promise()
-      .query(
+    await dbQuery(
         "UPDATE books SET publication_date = DATE(created_at) WHERE publication_date IS NULL AND status = 'published'",
       );
 
     // Create default admin user
-    const [adminRows] = await pool
-      .promise()
-      .query("SELECT id FROM users WHERE email = ?", ["admin@babcock.edu.ng"]);
+    const [adminRows] = await dbQuery("SELECT id FROM users WHERE email = ?", ["admin@babcock.edu.ng"]);
 
     if (adminRows.length === 0) {
       const hashedPassword = await bcrypt.hash("Admin@123", 10);
-      await pool
-        .promise()
-        .query(
+      await dbQuery(
           "INSERT INTO users (username, email, password, full_name, role, status, email_verified) VALUES (?, ?, ?, ?, ?, ?, ?)",
           [
             "admin",
@@ -829,12 +946,10 @@ const initDatabase = async () => {
     ];
 
     for (const setting of defaultSettings) {
-      await pool
-        .promise()
-        .query(
-          "INSERT IGNORE INTO settings (setting_key, setting_value, setting_type, category, description) VALUES (?, ?, ?, ?, ?)",
-          setting,
-        );
+      const upsertSettingSql = isPostgres
+        ? "INSERT INTO settings (setting_key, setting_value, setting_type, category, description) VALUES (?, ?, ?, ?, ?) ON CONFLICT (setting_key) DO NOTHING"
+        : "INSERT IGNORE INTO settings (setting_key, setting_value, setting_type, category, description) VALUES (?, ?, ?, ?, ?)";
+      await dbQuery(upsertSettingSql, setting);
     }
   } catch (error) {
     console.error("✗ Database initialization error:", error.message);
@@ -842,44 +957,13 @@ const initDatabase = async () => {
   }
 };
 
-// Test database connection
-pool.getConnection((err, connection) => {
-  if (err) {
-    console.error("✗ Database connection failed:", err.message);
-    console.log("⚠ Please ensure MySQL is running and the database exists");
-    process.exit(1);
-  }
-  console.log("✓ Connected to MySQL database");
-  connection.release();
-
-  // Initialize database tables and start server
-  initDatabase()
-    .then(() => {
-      console.log("✓ Database initialization complete");
-    })
-    .catch((error) => {
-      console.error("✗ Database initialization failed:", error.message);
-    });
-});
-
 // ============== MIDDLEWARE ==============
 // ============== API ROUTES ==============
-
-// Health check
-app.get("/api/health", (req, res) => {
-  res.json({
-    success: true,
-    message: "Server is running",
-    timestamp: new Date().toISOString(),
-    version: "2.0.0",
-    environment: process.env.NODE_ENV || "development",
-  });
-});
 
 // System health check
 app.get("/api/system/health", async (req, res) => {
   try {
-    const [dbResult] = await pool.promise().query("SELECT 1 as connected");
+    const [dbResult] = await dbQuery("SELECT 1 as connected");
     const dbConnected = dbResult[0].connected === 1;
 
     res.json({
@@ -939,9 +1023,7 @@ app.post("/api/users/register", async (req, res) => {
     }
 
     // Check if user already exists
-    const [existing] = await pool
-      .promise()
-      .query("SELECT id FROM users WHERE email = ? OR username = ?", [
+    const [existing] = await dbQuery("SELECT id FROM users WHERE email = ? OR username = ?", [
         email,
         username,
       ]);
@@ -958,7 +1040,7 @@ app.post("/api/users/register", async (req, res) => {
       expiresIn: "24h",
     });
 
-    const [result] = await pool.promise().query(
+    const [result] = await dbQuery(
       `INSERT INTO users (username, email, password, full_name, phone, role, status, verification_token) 
        VALUES (?, ?, ?, ?, ?, 'user', 'pending', ?)`,
       [
@@ -1020,9 +1102,7 @@ app.post("/api/users/login", async (req, res) => {
     }
 
     // Find user by email
-    const [users] = await pool
-      .promise()
-      .query("SELECT * FROM users WHERE email = ?", [email]);
+    const [users] = await dbQuery("SELECT * FROM users WHERE email = ?", [email]);
 
     if (users.length === 0) {
       return res.status(401).json({
@@ -1051,9 +1131,7 @@ app.post("/api/users/login", async (req, res) => {
     }
 
     // Update last login
-    await pool
-      .promise()
-      .query("UPDATE users SET last_login = CURRENT_TIMESTAMP WHERE id = ?", [
+    await dbQuery("UPDATE users SET last_login = CURRENT_TIMESTAMP WHERE id = ?", [
         user.id,
       ]);
 
@@ -1105,9 +1183,7 @@ app.post("/api/authors/login", async (req, res) => {
     }
 
     // Find user
-    const [users] = await pool
-      .promise()
-      .query("SELECT * FROM users WHERE email = ?", [email]);
+    const [users] = await dbQuery("SELECT * FROM users WHERE email = ?", [email]);
 
     if (users.length === 0) {
       return res.status(401).json({
@@ -1144,9 +1220,7 @@ app.post("/api/authors/login", async (req, res) => {
     }
 
     // Get author profile
-    const [authors] = await pool
-      .promise()
-      .query(
+    const [authors] = await dbQuery(
         "SELECT id, staff_id, faculty, department, qualifications, biography FROM authors WHERE user_id = ?",
         [user.id],
       );
@@ -1154,9 +1228,7 @@ app.post("/api/authors/login", async (req, res) => {
     const author = authors.length > 0 ? authors[0] : null;
 
     // Update last login
-    await pool
-      .promise()
-      .query("UPDATE users SET last_login = CURRENT_TIMESTAMP WHERE id = ?", [
+    await dbQuery("UPDATE users SET last_login = CURRENT_TIMESTAMP WHERE id = ?", [
         user.id,
       ]);
 
@@ -1206,9 +1278,7 @@ app.post("/api/admin/login", async (req, res) => {
       });
     }
 
-    const [admins] = await pool
-      .promise()
-      .query(
+    const [admins] = await dbQuery(
         "SELECT * FROM users WHERE email = ? AND role IN ('admin', 'editor', 'reviewer')",
         [email],
       );
@@ -1238,9 +1308,7 @@ app.post("/api/admin/login", async (req, res) => {
     }
 
     // Update last login
-    await pool
-      .promise()
-      .query("UPDATE users SET last_login = CURRENT_TIMESTAMP WHERE id = ?", [
+    await dbQuery("UPDATE users SET last_login = CURRENT_TIMESTAMP WHERE id = ?", [
         admin.id,
       ]);
 
@@ -1363,8 +1431,8 @@ app.get("/api/admin/users", authMiddleware, async (req, res) => {
     query += " ORDER BY created_at DESC LIMIT ? OFFSET ?";
     params.push(parseInt(limit), offset);
 
-    const [users] = await pool.promise().query(query, params);
-    const [[{ total }]] = await pool.promise().query(countQuery, countParams);
+    const [users] = await dbQuery(query, params);
+    const [[{ total }]] = await dbQuery(countQuery, countParams);
 
     res.json({
       success: true,
@@ -1398,9 +1466,7 @@ app.post("/api/admin/users", authMiddleware, async (req, res) => {
     }
 
     // Check if user already exists
-    const [existing] = await pool
-      .promise()
-      .query("SELECT id FROM users WHERE email = ? OR username = ?", [
+    const [existing] = await dbQuery("SELECT id FROM users WHERE email = ? OR username = ?", [
         email,
         username,
       ]);
@@ -1414,9 +1480,7 @@ app.post("/api/admin/users", authMiddleware, async (req, res) => {
 
     const hashedPassword = await bcrypt.hash(password, 10);
 
-    const [result] = await pool
-      .promise()
-      .query(
+    const [result] = await dbQuery(
         "INSERT INTO users (username, email, password, full_name, role, status, email_verified) VALUES (?, ?, ?, ?, ?, ?, ?)",
         [
           username,
@@ -1449,9 +1513,7 @@ app.put("/api/admin/users/:id", authMiddleware, async (req, res) => {
     const { username, email, full_name, role, status } = req.body;
     const userId = req.params.id;
 
-    const [result] = await pool
-      .promise()
-      .query(
+    const [result] = await dbQuery(
         "UPDATE users SET username = ?, email = ?, full_name = ?, role = ?, status = ? WHERE id = ?",
         [username, email, full_name, role, status, userId],
       );
@@ -1479,9 +1541,7 @@ app.put("/api/admin/users/:id", authMiddleware, async (req, res) => {
 // Delete user
 app.delete("/api/admin/users/:id", authMiddleware, async (req, res) => {
   try {
-    const [result] = await pool
-      .promise()
-      .query("DELETE FROM users WHERE id = ?", [req.params.id]);
+    const [result] = await dbQuery("DELETE FROM users WHERE id = ?", [req.params.id]);
 
     if (result.affectedRows === 0) {
       return res.status(404).json({
@@ -1508,7 +1568,7 @@ app.delete("/api/admin/users/:id", authMiddleware, async (req, res) => {
 // Get published books for homepage
 app.get("/api/books/published", async (req, res) => {
   try {
-    const [books] = await pool.promise().query(`
+    const [books] = await dbQuery(`
             SELECT b.*, u.full_name as author_name 
             FROM books b 
             LEFT JOIN authors a ON b.author_id = a.id 
@@ -1535,9 +1595,7 @@ app.get("/api/books/published", async (req, res) => {
 // Get authors count
 app.get("/api/authors/count", async (req, res) => {
   try {
-    const [[{ count }]] = await pool
-      .promise()
-      .query(
+    const [[{ count }]] = await dbQuery(
         "SELECT COUNT(*) as count FROM authors a JOIN users u ON a.user_id = u.id WHERE u.status = 'active'",
       );
 
@@ -1557,9 +1615,7 @@ app.get("/api/authors/count", async (req, res) => {
 // Get training registrations count
 app.get("/api/training/count", async (req, res) => {
   try {
-    const [[{ count }]] = await pool
-      .promise()
-      .query(
+    const [[{ count }]] = await dbQuery(
         "SELECT COUNT(*) as count FROM training_registrations WHERE status = 'completed'",
       );
 
@@ -1606,9 +1662,7 @@ app.post("/api/authors/register", upload.single("profile_image"), async (req, re
 
     const profileImagePath = getUploadPath(req.file);
 
-    const [existingUsers] = await pool
-      .promise()
-      .query("SELECT id FROM users WHERE email = ?", [email]);
+    const [existingUsers] = await dbQuery("SELECT id FROM users WHERE email = ?", [email]);
 
     if (existingUsers.length > 0) {
       return res.status(400).json({
@@ -1617,9 +1671,7 @@ app.post("/api/authors/register", upload.single("profile_image"), async (req, re
       });
     }
 
-    const [existingStaffId] = await pool
-      .promise()
-      .query("SELECT id FROM authors WHERE staff_id = ?", [staff_id]);
+    const [existingStaffId] = await dbQuery("SELECT id FROM authors WHERE staff_id = ?", [staff_id]);
 
     if (existingStaffId.length > 0) {
       return res.status(400).json({
@@ -1654,7 +1706,7 @@ app.post("/api/authors/register", upload.single("profile_image"), async (req, re
       }
     }
 
-    const [userResult] = await pool.promise().query(
+    const [userResult] = await dbQuery(
       `INSERT INTO users (${userInsertColumns.join(", ")}) VALUES (${userInsertPlaceholders.join(", ")})`,
       userInsertValues,
     );
@@ -1684,7 +1736,7 @@ app.post("/api/authors/register", upload.single("profile_image"), async (req, re
       }
     }
 
-    const [authorResult] = await pool.promise().query(
+    const [authorResult] = await dbQuery(
       `INSERT INTO authors (${authorInsertColumns.join(", ")}) VALUES (${authorInsertPlaceholders.join(", ")})`,
       authorInsertValues,
     );
@@ -1711,9 +1763,7 @@ app.post("/api/authors/login", async (req, res) => {
     const { email, password } = req.body;
 
     // First authenticate against users table
-    const [users] = await pool
-      .promise()
-      .query(
+    const [users] = await dbQuery(
         "SELECT id, full_name, email, role, password, status FROM users WHERE email = ?",
         [email],
       );
@@ -1744,9 +1794,7 @@ app.post("/api/authors/login", async (req, res) => {
     }
 
     // Get author profile
-    const [authors] = await pool
-      .promise()
-      .query(
+    const [authors] = await dbQuery(
         "SELECT id, staff_id, faculty, department FROM authors WHERE user_id = ?",
         [user.id],
       );
@@ -1754,9 +1802,7 @@ app.post("/api/authors/login", async (req, res) => {
     const author = authors.length > 0 ? authors[0] : null;
 
     // Update last login
-    await pool
-      .promise()
-      .query("UPDATE users SET last_login = CURRENT_TIMESTAMP WHERE id = ?", [
+    await dbQuery("UPDATE users SET last_login = CURRENT_TIMESTAMP WHERE id = ?", [
         user.id,
       ]);
 
@@ -1807,7 +1853,7 @@ app.post("/api/training/register", async (req, res) => {
       preferred_date,
     } = req.body;
 
-    const [result] = await pool.promise().query(
+    const [result] = await dbQuery(
       `INSERT INTO training_registrations 
             (full_name, email, student_id, faculty, department, level, training_type, preferred_date, status) 
             VALUES (?, ?, ?, ?, ?, ?, ?, ?, 'pending')`,
@@ -1856,7 +1902,7 @@ app.post("/api/contact", async (req, res) => {
       });
     }
 
-    const [result] = await pool.promise().query(
+    const [result] = await dbQuery(
       `INSERT INTO contacts 
             (name, email, phone, subject, message, category, status) 
             VALUES (?, ?, ?, ?, ?, ?, 'new')`,
@@ -1904,26 +1950,20 @@ app.get("/api/about", async (req, res) => {
     // Get statistics
     const [[booksCount], [authorsCount], [trainingCount], [countriesReached]] =
       await Promise.all([
-        pool
-          .promise()
-          .query(
+        dbQuery(
             "SELECT COUNT(*) as count FROM books WHERE status = 'published'",
           ),
-        pool
-          .promise()
-          .query(
+        dbQuery(
             "SELECT COUNT(*) as count FROM authors a JOIN users u ON a.user_id = u.id WHERE u.status = 'active'",
           ),
-        pool
-          .promise()
-          .query(
+        dbQuery(
             "SELECT COUNT(*) as count FROM training_registrations WHERE status = 'completed'",
           ),
-        pool.promise().query("SELECT '25' as count"),
+        dbQuery("SELECT '25' as count"),
       ]);
 
     // Get leadership team
-    const [team] = await pool.promise().query(`
+    const [team] = await dbQuery(`
       SELECT u.full_name, a.faculty, a.department, a.qualifications
       FROM users u
       LEFT JOIN authors a ON u.id = a.user_id
@@ -1999,72 +2039,48 @@ app.get("/api/admin/dashboard/stats", authMiddleware, async (req, res) => {
       [monthlyRevenue],
       [lowInventory],
     ] = await Promise.all([
-      pool
-        .promise()
-        .query(
+      dbQuery(
           "SELECT COUNT(*) as count FROM authors a JOIN users u ON a.user_id = u.id WHERE u.status = 'pending'",
         ),
-      pool
-        .promise()
-        .query(
+      dbQuery(
           "SELECT COUNT(*) as count FROM authors a JOIN users u ON a.user_id = u.id WHERE u.status = 'active'",
         ),
-      pool.promise().query("SELECT COUNT(*) as count FROM books"),
-      pool
-        .promise()
-        .query(
+      dbQuery("SELECT COUNT(*) as count FROM books"),
+      dbQuery(
           "SELECT COUNT(*) as count FROM books WHERE status = 'published'",
         ),
-      pool
-        .promise()
-        .query(
+      dbQuery(
           "SELECT COUNT(*) as count FROM submissions WHERE status = 'pending'",
         ),
-      pool
-        .promise()
-        .query(
+      dbQuery(
           "SELECT COUNT(*) as count FROM training_registrations WHERE status = 'pending'",
         ),
-      pool
-        .promise()
-        .query("SELECT COUNT(*) as count FROM contacts WHERE status = 'new'"),
-      pool
-        .promise()
-        .query(
+      dbQuery("SELECT COUNT(*) as count FROM contacts WHERE status = 'new'"),
+      dbQuery(
           "SELECT COUNT(*) as count FROM contracts WHERE status = 'draft' OR status = 'sent'",
         ),
-      pool
-        .promise()
-        .query(
+      dbQuery(
           "SELECT SUM(total_amount) as total FROM sales WHERE payment_status = 'paid' AND sale_date >= DATE_SUB(CURDATE(), INTERVAL 30 DAY)",
         ),
-      pool
-        .promise()
-        .query(
+      dbQuery(
           "SELECT SUM(total_amount) as revenue FROM sales WHERE payment_status = 'paid' AND MONTH(sale_date) = MONTH(CURDATE())",
         ),
-      pool
-        .promise()
-        .query(
+      dbQuery(
           "SELECT COUNT(*) as count FROM inventory WHERE available <= reorder_level",
         ),
     ]);
 
     // Get recent activities
-    const [recentBooks] = await pool
-      .promise()
-      .query(
+    const [recentBooks] = await dbQuery(
         "SELECT b.id, b.title, b.status, u.full_name as author, b.created_at FROM books b LEFT JOIN authors a ON b.author_id = a.id LEFT JOIN users u ON a.user_id = u.id ORDER BY b.created_at DESC LIMIT 5",
       );
 
-    const [recentSubmissions] = await pool
-      .promise()
-      .query(
+    const [recentSubmissions] = await dbQuery(
         "SELECT s.id, b.title, s.submission_type, s.status, s.submission_date FROM submissions s JOIN books b ON s.book_id = b.id ORDER BY s.submission_date DESC LIMIT 5",
       );
 
     // Get monthly sales data for chart
-    const [monthlySales] = await pool.promise().query(`
+    const [monthlySales] = await dbQuery(`
       SELECT 
         DATE_FORMAT(sale_date, '%Y-%m') as month,
         SUM(total_amount) as revenue,
@@ -2077,7 +2093,7 @@ app.get("/api/admin/dashboard/stats", authMiddleware, async (req, res) => {
     `);
 
     // Get book categories distribution
-    const [categoryDistribution] = await pool.promise().query(`
+    const [categoryDistribution] = await dbQuery(`
       SELECT 
         category,
         COUNT(*) as count,
@@ -2189,14 +2205,12 @@ app.get("/api/admin/authors", authMiddleware, async (req, res) => {
     query += " ORDER BY u.created_at DESC LIMIT ? OFFSET ?";
     params.push(parseInt(limit), offset);
 
-    const [authors] = await pool.promise().query(query, params);
-    const [[{ total }]] = await pool.promise().query(countQuery, countParams);
+    const [authors] = await dbQuery(query, params);
+    const [[{ total }]] = await dbQuery(countQuery, countParams);
 
     // Get book counts for each author
     for (const author of authors) {
-      const [[{ bookCount }]] = await pool
-        .promise()
-        .query("SELECT COUNT(*) as bookCount FROM books WHERE author_id = ?", [
+      const [[{ bookCount }]] = await dbQuery("SELECT COUNT(*) as bookCount FROM books WHERE author_id = ?", [
           author.id,
         ]);
       author.bookCount = bookCount;
@@ -2223,9 +2237,7 @@ app.get("/api/admin/authors/:id", authMiddleware, async (req, res) => {
   try {
     await ensureAuthorProfileColumns();
 
-    const [authors] = await pool
-      .promise()
-      .query(
+    const [authors] = await dbQuery(
         `SELECT a.*, u.id as user_id, u.username, u.email, u.full_name, u.phone, u.profile_image, u.status as user_status, u.created_at
          FROM authors a
          LEFT JOIN users u ON a.user_id = u.id
@@ -2242,15 +2254,13 @@ app.get("/api/admin/authors/:id", authMiddleware, async (req, res) => {
     const author = authors[0];
 
     // Get author's books
-    const [books] = await pool
-      .promise()
-      .query(
+    const [books] = await dbQuery(
         "SELECT id, title, status, created_at FROM books WHERE author_id = ? ORDER BY created_at DESC",
         [author.id],
       );
 
     // Get author's submissions
-    const [submissions] = await pool.promise().query(
+    const [submissions] = await dbQuery(
       `
       SELECT s.*, b.title 
       FROM submissions s 
@@ -2262,9 +2272,7 @@ app.get("/api/admin/authors/:id", authMiddleware, async (req, res) => {
     );
 
     // Get author's contracts
-    const [contracts] = await pool
-      .promise()
-      .query(
+    const [contracts] = await dbQuery(
         "SELECT * FROM contracts WHERE author_id = ? ORDER BY created_at DESC",
         [author.id],
       );
@@ -2297,9 +2305,7 @@ app.put("/api/admin/authors/:id/status", authMiddleware, async (req, res) => {
         .json({ success: false, message: "Invalid status" });
     }
 
-    const [authors] = await pool
-      .promise()
-      .query("SELECT id, user_id FROM authors WHERE id = ?", [req.params.id]);
+    const [authors] = await dbQuery("SELECT id, user_id FROM authors WHERE id = ?", [req.params.id]);
 
     if (authors.length === 0) {
       return res
@@ -2320,7 +2326,7 @@ app.put("/api/admin/authors/:id/status", authMiddleware, async (req, res) => {
     // Approval should still work by updating the linked users.status.
     let result = { affectedRows: 0 };
     try {
-      const [authorUpdate] = await pool.promise().query(
+      const [authorUpdate] = await dbQuery(
         "UPDATE authors SET status = ? WHERE id = ?",
         [status, req.params.id],
       );
@@ -2331,9 +2337,7 @@ app.put("/api/admin/authors/:id/status", authMiddleware, async (req, res) => {
       }
     }
 
-    const [userResult] = await pool
-      .promise()
-      .query("UPDATE users SET status = ? WHERE id = ?", [
+    const [userResult] = await dbQuery("UPDATE users SET status = ? WHERE id = ?", [
         userStatus,
         author.user_id,
       ]);
@@ -2446,24 +2450,20 @@ app.get("/api/admin/books", authMiddleware, async (req, res) => {
     query += " ORDER BY b.created_at DESC LIMIT ? OFFSET ?";
     params.push(parseInt(limit), offset);
 
-    const [books] = await pool.promise().query(query, params);
-    const [[{ total }]] = await pool.promise().query(countQuery, countParams);
+    const [books] = await dbQuery(query, params);
+    const [[{ total }]] = await dbQuery(countQuery, countParams);
 
     // Get additional data for each book
     for (const book of books) {
       // Get inventory
-      const [inventory] = await pool
-        .promise()
-        .query(
+      const [inventory] = await dbQuery(
           "SELECT format, quantity, available FROM inventory WHERE book_id = ?",
           [book.id],
         );
       book.inventory = inventory;
 
       // Get sales count
-      const [[{ salesCount }]] = await pool
-        .promise()
-        .query("SELECT COUNT(*) as salesCount FROM sales WHERE book_id = ?", [
+      const [[{ salesCount }]] = await dbQuery("SELECT COUNT(*) as salesCount FROM sales WHERE book_id = ?", [
           book.id,
         ]);
       book.salesCount = salesCount || 0;
@@ -2488,7 +2488,7 @@ app.get("/api/admin/books", authMiddleware, async (req, res) => {
 // Get single book with details
 app.get("/api/admin/books/:id", authMiddleware, async (req, res) => {
   try {
-    const [books] = await pool.promise().query(
+    const [books] = await dbQuery(
       `SELECT b.*, a.full_name as author_name, a.email as author_email, 
               a.faculty as author_faculty, a.department as author_department
        FROM books b
@@ -2506,31 +2506,25 @@ app.get("/api/admin/books/:id", authMiddleware, async (req, res) => {
     const book = books[0];
 
     // Get submissions for this book
-    const [submissions] = await pool
-      .promise()
-      .query(
+    const [submissions] = await dbQuery(
         "SELECT * FROM submissions WHERE book_id = ? ORDER BY submission_date DESC",
         [book.id],
       );
 
     // Get contracts for this book
-    const [contracts] = await pool
-      .promise()
-      .query(
+    const [contracts] = await dbQuery(
         "SELECT * FROM contracts WHERE book_id = ? ORDER BY created_at DESC",
         [book.id],
       );
 
     // Get production status
-    const [production] = await pool
-      .promise()
-      .query(
+    const [production] = await dbQuery(
         "SELECT * FROM production WHERE book_id = ? ORDER BY created_at DESC",
         [book.id],
       );
 
     // Get reviews for this book
-    const [reviews] = await pool.promise().query(
+    const [reviews] = await dbQuery(
       `
       SELECT r.*, a.full_name as reviewer_name
       FROM reviews r
@@ -2542,14 +2536,10 @@ app.get("/api/admin/books/:id", authMiddleware, async (req, res) => {
     );
 
     // Get inventory
-    const [inventory] = await pool
-      .promise()
-      .query("SELECT * FROM inventory WHERE book_id = ?", [book.id]);
+    const [inventory] = await dbQuery("SELECT * FROM inventory WHERE book_id = ?", [book.id]);
 
     // Get sales history
-    const [sales] = await pool
-      .promise()
-      .query(
+    const [sales] = await dbQuery(
         "SELECT * FROM sales WHERE book_id = ? ORDER BY sale_date DESC LIMIT 50",
         [book.id],
       );
@@ -2595,9 +2585,7 @@ app.put("/api/admin/books/:id/status", authMiddleware, async (req, res) => {
         .json({ success: false, message: "Invalid status" });
     }
 
-    const [result] = await pool
-      .promise()
-      .query(
+    const [result] = await dbQuery(
         "UPDATE books SET status = ?, editor_notes = COALESCE(?, editor_notes) WHERE id = ?",
         [status, notes, req.params.id],
       );
@@ -2634,9 +2622,7 @@ app.post(
 
       const coverPath = `/uploads/${req.file.filename}`;
 
-      const [result] = await pool
-        .promise()
-        .query("UPDATE books SET cover_image = ? WHERE id = ?", [
+      const [result] = await dbQuery("UPDATE books SET cover_image = ? WHERE id = ?", [
           coverPath,
           req.params.id,
         ]);
@@ -2747,8 +2733,8 @@ app.get("/api/admin/submissions", authMiddleware, async (req, res) => {
     query += " ORDER BY s.priority DESC, s.due_date ASC LIMIT ? OFFSET ?";
     params.push(parseInt(limit), offset);
 
-    const [submissions] = await pool.promise().query(query, params);
-    const [[{ total }]] = await pool.promise().query(countQuery, countParams);
+    const [submissions] = await dbQuery(query, params);
+    const [[{ total }]] = await dbQuery(countQuery, countParams);
 
     res.json({
       success: true,
@@ -2776,9 +2762,7 @@ app.post(
     try {
       const { reviewer_id, due_date, priority } = req.body;
 
-      const [result] = await pool
-        .promise()
-        .query(
+      const [result] = await dbQuery(
           "UPDATE submissions SET assigned_to = ?, due_date = ?, priority = ?, status = 'assigned' WHERE id = ?",
           [reviewer_id, due_date, priority, req.params.id],
         );
@@ -2839,7 +2823,7 @@ app.get("/api/admin/contracts", authMiddleware, async (req, res) => {
     query += " ORDER BY c.created_at DESC LIMIT ? OFFSET ?";
     params.push(parseInt(limit), offset);
 
-    const [contracts] = await pool.promise().query(query, params);
+    const [contracts] = await dbQuery(query, params);
 
     res.json({
       success: true,
@@ -2872,7 +2856,7 @@ app.post("/api/admin/contracts", authMiddleware, async (req, res) => {
     // Generate contract number
     const contractNumber = `CONTRACT-${Date.now()}-${Math.floor(Math.random() * 1000)}`;
 
-    const [result] = await pool.promise().query(
+    const [result] = await dbQuery(
       `INSERT INTO contracts (
         book_id, author_id, contract_type, contract_number,
         royalty_percentage, advance_amount, start_date, end_date,
@@ -2936,7 +2920,7 @@ app.get("/api/admin/training", authMiddleware, async (req, res) => {
     query += " ORDER BY created_at DESC LIMIT ? OFFSET ?";
     params.push(parseInt(limit), offset);
 
-    const [registrations] = await pool.promise().query(query, params);
+    const [registrations] = await dbQuery(query, params);
 
     res.json({
       success: true,
@@ -2956,7 +2940,7 @@ app.put("/api/admin/training/:id", authMiddleware, async (req, res) => {
   try {
     const { status, attendance, certificate_issued, feedback } = req.body;
 
-    const [result] = await pool.promise().query(
+    const [result] = await dbQuery(
       `UPDATE training_registrations 
        SET status = ?, attendance = ?, certificate_issued = ?, feedback = ?,
            updated_at = CURRENT_TIMESTAMP 
@@ -3030,10 +3014,10 @@ app.get("/api/admin/sales", authMiddleware, async (req, res) => {
     query += " ORDER BY s.sale_date DESC LIMIT ? OFFSET ?";
     params.push(parseInt(limit), offset);
 
-    const [sales] = await pool.promise().query(query, params);
+    const [sales] = await dbQuery(query, params);
 
     // Get summary
-    const [[summary]] = await pool.promise().query(
+    const [[summary]] = await dbQuery(
       `
       SELECT 
         COUNT(*) as total_transactions,
@@ -3101,10 +3085,10 @@ app.get("/api/admin/inventory", authMiddleware, async (req, res) => {
 
     query += " ORDER BY stock_status, i.available ASC";
 
-    const [inventory] = await pool.promise().query(query, params);
+    const [inventory] = await dbQuery(query, params);
 
     // Get summary
-    const [[summary]] = await pool.promise().query(`
+    const [[summary]] = await dbQuery(`
       SELECT 
         COUNT(*) as total_items,
         SUM(quantity) as total_quantity,
@@ -3135,7 +3119,7 @@ app.get("/api/admin/reports/financial", authMiddleware, async (req, res) => {
     const { year, month } = req.query;
 
     // Monthly revenue
-    const [monthlyRevenue] = await pool.promise().query(
+    const [monthlyRevenue] = await dbQuery(
       `
       SELECT 
         DATE_FORMAT(sale_date, '%Y-%m') as month,
@@ -3152,7 +3136,7 @@ app.get("/api/admin/reports/financial", authMiddleware, async (req, res) => {
     );
 
     // Top selling books
-    const [topBooks] = await pool.promise().query(
+    const [topBooks] = await dbQuery(
       `
       SELECT 
         b.id, b.title, b.isbn,
@@ -3174,7 +3158,7 @@ app.get("/api/admin/reports/financial", authMiddleware, async (req, res) => {
     );
 
     // Royalties due
-    const [royalties] = await pool.promise().query(`
+    const [royalties] = await dbQuery(`
       SELECT 
         r.*, c.contract_number,
         b.title as book_title,
@@ -3209,9 +3193,7 @@ app.get("/api/admin/reports/financial", authMiddleware, async (req, res) => {
 // Get settings
 app.get("/api/admin/settings", authMiddleware, async (req, res) => {
   try {
-    const [settings] = await pool
-      .promise()
-      .query("SELECT * FROM settings ORDER BY category, setting_key");
+    const [settings] = await dbQuery("SELECT * FROM settings ORDER BY category, setting_key");
 
     // Organize by category
     const organized = {};
@@ -3240,9 +3222,7 @@ app.post("/api/admin/settings", authMiddleware, async (req, res) => {
     const settings = req.body;
 
     for (const [key, value] of Object.entries(settings)) {
-      await pool
-        .promise()
-        .query(
+      await dbQuery(
           "UPDATE settings SET setting_value = ?, updated_at = CURRENT_TIMESTAMP WHERE setting_key = ?",
           [value, key],
         );
@@ -3265,21 +3245,15 @@ app.post("/api/admin/settings", authMiddleware, async (req, res) => {
 // Get filters data (for dropdowns, etc.)
 app.get("/api/admin/filters", authMiddleware, async (req, res) => {
   try {
-    const [faculties] = await pool
-      .promise()
-      .query(
+    const [faculties] = await dbQuery(
         "SELECT DISTINCT faculty FROM authors WHERE faculty IS NOT NULL AND faculty != '' ORDER BY faculty",
       );
 
-    const [categories] = await pool
-      .promise()
-      .query(
+    const [categories] = await dbQuery(
         "SELECT DISTINCT category FROM books WHERE category IS NOT NULL AND category != '' ORDER BY category",
       );
 
-    const [authors] = await pool
-      .promise()
-      .query(
+    const [authors] = await dbQuery(
         "SELECT a.id, u.full_name, u.email FROM authors a JOIN users u ON a.user_id = u.id WHERE u.status = 'active' ORDER BY u.full_name",
       );
 
@@ -3309,7 +3283,7 @@ app.get("/api/admin/search", authMiddleware, async (req, res) => {
     const searchTerm = `%${q}%`;
 
     // Search books
-    const [books] = await pool.promise().query(
+    const [books] = await dbQuery(
       `
       SELECT 'book' as type, id, title as name, CONCAT('Book: ', title) as description
       FROM books 
@@ -3320,7 +3294,7 @@ app.get("/api/admin/search", authMiddleware, async (req, res) => {
     );
 
     // Search authors
-    const [authors] = await pool.promise().query(
+    const [authors] = await dbQuery(
       `
       SELECT 'author' as type, id, full_name as name, CONCAT('Author: ', full_name, ' (', email, ')') as description
       FROM authors 
@@ -3331,7 +3305,7 @@ app.get("/api/admin/search", authMiddleware, async (req, res) => {
     );
 
     // Search contracts
-    const [contracts] = await pool.promise().query(
+    const [contracts] = await dbQuery(
       `
       SELECT 'contract' as type, c.id, c.contract_number as name, 
              CONCAT('Contract: ', c.contract_number, ' - ', b.title) as description
@@ -3361,7 +3335,7 @@ app.get("/api/author/profile", authMiddleware, async (req, res) => {
     await ensureAuthorProfileColumns();
 
     const userId = req.user.id;
-    const [rows] = await pool.promise().query(
+    const [rows] = await dbQuery(
       `SELECT u.id as user_id, u.full_name, u.email, u.phone, u.profile_image, u.status as user_status,
               a.id as author_id, a.staff_id, a.faculty, a.department, a.qualifications,
               a.biography, a.areas_of_expertise, a.orcid_id, a.google_scholar_id, a.linkedin_url, a.status as author_status
@@ -3415,9 +3389,7 @@ app.put(
         linkedin_url,
       } = req.body;
 
-      const [authorRows] = await pool
-        .promise()
-        .query("SELECT id FROM authors WHERE user_id = ?", [userId]);
+      const [authorRows] = await dbQuery("SELECT id FROM authors WHERE user_id = ?", [userId]);
 
       if (authorRows.length === 0) {
         return res.status(404).json({
@@ -3426,7 +3398,7 @@ app.put(
         });
       }
 
-      const [duplicateEmail] = await pool.promise().query(
+      const [duplicateEmail] = await dbQuery(
         "SELECT id FROM users WHERE email = ? AND id != ?",
         [email, userId],
       );
@@ -3464,9 +3436,7 @@ app.put(
           .map((key) => `${key} = ?`)
           .join(", ");
         userValues.push(...Object.values(userUpdates), userId);
-        await pool
-          .promise()
-          .query(`UPDATE users SET ${userSetClause} WHERE id = ?`, userValues);
+        await dbQuery(`UPDATE users SET ${userSetClause} WHERE id = ?`, userValues);
       }
 
       const authorUpdates = {};
@@ -3494,12 +3464,10 @@ app.put(
           .map((key) => `${key} = ?`)
           .join(", ");
         authorValues.push(...Object.values(authorUpdates), authorId);
-        await pool
-          .promise()
-          .query(`UPDATE authors SET ${authorSetClause} WHERE id = ?`, authorValues);
+        await dbQuery(`UPDATE authors SET ${authorSetClause} WHERE id = ?`, authorValues);
       }
 
-      const [rows] = await pool.promise().query(
+      const [rows] = await dbQuery(
         `SELECT u.id as user_id, u.full_name, u.email, u.phone, u.profile_image, u.status as user_status,
                 a.id as author_id, a.staff_id, a.faculty, a.department, a.qualifications,
                 a.biography, a.areas_of_expertise, a.orcid_id, a.google_scholar_id, a.linkedin_url, a.status as author_status
@@ -3537,9 +3505,7 @@ app.get("/api/author/dashboard", authMiddleware, async (req, res) => {
     const userId = req.user.id;
 
     // Get author ID
-    const [authorRows] = await pool
-      .promise()
-      .query("SELECT id FROM authors WHERE user_id = ?", [userId]);
+    const [authorRows] = await dbQuery("SELECT id FROM authors WHERE user_id = ?", [userId]);
 
     if (authorRows.length === 0) {
       return res.status(404).json({
@@ -3551,7 +3517,7 @@ app.get("/api/author/dashboard", authMiddleware, async (req, res) => {
     const authorId = authorRows[0].id;
 
     // Get author's books with progress
-    const [books] = await pool.promise().query(
+    const [books] = await dbQuery(
       `SELECT b.*, 
               COUNT(DISTINCT r.id) as review_count,
               COUNT(DISTINCT bp.id) as progress_count,
@@ -3567,7 +3533,7 @@ app.get("/api/author/dashboard", authMiddleware, async (req, res) => {
     );
 
     // Get overall statistics
-    const [stats] = await pool.promise().query(
+    const [stats] = await dbQuery(
       `SELECT 
         COUNT(*) as total_books,
         SUM(CASE WHEN status = 'published' THEN 1 ELSE 0 END) as published_books,
@@ -3580,7 +3546,7 @@ app.get("/api/author/dashboard", authMiddleware, async (req, res) => {
     );
 
     // Get recent reviews
-    const [reviews] = await pool.promise().query(
+    const [reviews] = await dbQuery(
       `SELECT r.*, b.title as book_title, u.full_name as reviewer_name
        FROM book_reviews r
        JOIN books b ON r.book_id = b.id
@@ -3592,7 +3558,7 @@ app.get("/api/author/dashboard", authMiddleware, async (req, res) => {
     );
 
     // Get royalty summary
-    const [royalties] = await pool.promise().query(
+    const [royalties] = await dbQuery(
       `SELECT 
         SUM(royalty_amount) as total_royalties,
         SUM(CASE WHEN payment_status = 'paid' THEN royalty_amount ELSE 0 END) as paid_royalties,
@@ -3627,9 +3593,7 @@ app.get("/api/author/books/:id", authMiddleware, async (req, res) => {
     const userId = req.user.id;
 
     // Verify author owns the book
-    const [authorRows] = await pool
-      .promise()
-      .query(
+    const [authorRows] = await dbQuery(
         "SELECT a.id FROM authors a JOIN books b ON a.id = b.author_id WHERE a.user_id = ? AND b.id = ?",
         [userId, bookId],
       );
@@ -3642,9 +3606,7 @@ app.get("/api/author/books/:id", authMiddleware, async (req, res) => {
     }
 
     // Get book details
-    const [books] = await pool
-      .promise()
-      .query("SELECT * FROM books WHERE id = ?", [bookId]);
+    const [books] = await dbQuery("SELECT * FROM books WHERE id = ?", [bookId]);
 
     if (books.length === 0) {
       return res.status(404).json({
@@ -3656,34 +3618,26 @@ app.get("/api/author/books/:id", authMiddleware, async (req, res) => {
     const book = books[0];
 
     // Get progress tracking
-    const [progress] = await pool
-      .promise()
-      .query(
+    const [progress] = await dbQuery(
         "SELECT * FROM book_progress WHERE book_id = ? ORDER BY start_date ASC",
         [bookId],
       );
 
     // Get reviews
-    const [book_reviews] = await pool
-      .promise()
-      .query(
+    const [book_reviews] = await dbQuery(
         "SELECT * FROM book_reviews WHERE book_id = ? ORDER BY created_at DESC",
         [bookId],
       );
 
     // Get sales data (if sales_orders_items exists)
-    const [sales] = await pool
-      .promise()
-      .query(
+    const [sales] = await dbQuery(
         "SELECT * FROM sales_orders WHERE id IN (SELECT order_id FROM sales_order_items WHERE book_id = ?) ORDER BY created_at DESC LIMIT 10",
         [bookId],
       )
       .catch(() => [[]]);
 
     // Get royalty statements
-    const [royalties] = await pool
-      .promise()
-      .query(
+    const [royalties] = await dbQuery(
         "SELECT * FROM royalty_statements WHERE book_id = ? ORDER BY period_end DESC",
         [bookId],
       );
@@ -3738,8 +3692,8 @@ app.get("/api/training", authMiddleware, async (req, res) => {
     query += " ORDER BY start_date DESC LIMIT ? OFFSET ?";
     params.push(parseInt(limit), offset);
 
-    const [trainings] = await pool.promise().query(query, params);
-    const [[{ total }]] = await pool.promise().query(countQuery, countParams);
+    const [trainings] = await dbQuery(query, params);
+    const [[{ total }]] = await dbQuery(countQuery, countParams);
 
     res.json({
       success: true,
@@ -3807,8 +3761,8 @@ app.get("/api/production", authMiddleware, async (req, res) => {
     query += " ORDER BY pt.due_date ASC, pt.priority DESC LIMIT ? OFFSET ?";
     params.push(parseInt(limit), offset);
 
-    const [tasks] = await pool.promise().query(query, params);
-    const [[{ total }]] = await pool.promise().query(countQuery, countParams);
+    const [tasks] = await dbQuery(query, params);
+    const [[{ total }]] = await dbQuery(countQuery, countParams);
 
     res.json({
       success: true,
@@ -3879,11 +3833,11 @@ app.get("/api/inventory", authMiddleware, async (req, res) => {
     query += " ORDER BY ii.available ASC, ii.book_id LIMIT ? OFFSET ?";
     params.push(parseInt(limit), offset);
 
-    const [inventory] = await pool.promise().query(query, params);
-    const [[{ total }]] = await pool.promise().query(countQuery, countParams);
+    const [inventory] = await dbQuery(query, params);
+    const [[{ total }]] = await dbQuery(countQuery, countParams);
 
     // Get summary
-    const [[summary]] = await pool.promise().query(`
+    const [[summary]] = await dbQuery(`
       SELECT 
         COUNT(*) as total_items,
         SUM(ii.quantity) as total_quantity,
@@ -3977,8 +3931,8 @@ app.get("/api/royalties", authMiddleware, async (req, res) => {
     query += " ORDER BY rs.period_end DESC LIMIT ? OFFSET ?";
     params.push(parseInt(limit), offset);
 
-    const [royalties] = await pool.promise().query(query, params);
-    const [[{ total }]] = await pool.promise().query(countQuery, countParams);
+    const [royalties] = await dbQuery(query, params);
+    const [[{ total }]] = await dbQuery(countQuery, countParams);
 
     res.json({
       success: true,
@@ -4060,11 +4014,11 @@ app.get("/api/sales", authMiddleware, async (req, res) => {
     query += " GROUP BY so.id ORDER BY so.created_at DESC LIMIT ? OFFSET ?";
     params.push(parseInt(limit), offset);
 
-    const [sales] = await pool.promise().query(query, params);
-    const [[{ total }]] = await pool.promise().query(countQuery, countParams);
+    const [sales] = await dbQuery(query, params);
+    const [[{ total }]] = await dbQuery(countQuery, countParams);
 
     // Get sales summary
-    const [[summary]] = await pool.promise().query(`
+    const [[summary]] = await dbQuery(`
       SELECT 
         COUNT(*) as total_orders,
         SUM(total_amount) as total_revenue,
@@ -4127,236 +4081,113 @@ app.use((err, req, res, next) => {
 
 // ============== AUTO-INITIALIZATION FUNCTIONS ==============
 
-// Initialize database schema and create default admin user
 async function initializeDatabase() {
-  const connection = mysql.createConnection({
-    host: dbConfig.host,
-    user: dbConfig.user,
-    password: dbConfig.password,
-    port: dbConfig.port,
-  });
-
-  return new Promise((resolve, reject) => {
-    // Create database
-    connection.query(
-      `CREATE DATABASE IF NOT EXISTS ${dbConfig.database}`,
-      (err) => {
-        if (err) {
-          console.error("❌ Database creation error:", err.message);
-          resolve(false);
-          return;
-        }
-
-        // Switch to database
-        connection.changeUser({ database: dbConfig.database });
-
-        // Create tables
-        const tables = [
-          `CREATE TABLE IF NOT EXISTS users (
-            id INT PRIMARY KEY AUTO_INCREMENT,
-            username VARCHAR(100) UNIQUE NOT NULL,
-            email VARCHAR(255) UNIQUE NOT NULL,
-            password VARCHAR(255) NOT NULL,
-            full_name VARCHAR(255),
-            phone VARCHAR(20),
-            role ENUM('admin', 'editor', 'reviewer', 'author', 'user') DEFAULT 'user',
-            status ENUM('active', 'inactive', 'pending', 'suspended') DEFAULT 'active',
-            email_verified BOOLEAN DEFAULT FALSE,
-            created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-            updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
-            last_login TIMESTAMP NULL,
-            INDEX (email), INDEX (username), INDEX (role)
-          )`,
-          `CREATE TABLE IF NOT EXISTS authors (
-            id INT PRIMARY KEY AUTO_INCREMENT,
-            user_id INT NOT NULL,
-            staff_id VARCHAR(100),
-            faculty VARCHAR(255),
-            department VARCHAR(255),
-            status ENUM('pending', 'approved', 'rejected') DEFAULT 'pending',
-            created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-            updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
-            FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE,
-            INDEX (user_id), INDEX (status)
-          )`,
-          `CREATE TABLE IF NOT EXISTS books (
-            id INT PRIMARY KEY AUTO_INCREMENT,
-            title VARCHAR(255) NOT NULL,
-            isbn VARCHAR(20) UNIQUE,
-            author_id INT,
-            category VARCHAR(100),
-            description LONGTEXT,
-            status ENUM('draft','submitted','under_review','approved','published','rejected') DEFAULT 'draft',
-            format VARCHAR(50),
-            price DECIMAL(10, 2),
-            publication_date DATE,
-            cover_image VARCHAR(255),
-            created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-            updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
-            FOREIGN KEY (author_id) REFERENCES authors(id) ON DELETE SET NULL,
-            INDEX (author_id), INDEX (status), INDEX (category)
-          )`,
-          `CREATE TABLE IF NOT EXISTS training_registrations (
-            id INT PRIMARY KEY AUTO_INCREMENT,
-            user_id INT NOT NULL,
-            course_name VARCHAR(255),
-            status ENUM('registered','in_progress','completed','cancelled') DEFAULT 'registered',
-            created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-            updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
-            FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE,
-            INDEX (user_id), INDEX (status)
-          )`,
-        ];
-
-        let completed = 0;
-        tables.forEach((table) => {
-          connection.query(table, (err) => {
-            if (err && err.code !== "ER_TABLE_EXISTS_ERROR") {
-              console.error("❌ Table creation error:", err.message);
-            }
-            completed++;
-            if (completed === tables.length) {
-              // Setup default admin user
-              setupDefaultAdmin(connection).then(() => {
-                connection.end();
-                resolve(true);
-              });
-            }
-          });
-        });
-      },
-    );
-  });
-}
-
-// Setup default admin user
-async function setupDefaultAdmin(connection) {
-  return new Promise((resolve) => {
-    const adminPassword = bcrypt.hashSync("Admin@123", 10);
-    const query = `INSERT INTO users (username, email, password, full_name, role, status, email_verified)
-      VALUES ('admin', 'admin@babcock.edu.ng', ?, 'System Administrator', 'admin', 'active', 1)
-      ON DUPLICATE KEY UPDATE password = ?, role = 'admin', status = 'active'`;
-
-    connection.query(query, [adminPassword, adminPassword], (err) => {
-      if (!err) {
-        console.log("✅ Admin user ready (admin@babcock.edu.ng / Admin@123)");
-      }
-      resolve();
-    });
-  });
+  try {
+    await dbQuery("SELECT 1");
+    if (!isPostgres) {
+      await initDatabase();
+    }
+    return true;
+  } catch (error) {
+    console.error("Database initialization error:", error.message);
+    return false;
+  }
 }
 
 // Health check endpoint
-app.get("/api/health", (req, res) => {
-  pool.getConnection((err, connection) => {
-    if (err) {
-      return res.status(503).json({
-        success: false,
-        message: "Database connection failed",
-        error: err.message,
-      });
-    }
-
-    connection.query("SELECT 1", (error) => {
-      connection.release();
-      if (error) {
-        return res.status(503).json({
-          success: false,
-          message: "Database query failed",
-          error: error.message,
-        });
-      }
-
-      res.json({
-        success: true,
-        message: "Server is healthy",
-        timestamp: new Date(),
-        database: dbConfig.database,
-        uptime: process.uptime(),
-      });
+app.get("/api/health", async (req, res) => {
+  try {
+    await dbQuery("SELECT 1");
+    res.json({
+      success: true,
+      message: "Server is healthy",
+      timestamp: new Date(),
+      database: isPostgres ? "postgres" : dbConfig.database,
+      client: isPostgres ? "postgres" : "mysql",
+      uptime: process.uptime(),
     });
-  });
+  } catch (error) {
+    res.status(503).json({
+      success: false,
+      message: "Database query failed",
+      error: error.message,
+    });
+  }
 });
-
 // ============== START SERVER ==============
 
 const PORT = process.env.PORT || 3001;
 
-// Initialize database on server start
-console.log("🔄 Initializing database...");
+console.log("Initializing database...");
 initializeDatabase().then((success) => {
-  if (success !== false) {
-    const server = app.listen(PORT, () => {
-      console.log(`
-🚀 BABCOCK UNIVERSITY PUBLISHING COMPANY - ADMIN SERVER
+  if (success === false) {
+    console.error("Failed to initialize database");
+    process.exit(1);
+  }
+
+  const server = app.listen(PORT, () => {
+    console.log(`
+BABCOCK UNIVERSITY PUBLISHING COMPANY - ADMIN SERVER
 ========================================================
 
-✅ Server running on port: ${PORT}
-✅ Main URL: http://localhost:${PORT}
-✅ Admin Panel: http://localhost:${PORT}/admin
-✅ API Health: http://localhost:${PORT}/api/health
+Server running on port: ${PORT}
+Main URL: http://localhost:${PORT}
+Admin Panel: http://localhost:${PORT}/admin
+API Health: http://localhost:${PORT}/api/health
 
-📊 DATABASE STATUS:
-   - MySQL: Connected & Initialized
-   - Database: ${dbConfig.database}
-   - Tables: 12+ publishing management tables
-   - Admin User: Created automatically
+DATABASE STATUS:
+   - Client: ${isPostgres ? "Postgres (Supabase-ready)" : "MySQL"}
+   - Database: ${isPostgres ? "postgres" : dbConfig.database}
+   - Tables: initialized in MySQL mode or pre-provisioned in Postgres mode
 
-🔑 DEFAULT ADMIN CREDENTIALS:
+DEFAULT ADMIN CREDENTIALS:
    - Email: admin@babcock.edu.ng
    - Password: Admin@123
    - Role: Super Admin
 
-📁 FILE UPLOADS:
+FILE UPLOADS:
    - Directory: ${path.join(__dirname, "uploads")}
    - Max Size: 10MB
 
-🔄 API ENDPOINTS:
-   - Authors: /api/admin/authors
-   - Books: /api/admin/books
-   - Submissions: /api/admin/submissions
-   - Contracts: /api/admin/contracts
-   - Training: /api/admin/training
-   - Sales: /api/admin/sales
-   - Inventory: /api/admin/inventory
-   - Reports: /api/admin/reports/*
-   - Settings: /api/admin/settings
-
 ========================================================
-      `);
-    });
+    `);
+  });
 
-    // Handle server errors
-    server.on("error", (err) => {
-      console.error("Server error:", err);
-      process.exit(1);
-    });
-
-    // Graceful shutdown
-    process.on("SIGTERM", () => {
-      console.log("SIGTERM received, shutting down gracefully...");
-      server.close(() => {
-        console.log("Server closed");
-        pool.end(() => {
-          console.log("Database connections closed");
-          process.exit(0);
-        });
-      });
-    });
-
-    process.on("uncaughtException", (err) => {
-      console.error("Uncaught Exception:", err);
-      process.exit(1);
-    });
-
-    process.on("unhandledRejection", (reason, promise) => {
-      console.error("Unhandled Rejection at:", promise, "reason:", reason);
-      process.exit(1);
-    });
-  } else {
-    console.error("❌ Failed to initialize database");
+  server.on("error", (err) => {
+    console.error("Server error:", err);
     process.exit(1);
-  }
+  });
+
+  process.on("SIGTERM", () => {
+    console.log("SIGTERM received, shutting down gracefully...");
+    server.close(async () => {
+      console.log("Server closed");
+      try {
+        if (isPostgres && pgPool) {
+          await pgPool.end();
+        }
+        if (!isPostgres && mysqlPool) {
+          await mysqlPool.promise().end();
+        }
+        console.log("Database connections closed");
+      } catch (dbShutdownError) {
+        console.error("Error closing database connections:", dbShutdownError);
+      }
+      process.exit(0);
+    });
+  });
+
+  process.on("uncaughtException", (err) => {
+    console.error("Uncaught Exception:", err);
+    process.exit(1);
+  });
+
+  process.on("unhandledRejection", (reason, promise) => {
+    console.error("Unhandled Rejection at:", promise, "reason:", reason);
+    process.exit(1);
+  });
 });
 
 // ============== END SERVER ==============
+
+

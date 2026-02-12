@@ -13,6 +13,30 @@ const schemaFilePath = path.join(outputDir, "generated_schema.sql");
 const summaryFilePath = path.join(outputDir, "migration_summary.json");
 
 const dbName = process.env.DB_NAME || "babcock_publishing";
+const mysqlConfig = {
+  host: process.env.MYSQL_MIGRATION_HOST || process.env.DB_HOST,
+  port: Number(process.env.MYSQL_MIGRATION_PORT || process.env.DB_PORT || 3306),
+  user: process.env.MYSQL_MIGRATION_USER || process.env.DB_USER,
+  password: process.env.MYSQL_MIGRATION_PASSWORD || process.env.DB_PASSWORD,
+  database: process.env.MYSQL_MIGRATION_DB || dbName,
+};
+
+function validateRequiredEnv() {
+  const missing = [];
+  if (!mysqlConfig.host) missing.push("MYSQL_MIGRATION_HOST (or DB_HOST)");
+  if (!mysqlConfig.user) missing.push("MYSQL_MIGRATION_USER (or DB_USER)");
+  if (!mysqlConfig.database) missing.push("MYSQL_MIGRATION_DB (or DB_NAME)");
+  if (shouldApply && !process.env.DATABASE_URL) {
+    missing.push("DATABASE_URL (required with --apply)");
+  }
+
+  if (missing.length > 0) {
+    throw new Error(
+      `Missing environment values: ${missing.join(", ")}.\n` +
+        "Tip: create backend/.env.migration with MySQL source + Supabase target values.",
+    );
+  }
+}
 
 function mapMySqlTypeToPostgres(mysqlType) {
   const type = mysqlType.toLowerCase();
@@ -36,23 +60,22 @@ function quoteIdent(identifier) {
 }
 
 async function main() {
+  validateRequiredEnv();
   fs.mkdirSync(outputDir, { recursive: true });
 
-  const mysqlConn = await mysql.createConnection({
-    host: process.env.DB_HOST,
-    port: Number(process.env.DB_PORT || 3306),
-    user: process.env.DB_USER,
-    password: process.env.DB_PASSWORD,
-    database: dbName,
-  });
+  const mysqlConn = await mysql.createConnection(mysqlConfig);
 
   const [tables] = await mysqlConn.query(
     `SELECT TABLE_NAME FROM INFORMATION_SCHEMA.TABLES WHERE TABLE_SCHEMA = ? ORDER BY TABLE_NAME`,
-    [dbName],
+    [mysqlConfig.database],
   );
 
   const tableNames = tables.map((t) => t.TABLE_NAME);
-  const summary = { database: dbName, generatedAt: new Date().toISOString(), tables: [] };
+  const summary = {
+    database: mysqlConfig.database,
+    generatedAt: new Date().toISOString(),
+    tables: [],
+  };
   const schemaStatements = [];
 
   for (const tableName of tableNames) {
@@ -61,7 +84,7 @@ async function main() {
        FROM INFORMATION_SCHEMA.COLUMNS
        WHERE TABLE_SCHEMA = ? AND TABLE_NAME = ?
        ORDER BY ORDINAL_POSITION`,
-      [dbName, tableName],
+      [mysqlConfig.database, tableName],
     );
 
     const pgColumns = columns.map((col) => {
@@ -136,6 +159,22 @@ async function main() {
 }
 
 main().catch((error) => {
+  if (String(error.message || "").includes("mysql_native_password")) {
+    console.error(
+      "Migration failed: MySQL account uses mysql_native_password but server does not have that plugin loaded.",
+    );
+    console.error(
+      "Fix on MySQL source server: create/use a user with caching_sha2_password, then set MYSQL_MIGRATION_USER/PASSWORD.",
+    );
+    console.error(
+      "Example SQL:\n" +
+        "  CREATE USER 'migrator'@'localhost' IDENTIFIED WITH caching_sha2_password BY 'StrongPassword!';\n" +
+        "  GRANT SELECT, SHOW VIEW ON babcock_publishing.* TO 'migrator'@'localhost';\n" +
+        "  FLUSH PRIVILEGES;",
+    );
+    process.exit(1);
+  }
+
   console.error("Migration failed:", error.message);
   process.exit(1);
 });

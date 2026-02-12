@@ -1,0 +1,146 @@
+{
+  "database": "babcock_publishing",
+  "generatedAt": "2026-02-12T13:53:55.022Z",
+  "tables": [
+    {
+      "tableName": "activity_logs",
+      "rowCount": 0,
+      "columnCount": 9
+    },
+    {
+      "tableName": "admins",
+      "rowCount": 1,
+      "columnCount": 11
+    },
+    {
+      "tableName": "analytics",
+      "rowCount": 0,
+      "columnCount": 8
+    },
+    {
+      "tableName": "announcements",
+      "rowCount": 0,
+      "columnCount": 12
+    },
+    {
+      "tableName": "authors",
+      "rowCount": 1,
+      "columnCount": 17
+    },
+    {
+      "tableName": "book_progress",
+      "rowCount": 0,
+      "columnCount": 11
+    },
+    {
+      "tableName": "book_reviews",
+      "rowCount": 0,
+      "columnCount": 11
+    },
+    {
+      "tableName": "books",
+      "rowCount": 0,
+      "columnCount": 11
+    },
+    {
+      "tableName": "contact_messages",
+      "rowCount": 0,
+      "columnCount": 15
+    },
+    {
+      "tableName": "contacts",
+      "rowCount": 0,
+      "columnCount": 7
+    },
+    {
+      "tableName": "contracts",
+      "rowCount": 0,
+      "columnCount": 20
+    },
+    {
+      "tableName": "events",
+      "rowCount": 0,
+      "columnCount": 17
+    },
+    {
+      "tableName": "file_uploads",
+      "rowCount": 0,
+      "columnCount": 7
+    },
+    {
+      "tableName": "inventory",
+      "rowCount": 0,
+      "columnCount": 13
+    },
+    {
+      "tableName": "inventory_items",
+      "rowCount": 0,
+      "columnCount": 19
+    },
+    {
+      "tableName": "production",
+      "rowCount": 0,
+      "columnCount": 12
+    },
+    {
+      "tableName": "production_tasks",
+      "rowCount": 0,
+      "columnCount": 14
+    },
+    {
+      "tableName": "reports",
+      "rowCount": 0,
+      "columnCount": 11
+    },
+    {
+      "tableName": "reviews",
+      "rowCount": 0,
+      "columnCount": 15
+    },
+    {
+      "tableName": "royalties",
+      "rowCount": 0,
+      "columnCount": 16
+    },
+    {
+      "tableName": "royalty_statements",
+      "rowCount": 0,
+      "columnCount": 20
+    },
+    {
+      "tableName": "sales",
+      "rowCount": 0,
+      "columnCount": 14
+    },
+    {
+      "tableName": "sales_orders",
+      "rowCount": 0,
+      "columnCount": 19
+    },
+    {
+      "tableName": "settings",
+      "rowCount": 9,
+      "columnCount": 8
+    },
+    {
+      "tableName": "submissions",
+      "rowCount": 0,
+      "columnCount": 6
+    },
+    {
+      "tableName": "training_registrations",
+      "rowCount": 0,
+      "columnCount": 11
+    },
+    {
+      "tableName": "training_workshops",
+      "rowCount": 0,
+      "columnCount": 19
+    },
+    {
+      "tableName": "users",
+      "rowCount": 2,
+      "columnCount": 16
+    }
+  ]
+}
