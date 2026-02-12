@@ -148,6 +148,7 @@ const mysqlPool = isPostgres ? null : mysql.createPool(dbConfig);
 const pgPool = isPostgres
   ? new PgPool({
       connectionString: process.env.DATABASE_URL,
+      family: Number(process.env.PG_FAMILY || 4),
       ssl:
         process.env.DB_SSL === "true"
           ? { rejectUnauthorized: false }
