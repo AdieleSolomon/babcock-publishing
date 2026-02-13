@@ -1,0 +1,1593 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Babcock University Publishing Company</title>
+    <link
+      rel="stylesheet"
+      href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" />
+    <link
+      href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700&family=Playfair+Display:wght@400;500;600;700&display=swap"
+      rel="stylesheet" />
+    <link
+      rel="stylesheet"
+      href="https://cdn.datatables.net/1.13.6/css/jquery.dataTables.min.css" />
+    <link rel="stylesheet" href="styles.css" />
+  </head>
+  <body>
+    <!-- ============= HOMEPAGE ============= -->
+    <div id="homepage">
+      <header class="site-header">
+        <div class="container header-container">
+          <div class="logo-area">
+            <img
+              src="OIP.webp"
+              alt="Babcock University Logo"
+              class="logo-img" />
+            <div class="logo-text">
+              <h1>Babcock University</h1>
+              <p>Publishing Company</p>
+            </div>
+          </div>
+          <nav class="main-nav">
+            <ul class="nav-links">
+              <li><a href="#home">Home</a></li>
+              <li><a href="#publications">Publications</a></li>
+              <li><a href="#services">Services</a></li>
+              <li><a href="#about">About Us</a></li>
+              <li><a href="#contact">Contact</a></li>
+            </ul>
+            <div class="auth-buttons" id="authButtons">
+              <button class="btn btn-outline" onclick="showLoginModal()">
+                <i class="fas fa-sign-in-alt"></i> Login
+              </button>
+              <button class="btn btn-primary" onclick="showRegisterModal()">
+                <i class="fas fa-user-plus"></i> Register
+              </button>
+            </div>
+          </nav>
+          <button class="hamburger-menu" id="hamburgerMenu" title="Toggle navigation menu">
+            <span></span><span></span><span></span>
+          </button>
+        </div>
+      </header>
+
+      <div class="mobile-menu-overlay" id="mobileMenuOverlay"></div>
+      <div class="mobile-menu" id="mobileMenu">
+        <ul class="mobile-nav-links">
+          <li><a href="#home">Home</a></li>
+          <li><a href="#publications">Publications</a></li>
+          <li><a href="#services">Services</a></li>
+          <li><a href="#about">About Us</a></li>
+          <li><a href="#contact">Contact</a></li>
+        </ul>
+        <div class="mobile-auth-buttons" id="mobileAuthButtons">
+          <button class="btn btn-outline" onclick="showLoginModal()">
+            <i class="fas fa-sign-in-alt"></i> Login
+          </button>
+          <button class="btn btn-primary" onclick="showRegisterModal()">
+            <i class="fas fa-user-plus"></i> Register
+          </button>
+        </div>
+      </div>
+
+      <section class="hero-section" id="home">
+        <div class="container">
+          <div class="hero-content">
+            <h1 class="hero-title">Excellence in Academic Publishing</h1>
+            <p class="hero-subtitle">
+              Babcock University Publishing Company provides world-class
+              publishing services, connecting scholars with global audiences
+              through rigorous academic standards.
+            </p>
+            <div class="hero-buttons">
+              <button
+                class="btn btn-secondary"
+                onclick="showAuthorRegistration()">
+                <i class="fas fa-user-plus"></i> Become an Author
+              </button>
+              <button
+                class="btn btn-outline-white"
+                onclick="showTrainingRegistration()">
+                <i class="fas fa-graduation-cap"></i> Student Training
+              </button>
+            </div>
+            <div class="hero-stats">
+              <div class="stat-item">
+                <div class="stat-number" id="publishedBooks">150+</div>
+                <div class="stat-label">Published Books</div>
+              </div>
+              <div class="stat-item">
+                <div class="stat-number" id="activeAuthors">85+</div>
+                <div class="stat-label">Active Authors</div>
+              </div>
+              <div class="stat-item">
+                <div class="stat-number" id="studentsTrained">1200+</div>
+                <div class="stat-label">Students Trained</div>
+              </div>
+              <div class="stat-item">
+                <div class="stat-number" id="yearsExperience">15+</div>
+                <div class="stat-label">Years Experience</div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <section class="features-section" id="services">
+        <div class="container">
+          <div class="section-header">
+            <h2 class="section-title">Our Publishing Services</h2>
+            <p class="section-subtitle">
+              Comprehensive publishing solutions from manuscript review to
+              global distribution
+            </p>
+          </div>
+          <div class="features-grid">
+            <div class="feature-card">
+              <div class="feature-icon"><i class="fas fa-book-open"></i></div>
+              <h3 class="feature-title">Academic Publishing</h3>
+              <p>
+                Professional publishing of textbooks, research papers, and
+                academic journals with rigorous peer-review process.
+              </p>
+            </div>
+            <div class="feature-card">
+              <div class="feature-icon"><i class="fas fa-print"></i></div>
+              <h3 class="feature-title">Printing Services</h3>
+              <p>
+                High-quality offset and digital printing with various binding
+                options for all academic materials.
+              </p>
+            </div>
+            <div class="feature-card">
+              <div class="feature-icon"><i class="fas fa-edit"></i></div>
+              <h3 class="feature-title">Editing & Proofreading</h3>
+              <p>
+                Comprehensive editing services including copyediting,
+                substantive editing, and proofreading by subject experts.
+              </p>
+            </div>
+            <div class="feature-card">
+              <div class="feature-icon">
+                <i class="fas fa-graduation-cap"></i>
+              </div>
+              <h3 class="feature-title">Student Training</h3>
+              <p>
+                Workshops and training programs in publishing, editing,
+                copyright, and academic writing for students.
+              </p>
+            </div>
+            <div class="feature-card">
+              <div class="feature-icon"><i class="fas fa-globe"></i></div>
+              <h3 class="feature-title">Global Distribution</h3>
+              <p>
+                Worldwide distribution through major academic channels and
+                online platforms for maximum reach.
+              </p>
+            </div>
+            <div class="feature-card">
+              <div class="feature-icon">
+                <i class="fas fa-file-contract"></i>
+              </div>
+              <h3 class="feature-title">Copyright Management</h3>
+              <p>
+                Expert guidance on copyright, licensing, and intellectual
+                property protection for authors.
+              </p>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <!-- Enhanced About Us Section -->
+      <section class="about-section" id="about">
+        <div class="container">
+          <div class="section-header">
+            <h2 class="section-title">About Babcock University Publishing</h2>
+            <p class="section-subtitle">Empowering scholars since 2009</p>
+          </div>
+
+          <div class="about-content-wrapper">
+            <div class="about-hero animate-fade-in-up">
+              <div class="about-hero-text">
+                <h3>Excellence in Academic Publishing</h3>
+                <p>
+                  Babcock University Publishing is a premier academic publishing
+                  platform dedicated to advancing knowledge and fostering
+                  intellectual excellence in the African academic community.
+                </p>
+              </div>
+            </div>
+
+            <div class="mission-vision-grid">
+              <div class="mission-card animate-fade-in-up delay-1">
+                <div class="card-icon">
+                  <i class="fas fa-bullseye"></i>
+                </div>
+                <h4>Our Mission</h4>
+                <p>
+                  To advance scholarly communication by providing innovative
+                  publishing solutions that empower researchers, educators, and
+                  students to share their work with the global academic
+                  community.
+                </p>
+              </div>
+
+              <div class="vision-card animate-fade-in-up delay-2">
+                <div class="card-icon">
+                  <i class="fas fa-eye"></i>
+                </div>
+                <h4>Our Vision</h4>
+                <p>
+                  To become the leading academic publishing platform in Africa,
+                  recognized globally for excellence in scholarly communication
+                  and innovation in publishing technology.
+                </p>
+              </div>
+            </div>
+
+            <div class="history-section animate-fade-in-up delay-3">
+              <h3>Our Journey</h3>
+              <p>
+                Founded in 2009 as part of Babcock University's commitment to
+                scholarly excellence, we have grown from publishing a handful of
+                local textbooks to becoming a comprehensive academic publishing
+                house serving scholars across Africa and beyond.
+              </p>
+
+              <div class="timeline">
+                <div class="timeline-item">
+                  <div class="timeline-year">2009</div>
+                  <div class="timeline-content">
+                    <h5>Foundation</h5>
+                    <p>Babcock University Publishing Company established</p>
+                  </div>
+                </div>
+                <div class="timeline-item">
+                  <div class="timeline-year">2012</div>
+                  <div class="timeline-content">
+                    <h5>First International Publication</h5>
+                    <p>
+                      Published our first internationally distributed textbook
+                    </p>
+                  </div>
+                </div>
+                <div class="timeline-item">
+                  <div class="timeline-year">2018</div>
+                  <div class="timeline-content">
+                    <h5>Digital Transformation</h5>
+                    <p>
+                      Launched digital publishing platform and e-book
+                      distribution
+                    </p>
+                  </div>
+                </div>
+                <div class="timeline-item">
+                  <div class="timeline-year">2023</div>
+                  <div class="timeline-content">
+                    <h5>Global Recognition</h5>
+                    <p>
+                      Publications now reach readers in 25+ countries worldwide
+                    </p>
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            <div class="values-section animate-fade-in-up">
+              <h3>Our Core Values</h3>
+              <div class="values-grid">
+                <div class="value-card">
+                  <div class="value-icon">
+                    <i class="fas fa-graduation-cap"></i>
+                  </div>
+                  <h4>Academic Excellence</h4>
+                  <p>
+                    Upholding the highest standards of scholarly rigor and
+                    quality
+                  </p>
+                </div>
+                <div class="value-card">
+                  <div class="value-icon">
+                    <i class="fas fa-shield-alt"></i>
+                  </div>
+                  <h4>Integrity</h4>
+                  <p>
+                    Maintaining ethical standards and transparent publishing
+                    practices
+                  </p>
+                </div>
+                <div class="value-card">
+                  <div class="value-icon"><i class="fas fa-lightbulb"></i></div>
+                  <h4>Innovation</h4>
+                  <p>
+                    Embracing new technologies to enhance scholarly
+                    communication
+                  </p>
+                </div>
+                <div class="value-card">
+                  <div class="value-icon"><i class="fas fa-globe"></i></div>
+                  <h4>Global Reach</h4>
+                  <p>
+                    Connecting African scholars with international academic
+                    communities
+                  </p>
+                </div>
+              </div>
+            </div>
+
+            <div class="team-preview animate-fade-in-up delay-1">
+              <h3>Leadership Team</h3>
+              <div class="team-grid">
+                <div class="team-member">
+                  <div class="member-avatar">
+                    <i class="fas fa-user-tie"></i>
+                  </div>
+                  <h5>Dr. Sam Okere</h5>
+                  <p class="member-role">Director of Publishing</p>
+                </div>
+                <div class="team-member">
+                  <div class="member-avatar">
+                    <i class="fas fa-user-graduate"></i>
+                  </div>
+                  <h5>Prof. Mary Johnson</h5>
+                  <p class="member-role">Editor-in-Chief</p>
+                </div>
+                <div class="team-member">
+                  <div class="member-avatar">
+                    <i class="fas fa-chart-line"></i>
+                  </div>
+                  <h5>Dr. Samuel Ojo</h5>
+                  <p class="member-role">Operations Director</p>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <section class="publications-section" id="publications">
+        <div class="container">
+          <div class="section-header">
+            <h2 class="section-title">Featured Publications</h2>
+            <p class="section-subtitle">
+              Discover our latest academic publications from Babcock University
+              scholars
+            </p>
+          </div>
+          <div class="publications-filter">
+            <button
+              class="filter-btn active"
+              data-category="all"
+              onclick="filterPublications('all')">
+              All Publications
+            </button>
+            <button
+              class="filter-btn"
+              data-category="textbook"
+              onclick="filterPublications('textbook')">
+              Textbooks
+            </button>
+            <button
+              class="filter-btn"
+              data-category="research"
+              onclick="filterPublications('research')">
+              Research
+            </button>
+            <button
+              class="filter-btn"
+              data-category="journal"
+              onclick="filterPublications('journal')">
+              Journals
+            </button>
+          </div>
+          <div class="publications-grid" id="publicationsGrid">
+            <!-- Publications will be loaded dynamically -->
+          </div>
+          <div style="text-align: center; margin-top: 30px">
+            <button class="btn btn-primary" onclick="loadMorePublications()">
+              <i class="fas fa-book-open"></i> Load More Publications
+            </button>
+          </div>
+        </div>
+      </section>
+
+      <section class="stats-section">
+        <div class="container">
+          <div class="section-header">
+            <h2 class="section-title">Our Impact in Numbers</h2>
+            <p class="section-subtitle">
+              Building academic excellence through quality publishing
+            </p>
+          </div>
+          <div class="stats-grid">
+            <div class="stats-item">
+              <div class="stats-number" id="totalBooksPublished">150+</div>
+              <div class="stats-label">Books Published</div>
+            </div>
+            <div class="stats-item">
+              <div class="stats-number" id="authorsPublished">85+</div>
+              <div class="stats-label">Authors Published</div>
+            </div>
+            <div class="stats-item">
+              <div class="stats-number">25+</div>
+              <div class="stats-label">Countries Reached</div>
+            </div>
+            <div class="stats-item">
+              <div class="stats-number">98%</div>
+              <div class="stats-label">Author Satisfaction</div>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <section class="cta-section">
+        <div class="container">
+          <div class="cta-content">
+            <h2 class="cta-title">Ready to Publish Your Work?</h2>
+            <p style="font-size: 1.2rem; opacity: 0.9; margin-bottom: 30px">
+              Join our community of scholars and share your research with the
+              world.
+            </p>
+            <div class="cta-buttons">
+              <button
+                class="btn btn-secondary"
+                onclick="showAuthorRegistration()">
+                <i class="fas fa-pen-alt"></i> Submit Manuscript
+              </button>
+              <button
+                class="btn btn-outline-white"
+                onclick="showContactModal()">
+                <i class="fas fa-envelope"></i> Contact Our Team
+              </button>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <footer class="site-footer" id="contact">
+        <div class="container">
+          <div class="footer-grid">
+            <div class="footer-column">
+              <h3>Babcock University Publishing</h3>
+              <p style="color: var(--gray-400); margin-bottom: 20px">
+                Excellence in academic publishing since 2009. Committed to
+                advancing scholarship through quality publications.
+              </p>
+              <div class="social-links">
+                <a href="#"><i class="fab fa-facebook-f"></i></a>
+                <a href="#"><i class="fab fa-twitter"></i></a>
+                <a href="#"><i class="fab fa-linkedin-in"></i></a>
+                <a href="#"><i class="fab fa-instagram"></i></a>
+                <a href="#"><i class="fab fa-youtube"></i></a>
+              </div>
+            </div>
+            <div class="footer-column">
+              <h3>Quick Links</h3>
+              <ul class="footer-links">
+                <li>
+                  <a href="#home"><i class="fas fa-chevron-right"></i> Home</a>
+                </li>
+                <li>
+                  <a href="#publications"
+                    ><i class="fas fa-chevron-right"></i> Publications</a
+                  >
+                </li>
+                <li>
+                  <a href="#services"
+                    ><i class="fas fa-chevron-right"></i> Services</a
+                  >
+                </li>
+                <li>
+                  <a href="#about"
+                    ><i class="fas fa-chevron-right"></i> About Us</a
+                  >
+                </li>
+                <li>
+                  <a href="#contact"
+                    ><i class="fas fa-chevron-right"></i> Contact</a
+                  >
+                </li>
+              </ul>
+            </div>
+            <div class="footer-column">
+              <h3>Author Services</h3>
+              <ul class="footer-links">
+                <li>
+                  <a href="#" onclick="showAuthorRegistration()"
+                    ><i class="fas fa-chevron-right"></i> Register as Author</a
+                  >
+                </li>
+                <li>
+                  <a href="#" onclick="showAuthorLogin()"
+                    ><i class="fas fa-chevron-right"></i> Author Login</a
+                  >
+                </li>
+                <li>
+                  <a href="#" onclick="showContactModal()"
+                    ><i class="fas fa-chevron-right"></i> Submit Manuscript</a
+                  >
+                </li>
+                <li>
+                  <a href="#" onclick="showTrainingRegistration()"
+                    ><i class="fas fa-chevron-right"></i> Training Programs</a
+                  >
+                </li>
+                <li>
+                  <a href="#" onclick="showFaqModal()"
+                    ><i class="fas fa-chevron-right"></i> Author Guidelines</a
+                  >
+                </li>
+              </ul>
+            </div>
+            <div class="footer-column">
+              <h3>Contact Info</h3>
+              <ul class="footer-links">
+                <li>
+                  <a href="#"
+                    ><i class="fas fa-map-marker-alt"></i> Babcock University,
+                    Ilishan-Remo, Ogun State</a
+                  >
+                </li>
+                <li>
+                  <a href="tel:+2348031234567"
+                    ><i class="fas fa-phone"></i> +234 (0) 803 123 4567</a
+                  >
+                </li>
+                <li>
+                  <a href="mailto:publishing@babcock.edu.ng"
+                    ><i class="fas fa-envelope"></i>
+                    publishing@babcock.edu.ng</a
+                  >
+                </li>
+                <li>
+                  <a href="#"
+                    ><i class="fas fa-clock"></i> Mon-Fri: 8:00 AM - 5:00 PM</a
+                  >
+                </li>
+              </ul>
+            </div>
+          </div>
+          <div class="footer-bottom">
+            <p>
+              &copy; 2024 Babcock University Publishing Company. All Rights
+              Reserved.
+            </p>
+            <p style="margin-top: 10px; font-size: 0.85rem">
+              <a href="#" style="color: #adb5bd; margin: 0 10px"
+                >Privacy Policy</a
+              >
+              |
+              <a href="#" style="color: #adb5bd; margin: 0 10px"
+                >Terms of Service</a
+              >
+            </p>
+          </div>
+        </div>
+      </footer>
+
+      <!-- Login Modal -->
+      <div class="modal" id="loginModal">
+        <div class="modal-content">
+          <div class="modal-header">
+            <h3>Login</h3>
+            <button class="modal-close" onclick="closeModal('loginModal')">
+              &times;
+            </button>
+          </div>
+          <div class="modal-body">
+            <div class="auth-tabs">
+              <button
+                class="auth-tab-btn active"
+                onclick="switchAuthTab('userLogin')">
+                User Login
+              </button>
+              <button
+                class="auth-tab-btn"
+                onclick="switchAuthTab('authorLogin')">
+                Author Login
+              </button>
+              <button
+                class="auth-tab-btn"
+                onclick="switchAuthTab('adminLogin')">
+                Admin Login
+              </button>
+            </div>
+            <div id="userLogin" class="auth-tab-content active">
+              <form id="userLoginForm" onsubmit="handleUserLogin(event)">
+                <div class="form-group">
+                  <label>Email Address *</label>
+                  <input
+                    type="email"
+                    id="userLoginEmail"
+                    class="form-control"
+                    required />
+                </div>
+                <div class="form-group">
+                  <label>Password *</label>
+                  <input
+                    type="password"
+                    id="userLoginPassword"
+                    class="form-control"
+                    required />
+                </div>
+                <button type="submit" class="btn btn-primary btn-block">
+                  Login as User
+                </button>
+              </form>
+            </div>
+            <div id="authorLogin" class="auth-tab-content">
+              <form id="authorLoginForm" onsubmit="handleAuthorLogin(event)">
+                <div class="form-group">
+                  <label>Email Address *</label>
+                  <input
+                    type="email"
+                    id="authorLoginEmail"
+                    class="form-control"
+                    required />
+                </div>
+                <div class="form-group">
+                  <label>Password *</label>
+                  <input
+                    type="password"
+                    id="authorLoginPassword"
+                    class="form-control"
+                    required />
+                </div>
+                <button type="submit" class="btn btn-primary btn-block">
+                  Login as Author
+                </button>
+              </form>
+            </div>
+            <div id="adminLogin" class="auth-tab-content">
+              <form id="adminLoginForm" onsubmit="handleAdminLogin(event)">
+                <div class="form-group">
+                  <label>Email Address *</label>
+                  <input
+                    type="email"
+                    id="adminLoginEmail"
+                    class="form-control"
+                    required />
+                </div>
+                <div class="form-group">
+                  <label>Password *</label>
+                  <input
+                    type="password"
+                    id="adminLoginPassword"
+                    class="form-control"
+                    required />
+                </div>
+                <button type="submit" class="btn btn-primary btn-block">
+                  Login as Admin
+                </button>
+              </form>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Register Modal -->
+      <div class="modal" id="registerModal">
+        <div class="modal-content">
+          <div class="modal-header">
+            <h3>Register</h3>
+            <button class="modal-close" onclick="closeModal('registerModal')">
+              &times;
+            </button>
+          </div>
+          <div class="modal-body">
+            <div class="auth-tabs">
+              <button
+                class="auth-tab-btn active"
+                onclick="switchRegisterTab('userRegister')">
+                User Registration
+              </button>
+              <button
+                class="auth-tab-btn"
+                onclick="switchRegisterTab('authorRegister')">
+                Author Registration
+              </button>
+            </div>
+            <div id="userRegister" class="auth-tab-content active">
+              <form
+                id="userRegisterForm"
+                onsubmit="handleUserRegistration(event)">
+                <div class="form-group">
+                  <label>Full Name *</label>
+                  <input
+                    type="text"
+                    id="userRegFullName"
+                    class="form-control"
+                    required />
+                </div>
+                <div class="form-group">
+                  <label>Email Address *</label>
+                  <input
+                    type="email"
+                    id="userRegEmail"
+                    class="form-control"
+                    required />
+                </div>
+                <div class="form-group">
+                  <label>Username *</label>
+                  <input
+                    type="text"
+                    id="userRegUsername"
+                    class="form-control"
+                    required />
+                </div>
+                <div class="form-group">
+                  <label>Phone Number</label>
+                  <input type="tel" id="userRegPhone" class="form-control" />
+                </div>
+                <div class="form-group">
+                  <label>Password *</label>
+                  <input
+                    type="password"
+                    id="userRegPassword"
+                    class="form-control"
+                    required />
+                </div>
+                <button type="submit" class="btn btn-primary btn-block">
+                  Register as User
+                </button>
+              </form>
+            </div>
+            <div id="authorRegister" class="auth-tab-content">
+              <form
+                id="authorRegisterForm"
+                onsubmit="handleAuthorRegistration(event)">
+                <div class="form-group">
+                  <label>Full Name *</label>
+                  <input
+                    type="text"
+                    id="regFullName"
+                    class="form-control"
+                    required />
+                </div>
+                <div class="form-group">
+                  <label>Email Address *</label>
+                  <input
+                    type="email"
+                    id="regEmail"
+                    class="form-control"
+                    required />
+                </div>
+                <div class="form-group">
+                  <label>Phone Number *</label>
+                  <input
+                    type="tel"
+                    id="regPhone"
+                    class="form-control"
+                    required />
+                </div>
+                <div class="form-group">
+                  <label>Faculty *</label>
+                  <input
+                    type="text"
+                    id="regFaculty"
+                    class="form-control"
+                    required />
+                </div>
+                <div class="form-group">
+                  <label>Department *</label>
+                  <input
+                    type="text"
+                    id="regDepartment"
+                    class="form-control"
+                    required />
+                </div>
+                <div class="form-group">
+                  <label>Staff/Student ID *</label>
+                  <input
+                    type="text"
+                    id="regStaffId"
+                    class="form-control"
+                    required />
+                </div>
+                <div class="form-group">
+                  <label>Highest Qualification *</label>
+                  <input
+                    type="text"
+                    id="regHighestQualification"
+                    class="form-control"
+                    placeholder="e.g., PhD in Education"
+                    required />
+                </div>
+                <div class="form-group">
+                  <label>Research Interests / Expertise *</label>
+                  <input
+                    type="text"
+                    id="regExpertise"
+                    class="form-control"
+                    placeholder="e.g., Curriculum studies, educational technology"
+                    required />
+                </div>
+                <div class="form-group">
+                  <label>ORCID iD (Recommended)</label>
+                  <input
+                    type="text"
+                    id="regOrcidId"
+                    class="form-control"
+                    placeholder="0000-0002-1825-0097" />
+                </div>
+                <div class="form-group">
+                  <label>Google Scholar ID (Optional)</label>
+                  <input
+                    type="text"
+                    id="regGoogleScholarId"
+                    class="form-control"
+                    placeholder="Scholar profile ID" />
+                </div>
+                <div class="form-group">
+                  <label>Short Biography *</label>
+                  <textarea
+                    id="regBiography"
+                    class="form-control"
+                    rows="4"
+                    placeholder="Professional bio, teaching/research focus, publications summary"
+                    required></textarea>
+                </div>
+                <div class="form-group">
+                  <label>Profile Picture (Optional)</label>
+                  <input
+                    type="file"
+                    id="regProfilePicture"
+                    class="form-control"
+                    accept="image/png,image/jpeg,image/jpg,image/gif" />
+                </div>
+                <div class="form-group">
+                  <label>Password *</label>
+                  <input
+                    type="password"
+                    id="regPassword"
+                    class="form-control"
+                    required />
+                </div>
+                <button type="submit" class="btn btn-primary btn-block">
+                  Register as Author
+                </button>
+              </form>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Contact Modal -->
+      <div class="modal" id="contactModal">
+        <div class="modal-content">
+          <div class="modal-header">
+            <h3>Contact Us</h3>
+            <button class="modal-close" onclick="closeModal('contactModal')">
+              &times;
+            </button>
+          </div>
+          <div class="modal-body">
+            <form id="contactForm" onsubmit="handleContactSubmit(event)">
+              <div class="form-group">
+                <label>Full Name *</label>
+                <input
+                  type="text"
+                  id="contactName"
+                  class="form-control"
+                  required />
+              </div>
+              <div class="form-group">
+                <label>Email Address *</label>
+                <input
+                  type="email"
+                  id="contactEmail"
+                  class="form-control"
+                  required />
+              </div>
+              <div class="form-group">
+                <label>Phone Number</label>
+                <input type="tel" id="contactPhone" class="form-control" />
+              </div>
+              <div class="form-group">
+                <label>Subject *</label>
+                <input
+                  type="text"
+                  id="contactSubject"
+                  class="form-control"
+                  required />
+              </div>
+              <div class="form-group">
+                <label>Category</label>
+                <select id="contactCategory" class="form-control">
+                  <option value="general">General Inquiry</option>
+                  <option value="submission">Manuscript Submission</option>
+                  <option value="training">Training Programs</option>
+                  <option value="technical">Technical Support</option>
+                  <option value="other">Other</option>
+                </select>
+              </div>
+              <div class="form-group">
+                <label>Message *</label>
+                <textarea
+                  id="contactMessage"
+                  class="form-control"
+                  rows="5"
+                  required></textarea>
+              </div>
+              <button type="submit" class="btn btn-primary btn-block">
+                Send Message
+              </button>
+            </form>
+          </div>
+        </div>
+      </div>
+
+      <!-- Training Registration Modal -->
+      <div class="modal" id="trainingModal">
+        <div class="modal-content">
+          <div class="modal-header">
+            <h3>Training Registration</h3>
+            <button class="modal-close" onclick="closeModal('trainingModal')">
+              &times;
+            </button>
+          </div>
+          <div class="modal-body">
+            <form
+              id="trainingForm"
+              onsubmit="handleTrainingRegistration(event)">
+              <div class="form-group">
+                <label>Full Name *</label>
+                <input
+                  type="text"
+                  id="trainingName"
+                  class="form-control"
+                  required />
+              </div>
+              <div class="form-group">
+                <label>Email Address *</label>
+                <input
+                  type="email"
+                  id="trainingEmail"
+                  class="form-control"
+                  required />
+              </div>
+              <div class="form-group">
+                <label>Student ID</label>
+                <input
+                  type="text"
+                  id="trainingStudentId"
+                  class="form-control" />
+              </div>
+              <div class="form-group">
+                <label>Faculty</label>
+                <input type="text" id="trainingFaculty" class="form-control" />
+              </div>
+              <div class="form-group">
+                <label>Department</label>
+                <input
+                  type="text"
+                  id="trainingDepartment"
+                  class="form-control" />
+              </div>
+              <div class="form-group">
+                <label>Level</label>
+                <input
+                  type="text"
+                  id="trainingLevel"
+                  class="form-control"
+                  placeholder="e.g., 100 Level, 200 Level" />
+              </div>
+              <div class="form-group">
+                <label>Training Type *</label>
+                <select id="trainingType" class="form-control" required>
+                  <option value="">Select Training Type</option>
+                  <option value="publishing_basics">Publishing Basics</option>
+                  <option value="editing_proofreading">
+                    Editing & Proofreading
+                  </option>
+                  <option value="copyright_law">Copyright Law</option>
+                  <option value="digital_publishing">Digital Publishing</option>
+                  <option value="academic_writing">Academic Writing</option>
+                  <option value="research_methodology">
+                    Research Methodology
+                  </option>
+                </select>
+              </div>
+              <div class="form-group">
+                <label>Training Mode</label>
+                <select id="trainingMode" class="form-control">
+                  <option value="in_person">In Person</option>
+                  <option value="online">Online</option>
+                  <option value="hybrid">Hybrid</option>
+                </select>
+              </div>
+              <div class="form-group">
+                <label>Preferred Date</label>
+                <input type="date" id="trainingDate" class="form-control" />
+              </div>
+              <button type="submit" class="btn btn-primary btn-block">
+                Register for Training
+              </button>
+            </form>
+          </div>
+        </div>
+      </div>
+
+      <!-- Loading Modal -->
+      <div class="modal" id="loadingModal">
+        <div class="modal-content" style="max-width: 300px; text-align: center">
+          <div class="modal-body">
+            <div
+              class="spinner"
+              style="width: 40px; height: 40px; margin: 20px auto"></div>
+            <p id="loadingText">Loading...</p>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- ============= ADMIN DASHBOARD ============= -->
+    <div id="adminDashboard" class="dashboard-container admin-dashboard">
+      <div class="admin-container">
+        <aside class="sidebar" id="sidebar">
+          <div class="sidebar-header">
+            <div class="logo">
+              <img src="OIP.webp" alt="Logo" class="logo-img" />
+              <div class="logo-text">
+                <h2>BU Publishing</h2>
+                <p>Admin Panel</p>
+              </div>
+            </div>
+            <button class="toggle-sidebar" id="toggleSidebar" aria-label="Toggle sidebar">
+              <i class="fas fa-chevron-left"></i>
+            </button>
+          </div>
+
+          <nav class="sidebar-menu">
+            <div class="menu-section">
+              <div class="menu-title">Main</div>
+              <a href="#" class="nav-item" onclick="showHomepage()">
+                <i class="fas fa-home"></i>
+                <span>Home</span>
+              </a>
+              <a href="#" class="nav-item active" data-section="dashboard">
+                <i class="fas fa-chart-line"></i>
+                <span>Dashboard</span>
+              </a>
+            </div>
+
+            <div class="menu-section">
+              <div class="menu-title">Content</div>
+              <a href="#" class="nav-item" data-section="users">
+                <i class="fas fa-user-friends"></i>
+                <span>Users</span>
+              </a>
+              <a href="#" class="nav-item" data-section="authors">
+                <i class="fas fa-users"></i>
+                <span>Authors</span>
+              </a>
+              <a href="#" class="nav-item" data-section="books">
+                <i class="fas fa-book"></i>
+                <span>Books</span>
+              </a>
+              <a href="#" class="nav-item" data-section="submissions">
+                <i class="fas fa-file-upload"></i>
+                <span>Submissions</span>
+              </a>
+            </div>
+
+            <div class="menu-section">
+              <div class="menu-title">Publishing</div>
+              <a href="#" class="nav-item" data-section="contracts">
+                <i class="fas fa-file-contract"></i>
+                <span>Contracts</span>
+              </a>
+              <a href="#" class="nav-item" data-section="training">
+                <i class="fas fa-graduation-cap"></i>
+                <span>Training</span>
+              </a>
+            </div>
+          </nav>
+
+          <div class="sidebar-footer">
+            <div class="user-info">
+              <div class="user-avatar" id="userAvatar">A</div>
+              <div class="user-details">
+                <div class="user-name" id="userName">Admin</div>
+                <div class="user-role" id="userRole">Administrator</div>
+              </div>
+              <button class="logout-btn" onclick="logout()" aria-label="Logout">
+                <i class="fas fa-sign-out-alt"></i>
+              </button>
+            </div>
+          </div>
+        </aside>
+
+        <div class="main-content" id="mainContent">
+          <header class="main-header">
+            <div class="header-left">
+              <button class="mobile-menu-toggle" id="mobileMenuToggle" aria-label="Open menu">
+                <i class="fas fa-bars"></i>
+              </button>
+              <h1 class="header-title" id="pageTitle">Dashboard</h1>
+            </div>
+
+            <div class="header-actions">
+              <div class="search-bar">
+                <i class="fas fa-search"></i>
+                <input type="text" placeholder="Search..." id="globalSearch" />
+              </div>
+              <div class="quick-actions">
+                <button class="action-btn" onclick="loadAdminDashboard()">
+                  <i class="fas fa-sync-alt"></i>
+                  <span>Refresh</span>
+                </button>
+              </div>
+            </div>
+          </header>
+
+          <main class="content-area">
+            <section id="dashboard" class="content-section active">
+              <div class="welcome-banner">
+                <div class="welcome-content">
+                  <h1>Welcome back</h1>
+                  <p>Track approvals, submissions, and publishing activity at a glance.</p>
+                </div>
+              </div>
+
+              <div class="stats-grid">
+                <div class="stat-card">
+                  <div class="stat-header">
+                    <div class="stat-icon" style="background: linear-gradient(135deg, #ff6b6b 0%, #ee5a52 100%);">
+                      <i class="fas fa-user-clock"></i>
+                    </div>
+                  </div>
+                  <div class="stat-value" id="pendingAuthorsCount">0</div>
+                  <div class="stat-label">Pending Authors</div>
+                </div>
+
+                <div class="stat-card">
+                  <div class="stat-header">
+                    <div class="stat-icon" style="background: linear-gradient(135deg, #006747 0%, #005035 100%);">
+                      <i class="fas fa-book"></i>
+                    </div>
+                  </div>
+                  <div class="stat-value" id="totalBooksCount">0</div>
+                  <div class="stat-label">Total Books</div>
+                </div>
+
+                <div class="stat-card">
+                  <div class="stat-header">
+                    <div class="stat-icon" style="background: linear-gradient(135deg, #ffd700 0%, #e6c200 100%);">
+                      <i class="fas fa-file-upload"></i>
+                    </div>
+                  </div>
+                  <div class="stat-value" id="pendingSubmissionsCount">0</div>
+                  <div class="stat-label">Pending Submissions</div>
+                </div>
+
+                <div class="stat-card">
+                  <div class="stat-header">
+                    <div class="stat-icon" style="background: linear-gradient(135deg, #3b82f6 0%, #2563eb 100%);">
+                      <i class="fas fa-graduation-cap"></i>
+                    </div>
+                  </div>
+                  <div class="stat-value" id="pendingTrainingCount">0</div>
+                  <div class="stat-label">Pending Training</div>
+                </div>
+              </div>
+            </section>
+
+            <section id="authors" class="content-section">
+              <div class="data-section">
+                <div class="section-header">
+                  <h2 class="section-title">Author Management</h2>
+                  <button class="btn btn-primary" onclick="showAddAuthorModal()">
+                    <i class="fas fa-user-plus"></i> Add Author
+                  </button>
+                </div>
+                <div class="data-table-container">
+                  <table class="data-table" id="authorsTable">
+                    <thead>
+                      <tr>
+                        <th>Name</th>
+                        <th>Email</th>
+                        <th>Faculty</th>
+                        <th>Status</th>
+                        <th>Books</th>
+                        <th>Actions</th>
+                      </tr>
+                    </thead>
+                    <tbody id="authorsTableBody">
+                      <tr>
+                        <td colspan="6" style="text-align: center; padding: 20px">
+                          Loading authors...
+                        </td>
+                      </tr>
+                    </tbody>
+                  </table>
+                </div>
+              </div>
+            </section>
+
+            <section id="users" class="content-section">
+              <div class="data-section">
+                <div class="section-header">
+                  <h2 class="section-title">Registered Users</h2>
+                  <button class="btn btn-primary" onclick="loadRegisteredUsers()">
+                    <i class="fas fa-sync-alt"></i> Refresh
+                  </button>
+                </div>
+                <div class="data-table-container">
+                  <table class="data-table" id="usersTable">
+                    <thead>
+                      <tr>
+                        <th>Full Name</th>
+                        <th>Email</th>
+                        <th>Username</th>
+                        <th>Role</th>
+                        <th>Status</th>
+                        <th>Last Login</th>
+                        <th>Registered</th>
+                      </tr>
+                    </thead>
+                    <tbody id="usersTableBody">
+                      <tr>
+                        <td colspan="7" style="text-align: center; padding: 20px">
+                          Loading registered users...
+                        </td>
+                      </tr>
+                    </tbody>
+                  </table>
+                </div>
+              </div>
+            </section>
+
+            <section id="books" class="content-section">
+              <div class="data-section">
+                <div class="section-header">
+                  <h2 class="section-title">Book Management</h2>
+                  <button class="btn btn-primary" onclick="showAddBookModal()">
+                    <i class="fas fa-plus"></i> Add Book
+                  </button>
+                </div>
+                <div class="data-table-container">
+                  <table class="data-table" id="booksTable">
+                    <thead>
+                      <tr>
+                        <th>Title</th>
+                        <th>Author</th>
+                        <th>Category</th>
+                        <th>Status</th>
+                        <th>Price</th>
+                        <th>Actions</th>
+                      </tr>
+                    </thead>
+                    <tbody id="booksTableBody">
+                      <tr>
+                        <td colspan="6" style="text-align: center; padding: 20px">
+                          Loading books...
+                        </td>
+                      </tr>
+                    </tbody>
+                  </table>
+                </div>
+              </div>
+            </section>
+
+            <section id="submissions" class="content-section">
+              <div class="data-section">
+                <div class="section-header">
+                  <h2 class="section-title">Submission Management</h2>
+                  <button class="btn btn-primary" onclick="loadSubmissions()">
+                    <i class="fas fa-sync-alt"></i> Refresh
+                  </button>
+                </div>
+                <div class="data-table-container">
+                  <table class="data-table" id="submissionsTable">
+                    <thead>
+                      <tr>
+                        <th>Book Title</th>
+                        <th>Type</th>
+                        <th>Status</th>
+                        <th>Priority</th>
+                        <th>Submitted</th>
+                        <th>Actions</th>
+                      </tr>
+                    </thead>
+                    <tbody id="submissionsTableBody">
+                      <tr>
+                        <td colspan="6" style="text-align: center; padding: 20px">
+                          Loading submissions...
+                        </td>
+                      </tr>
+                    </tbody>
+                  </table>
+                </div>
+              </div>
+            </section>
+
+            <section id="contracts" class="content-section">
+              <div class="data-section">
+                <div class="section-header">
+                  <h2 class="section-title">Contract Management</h2>
+                  <button class="btn btn-primary" onclick="showAddContractModal()">
+                    <i class="fas fa-file-contract"></i> New Contract
+                  </button>
+                </div>
+                <div class="data-table-container">
+                  <table class="data-table" id="contractsTable">
+                    <thead>
+                      <tr>
+                        <th>Contract No.</th>
+                        <th>Book</th>
+                        <th>Author</th>
+                        <th>Type</th>
+                        <th>Status</th>
+                        <th>Actions</th>
+                      </tr>
+                    </thead>
+                    <tbody id="contractsTableBody">
+                      <tr>
+                        <td colspan="6" style="text-align: center; padding: 20px">
+                          Loading contracts...
+                        </td>
+                      </tr>
+                    </tbody>
+                  </table>
+                </div>
+              </div>
+            </section>
+
+            <section id="training" class="content-section">
+              <div class="data-section">
+                <div class="section-header">
+                  <h2 class="section-title">Training Programs</h2>
+                  <button class="btn btn-primary" onclick="loadTrainingRegistrations()">
+                    <i class="fas fa-sync-alt"></i> Refresh
+                  </button>
+                </div>
+                <div class="data-table-container">
+                  <table class="data-table" id="trainingTable">
+                    <thead>
+                      <tr>
+                        <th>Name</th>
+                        <th>Email</th>
+                        <th>Training Type</th>
+                        <th>Status</th>
+                        <th>Date</th>
+                        <th>Actions</th>
+                      </tr>
+                    </thead>
+                    <tbody id="trainingTableBody">
+                      <tr>
+                        <td colspan="6" style="text-align: center; padding: 20px">
+                          Loading training registrations...
+                        </td>
+                      </tr>
+                    </tbody>
+                  </table>
+                </div>
+              </div>
+            </section>
+          </main>
+        </div>
+      </div>
+    </div>
+
+<!-- ============= AUTHOR DASHBOARD ============= -->
+    <div id="authorDashboard" class="dashboard-container">
+      <header class="dashboard-header">
+        <div style="display: flex; align-items: center; gap: 10px">
+          <img
+            src="OIP.webp"
+            alt="Logo"
+            style="width: 40px; height: 40px" />
+          <div>
+            <h2
+              style="
+                font-size: 18px;
+                font-weight: 700;
+                color: #006747;
+                margin: 0;
+              ">
+              Author Dashboard
+            </h2>
+            <p style="font-size: 12px; color: #6c757d; margin: 0">
+              Babcock Publishing
+            </p>
+          </div>
+        </div>
+        <div style="display: flex; align-items: center; gap: 15px">
+          <span
+            style="color: var(--primary-color); font-weight: 600"
+            id="authorUserName"></span>
+          <button
+            class="btn btn-secondary"
+            onclick="logout()"
+            style="padding: 8px 16px; font-size: 12px">
+            Logout
+          </button>
+        </div>
+      </header>
+
+      <main class="dashboard-main">
+        <div class="page-header">
+          <h1>My Publications</h1>
+          <button class="btn btn-primary" onclick="showAddBookModal()">
+            <i class="fas fa-plus"></i> New Book
+          </button>
+        </div>
+        <div class="stats-grid">
+          <div class="stat-card">
+            <div
+              class="stat-icon"
+              style="
+                background: linear-gradient(135deg, #006747 0%, #005035 100%);
+              ">
+              <i class="fas fa-book"></i>
+            </div>
+            <div class="stat-content">
+              <h3 id="authorTotalBooks">0</h3>
+              <p>Total Books</p>
+            </div>
+          </div>
+          <div class="stat-card">
+            <div
+              class="stat-icon"
+              style="
+                background: linear-gradient(135deg, #28a745 0%, #218838 100%);
+              ">
+              <i class="fas fa-check-circle"></i>
+            </div>
+            <div class="stat-content">
+              <h3 id="authorPublishedBooks">0</h3>
+              <p>Published</p>
+            </div>
+          </div>
+          <div class="stat-card">
+            <div
+              class="stat-icon"
+              style="
+                background: linear-gradient(135deg, #ffc107 0%, #e0a800 100%);
+              ">
+              <i class="fas fa-hourglass-half"></i>
+            </div>
+            <div class="stat-content">
+              <h3 id="authorInProgressBooks">0</h3>
+              <p>In Progress</p>
+            </div>
+          </div>
+          <div class="stat-card">
+            <div
+              class="stat-icon"
+              style="
+                background: linear-gradient(135deg, #17a2b8 0%, #138496 100%);
+              ">
+              <i class="fas fa-money-bill-wave"></i>
+            </div>
+            <div class="stat-content">
+              <h3 id="authorTotalRoyalties">?0</h3>
+              <p>Total Royalties</p>
+            </div>
+          </div>
+        </div>
+        <div class="data-table-container" style="margin-bottom: 24px">
+          <div class="section-header">
+            <h2 class="section-title">My Author Profile</h2>
+          </div>
+          <form id="authorProfileForm" onsubmit="handleAuthorProfileUpdate(event)">
+            <div style="display: flex; align-items: center; gap: 16px; margin-bottom: 20px; flex-wrap: wrap;">
+              <img
+                id="authorProfileImagePreview"
+                src="OIP.webp"
+                alt="Author profile"
+                style="width: 88px; height: 88px; border-radius: 50%; object-fit: cover; border: 2px solid #e9ecef;" />
+              <div class="form-group" style="margin: 0; min-width: 240px;">
+                <label>Change Profile Picture</label>
+                <input
+                  type="file"
+                  id="authorProfilePicture"
+                  class="form-control"
+                  accept="image/png,image/jpeg,image/jpg,image/gif" />
+              </div>
+            </div>
+
+            <div class="stats-grid" style="margin-bottom: 0;">
+              <div class="form-group">
+                <label>Full Name *</label>
+                <input type="text" id="authorProfileFullName" class="form-control" required />
+              </div>
+              <div class="form-group">
+                <label>Email *</label>
+                <input type="email" id="authorProfileEmail" class="form-control" required />
+              </div>
+              <div class="form-group">
+                <label>Phone</label>
+                <input type="tel" id="authorProfilePhone" class="form-control" />
+              </div>
+              <div class="form-group">
+                <label>Staff/Student ID</label>
+                <input type="text" id="authorProfileStaffId" class="form-control" />
+              </div>
+              <div class="form-group">
+                <label>Faculty</label>
+                <input type="text" id="authorProfileFaculty" class="form-control" />
+              </div>
+              <div class="form-group">
+                <label>Department</label>
+                <input type="text" id="authorProfileDepartment" class="form-control" />
+              </div>
+              <div class="form-group">
+                <label>Highest Qualification</label>
+                <input type="text" id="authorProfileQualification" class="form-control" />
+              </div>
+              <div class="form-group">
+                <label>Research Interests / Expertise</label>
+                <input type="text" id="authorProfileExpertise" class="form-control" />
+              </div>
+              <div class="form-group">
+                <label>ORCID iD</label>
+                <input type="text" id="authorProfileOrcidId" class="form-control" />
+              </div>
+              <div class="form-group">
+                <label>Google Scholar ID</label>
+                <input type="text" id="authorProfileGoogleScholarId" class="form-control" />
+              </div>
+              <div class="form-group">
+                <label>LinkedIn URL</label>
+                <input type="url" id="authorProfileLinkedIn" class="form-control" />
+              </div>
+            </div>
+
+            <div class="form-group">
+              <label>Biography</label>
+              <textarea id="authorProfileBiography" class="form-control" rows="4"></textarea>
+            </div>
+
+            <button type="submit" class="btn btn-primary">
+              <i class="fas fa-save"></i> Save Profile
+            </button>
+          </form>
+        </div>
+        <div class="data-table-container">
+          <div style="text-align: center; padding: 30px">
+            <i
+              class="fas fa-book"
+              style="
+                font-size: 48px;
+                color: #006747;
+                margin-bottom: 20px;
+                display: block;
+              "></i>
+            <h3 style="color: #343a40">No books yet</h3>
+            <p style="color: #6c757d; margin-bottom: 20px">
+              Submit your first book to get started
+            </p>
+            <button class="btn btn-primary" onclick="showAddBookModal()">
+              <i class="fas fa-pen-alt"></i> Submit Manuscript
+            </button>
+          </div>
+        </div>
+      </main>
+    </div>
+
+    <div class="modal" id="authorDetailsModal">
+      <div class="modal-content">
+        <div class="modal-header">
+          <h3>Author Details</h3>
+          <button class="modal-close" onclick="closeModal('authorDetailsModal')">
+            &times;
+          </button>
+        </div>
+        <div class="modal-body" id="authorDetailsContent">
+          Loading author details...
+        </div>
+      </div>
+    </div>
+
+    <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+    <script src="https://cdn.datatables.net/1.13.6/js/jquery.dataTables.min.js"></script>
+    <script src="config.js"></script>
+    <script src="script.js"></script>
+  </body>
+</html>
+
