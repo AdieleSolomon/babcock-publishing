@@ -37,25 +37,62 @@ function parseOrigins(value) {
     .filter(Boolean);
 }
 
+function normalizeOrigin(origin) {
+  if (!origin) return "";
+  return origin.trim().replace(/\/+$/, "").toLowerCase();
+}
+
+function wildcardToRegExp(pattern) {
+  const escaped = pattern
+    .replace(/[.+?^${}()|[\]\\]/g, "\\$&")
+    .replace(/\*/g, ".*");
+  return new RegExp(`^${escaped}$`, "i");
+}
+
 const configuredOrigins = [
   ...parseOrigins(process.env.CORS_ORIGIN),
   ...parseOrigins(process.env.FRONTEND_URL),
 ];
 
-const allowedOrigins = new Set(
+const resolvedOrigins =
   process.env.NODE_ENV === "production"
     ? configuredOrigins
-    : [...LOCAL_CORS_ORIGINS, ...configuredOrigins],
+    : [...LOCAL_CORS_ORIGINS, ...configuredOrigins];
+
+const allowedOrigins = new Set(
+  resolvedOrigins
+    .filter((origin) => !origin.includes("*"))
+    .map((origin) => normalizeOrigin(origin)),
 );
+
+const allowedOriginPatterns = resolvedOrigins
+  .filter((origin) => origin.includes("*"))
+  .map((origin) => wildcardToRegExp(normalizeOrigin(origin)));
+
+const allowAllOrigins =
+  process.env.NODE_ENV !== "production" &&
+  allowedOrigins.size === 0 &&
+  allowedOriginPatterns.length === 0;
 
 const corsOptions = {
   origin: (origin, callback) => {
     // Allow non-browser clients and same-origin requests.
-    if (!origin || allowedOrigins.size === 0 || allowedOrigins.has(origin)) {
+    if (!origin || allowAllOrigins) {
       callback(null, true);
       return;
     }
-    callback(new Error("CORS blocked for this origin"));
+
+    const normalizedOrigin = normalizeOrigin(origin);
+    const isPatternAllowed = allowedOriginPatterns.some((pattern) =>
+      pattern.test(normalizedOrigin),
+    );
+
+    if (allowedOrigins.has(normalizedOrigin) || isPatternAllowed) {
+      callback(null, true);
+      return;
+    }
+
+    callback(null, false);
   },
   credentials: true,
   methods: ["GET", "POST", "PUT", "DELETE", "OPTIONS", "PATCH"],
@@ -169,6 +206,12 @@ function buildPostgresConfig() {
 }
 
 const pgPool = isPostgres ? new PgPool(buildPostgresConfig()) : null;
+const POSTGRES_SCHEMA_FILE = path.join(
+  __dirname,
+  "migrations",
+  "mysql_to_postgres",
+  "generated_schema.sql",
+);
 
 function convertQuestionParams(sql) {
   let idx = 0;
@@ -342,6 +385,146 @@ async function ensureAuthorProfileColumns() {
   }
   if (authorAlterStatements.length > 0) {
     await dbQuery(`ALTER TABLE authors ${authorAlterStatements.join(", ")}`);
+  }
+}
+
+async function ensurePostgresSchema() {
+  if (!isPostgres || !pgPool) return;
+
+  const { rows } = await pgPool.query(`
+    SELECT
+      to_regclass('public.users') AS users_table,
+      to_regclass('public.books') AS books_table
+  `);
+  const hasCoreTables = !!rows?.[0]?.users_table && !!rows?.[0]?.books_table;
+  if (hasCoreTables) return;
+
+  if (!fs.existsSync(POSTGRES_SCHEMA_FILE)) {
+    throw new Error(`Missing Postgres schema file: ${POSTGRES_SCHEMA_FILE}`);
+  }
+
+  const schemaSql = fs.readFileSync(POSTGRES_SCHEMA_FILE, "utf8");
+  await pgPool.query(schemaSql);
+
+  await pgPool.query(`
+    CREATE UNIQUE INDEX IF NOT EXISTS idx_users_email_unique ON users(email);
+    CREATE UNIQUE INDEX IF NOT EXISTS idx_users_username_unique ON users(username);
+    CREATE UNIQUE INDEX IF NOT EXISTS idx_settings_setting_key_unique ON settings(setting_key);
+  `);
+
+  console.log("Postgres schema ensured from generated migration file");
+}
+
+function parsePostgresSchemaColumns(schemaSql) {
+  const tableColumns = new Map();
+  const tableRegex = /CREATE TABLE IF NOT EXISTS "([^"]+)"\s*\(([\s\S]*?)\);/g;
+  let tableMatch;
+
+  while ((tableMatch = tableRegex.exec(schemaSql)) !== null) {
+    const tableName = tableMatch[1];
+    const body = tableMatch[2];
+    const columns = [];
+
+    for (const rawLine of body.split("\n")) {
+      const line = rawLine.trim().replace(/,$/, "");
+      if (!line.startsWith('"')) continue;
+
+      const colMatch = line.match(/^"([^"]+)"\s+(.+)$/);
+      if (!colMatch) continue;
+
+      columns.push({
+        name: colMatch[1],
+        definition: colMatch[2],
+      });
+    }
+
+    tableColumns.set(tableName, columns);
+  }
+
+  return tableColumns;
+}
+
+async function reconcilePostgresSchemaColumns() {
+  if (!isPostgres || !pgPool) return;
+  if (!fs.existsSync(POSTGRES_SCHEMA_FILE)) return;
+
+  const schemaSql = fs.readFileSync(POSTGRES_SCHEMA_FILE, "utf8");
+  const tableColumns = parsePostgresSchemaColumns(schemaSql);
+
+  for (const [tableName, columns] of tableColumns) {
+    if (!/^[a-zA-Z0-9_]+$/.test(tableName)) continue;
+
+    const { rows } = await pgPool.query(
+      `SELECT column_name
+       FROM information_schema.columns
+       WHERE table_schema = 'public' AND table_name = $1`,
+      [tableName],
+    );
+    if (rows.length === 0) continue;
+
+    const existingColumns = new Set(rows.map((row) => row.column_name));
+    for (const column of columns) {
+      if (!/^[a-zA-Z0-9_]+$/.test(column.name)) continue;
+      if (existingColumns.has(column.name)) continue;
+
+      await pgPool.query(
+        `ALTER TABLE "${tableName}" ADD COLUMN IF NOT EXISTS "${column.name}" ${column.definition}`,
+      );
+    }
+  }
+
+  console.log("Postgres schema columns reconciled");
+}
+
+async function seedPostgresDefaults() {
+  if (!isPostgres) return;
+
+  const adminEmail = process.env.ADMIN_EMAIL || "admin@babcock.edu.ng";
+  const adminPassword = process.env.ADMIN_PASSWORD || "Admin@123";
+  const [existingAdmin] = await dbQuery("SELECT id FROM users WHERE email = ?", [
+    adminEmail,
+  ]);
+
+  if (existingAdmin.length === 0) {
+    const hashedPassword = await bcrypt.hash(adminPassword, 10);
+    await dbQuery(
+      "INSERT INTO users (username, email, password, full_name, role, status, email_verified) VALUES (?, ?, ?, ?, ?, ?, ?)",
+      [
+        "admin",
+        adminEmail,
+        hashedPassword,
+        "System Administrator",
+        "admin",
+        "active",
+        1,
+      ],
+    );
+    console.log("Default admin user ensured for Postgres");
+  }
+
+  const defaultSettings = [
+    [
+      "site_name",
+      "Babcock University Publishing Company",
+      "string",
+      "general",
+      "Site Name",
+    ],
+    ["royalty_rate", "15", "number", "royalty", "Default royalty percentage"],
+    [
+      "contact_email",
+      "publishing@babcock.edu.ng",
+      "string",
+      "contact",
+      "Contact email",
+    ],
+  ];
+
+  for (const setting of defaultSettings) {
+    await dbQuery(
+      "INSERT INTO settings (setting_key, setting_value, setting_type, category, description) VALUES (?, ?, ?, ?, ?) ON CONFLICT (setting_key) DO NOTHING",
+      setting,
+    );
   }
 }
 
@@ -4168,7 +4351,12 @@ app.use((err, req, res, next) => {
 async function initializeDatabase() {
   try {
     await dbQuery("SELECT 1");
-    if (!isPostgres) {
+    if (isPostgres) {
+      await ensurePostgresSchema();
+      await reconcilePostgresSchemaColumns();
+      await ensureAuthorProfileColumns();
+      await seedPostgresDefaults();
+    } else {
       await initDatabase();
     }
     return true;
