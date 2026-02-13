@@ -1,4 +1,10 @@
 {
-  "cleanUrls": true
+  "version": 2,
+  "cleanUrls": true,
+  "rewrites": [
+    { "source": "/assets/:path*", "destination": "/frontend/assets/:path*" },
+    { "source": "/public/:path*", "destination": "/frontend/public/:path*" },
+    { "source": "/(.*)", "destination": "/frontend/index.html" }
+  ]
 }
 
