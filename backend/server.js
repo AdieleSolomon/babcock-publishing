@@ -145,18 +145,30 @@ const dbConfig = {
 };
 
 const mysqlPool = isPostgres ? null : mysql.createPool(dbConfig);
-const pgPool = isPostgres
-  ? new PgPool({
-      connectionString: process.env.DATABASE_URL,
-      family: process.env.PG_FAMILY
-        ? Number(process.env.PG_FAMILY)
-        : undefined,
-      ssl:
-        process.env.DB_SSL === "true"
-          ? { rejectUnauthorized: false }
-          : undefined,
-    })
-  : null;
+function buildPostgresConfig() {
+  const databaseUrl = process.env.DATABASE_URL;
+  if (!databaseUrl) {
+    throw new Error("DATABASE_URL is required when DB_CLIENT=postgres");
+  }
+
+  const parsed = new URL(databaseUrl);
+  const family = process.env.PG_FAMILY
+    ? Number(process.env.PG_FAMILY)
+    : undefined;
+  const sslEnabled = process.env.DB_SSL === "true";
+
+  return {
+    host: parsed.hostname,
+    port: parsed.port ? Number(parsed.port) : 5432,
+    user: decodeURIComponent(parsed.username || ""),
+    password: decodeURIComponent(parsed.password || ""),
+    database: parsed.pathname ? parsed.pathname.replace(/^\/+/, "") : "postgres",
+    family,
+    ssl: sslEnabled ? { rejectUnauthorized: false } : undefined,
+  };
+}
+
+const pgPool = isPostgres ? new PgPool(buildPostgresConfig()) : null;
 
 function convertQuestionParams(sql) {
   let idx = 0;
