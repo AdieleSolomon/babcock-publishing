@@ -148,7 +148,9 @@ const mysqlPool = isPostgres ? null : mysql.createPool(dbConfig);
 const pgPool = isPostgres
   ? new PgPool({
       connectionString: process.env.DATABASE_URL,
-      family: Number(process.env.PG_FAMILY || 4),
+      family: process.env.PG_FAMILY
+        ? Number(process.env.PG_FAMILY)
+        : undefined,
       ssl:
         process.env.DB_SSL === "true"
           ? { rejectUnauthorized: false }
@@ -886,26 +888,28 @@ const initDatabase = async () => {
 
     // Backfill publication_date for already published books if missing
     await dbQuery(
-        "UPDATE books SET publication_date = DATE(created_at) WHERE publication_date IS NULL AND status = 'published'",
-      );
+      "UPDATE books SET publication_date = DATE(created_at) WHERE publication_date IS NULL AND status = 'published'",
+    );
 
     // Create default admin user
-    const [adminRows] = await dbQuery("SELECT id FROM users WHERE email = ?", ["admin@babcock.edu.ng"]);
+    const [adminRows] = await dbQuery("SELECT id FROM users WHERE email = ?", [
+      "admin@babcock.edu.ng",
+    ]);
 
     if (adminRows.length === 0) {
       const hashedPassword = await bcrypt.hash("Admin@123", 10);
       await dbQuery(
-          "INSERT INTO users (username, email, password, full_name, role, status, email_verified) VALUES (?, ?, ?, ?, ?, ?, ?)",
-          [
-            "admin",
-            "admin@babcock.edu.ng",
-            hashedPassword,
-            "System Administrator",
-            "admin",
-            "active",
-            true,
-          ],
-        );
+        "INSERT INTO users (username, email, password, full_name, role, status, email_verified) VALUES (?, ?, ?, ?, ?, ?, ?)",
+        [
+          "admin",
+          "admin@babcock.edu.ng",
+          hashedPassword,
+          "System Administrator",
+          "admin",
+          "active",
+          true,
+        ],
+      );
       console.log("✓ Default admin user created");
     }
 
@@ -1024,10 +1028,10 @@ app.post("/api/users/register", async (req, res) => {
     }
 
     // Check if user already exists
-    const [existing] = await dbQuery("SELECT id FROM users WHERE email = ? OR username = ?", [
-        email,
-        username,
-      ]);
+    const [existing] = await dbQuery(
+      "SELECT id FROM users WHERE email = ? OR username = ?",
+      [email, username],
+    );
 
     if (existing.length > 0) {
       return res.status(400).json({
@@ -1103,7 +1107,9 @@ app.post("/api/users/login", async (req, res) => {
     }
 
     // Find user by email
-    const [users] = await dbQuery("SELECT * FROM users WHERE email = ?", [email]);
+    const [users] = await dbQuery("SELECT * FROM users WHERE email = ?", [
+      email,
+    ]);
 
     if (users.length === 0) {
       return res.status(401).json({
@@ -1132,9 +1138,10 @@ app.post("/api/users/login", async (req, res) => {
     }
 
     // Update last login
-    await dbQuery("UPDATE users SET last_login = CURRENT_TIMESTAMP WHERE id = ?", [
-        user.id,
-      ]);
+    await dbQuery(
+      "UPDATE users SET last_login = CURRENT_TIMESTAMP WHERE id = ?",
+      [user.id],
+    );
 
     // Generate JWT token
     const token = jwt.sign(
@@ -1184,7 +1191,9 @@ app.post("/api/authors/login", async (req, res) => {
     }
 
     // Find user
-    const [users] = await dbQuery("SELECT * FROM users WHERE email = ?", [email]);
+    const [users] = await dbQuery("SELECT * FROM users WHERE email = ?", [
+      email,
+    ]);
 
     if (users.length === 0) {
       return res.status(401).json({
@@ -1222,16 +1231,17 @@ app.post("/api/authors/login", async (req, res) => {
 
     // Get author profile
     const [authors] = await dbQuery(
-        "SELECT id, staff_id, faculty, department, qualifications, biography FROM authors WHERE user_id = ?",
-        [user.id],
-      );
+      "SELECT id, staff_id, faculty, department, qualifications, biography FROM authors WHERE user_id = ?",
+      [user.id],
+    );
 
     const author = authors.length > 0 ? authors[0] : null;
 
     // Update last login
-    await dbQuery("UPDATE users SET last_login = CURRENT_TIMESTAMP WHERE id = ?", [
-        user.id,
-      ]);
+    await dbQuery(
+      "UPDATE users SET last_login = CURRENT_TIMESTAMP WHERE id = ?",
+      [user.id],
+    );
 
     // Generate token
     const token = jwt.sign(
@@ -1280,9 +1290,9 @@ app.post("/api/admin/login", async (req, res) => {
     }
 
     const [admins] = await dbQuery(
-        "SELECT * FROM users WHERE email = ? AND role IN ('admin', 'editor', 'reviewer')",
-        [email],
-      );
+      "SELECT * FROM users WHERE email = ? AND role IN ('admin', 'editor', 'reviewer')",
+      [email],
+    );
 
     if (admins.length === 0) {
       return res.status(401).json({
@@ -1309,9 +1319,10 @@ app.post("/api/admin/login", async (req, res) => {
     }
 
     // Update last login
-    await dbQuery("UPDATE users SET last_login = CURRENT_TIMESTAMP WHERE id = ?", [
-        admin.id,
-      ]);
+    await dbQuery(
+      "UPDATE users SET last_login = CURRENT_TIMESTAMP WHERE id = ?",
+      [admin.id],
+    );
 
     const token = jwt.sign(
       {
@@ -1467,10 +1478,10 @@ app.post("/api/admin/users", authMiddleware, async (req, res) => {
     }
 
     // Check if user already exists
-    const [existing] = await dbQuery("SELECT id FROM users WHERE email = ? OR username = ?", [
-        email,
-        username,
-      ]);
+    const [existing] = await dbQuery(
+      "SELECT id FROM users WHERE email = ? OR username = ?",
+      [email, username],
+    );
 
     if (existing.length > 0) {
       return res.status(400).json({
@@ -1482,17 +1493,17 @@ app.post("/api/admin/users", authMiddleware, async (req, res) => {
     const hashedPassword = await bcrypt.hash(password, 10);
 
     const [result] = await dbQuery(
-        "INSERT INTO users (username, email, password, full_name, role, status, email_verified) VALUES (?, ?, ?, ?, ?, ?, ?)",
-        [
-          username,
-          email,
-          hashedPassword,
-          full_name,
-          role,
-          status || "active",
-          true,
-        ],
-      );
+      "INSERT INTO users (username, email, password, full_name, role, status, email_verified) VALUES (?, ?, ?, ?, ?, ?, ?)",
+      [
+        username,
+        email,
+        hashedPassword,
+        full_name,
+        role,
+        status || "active",
+        true,
+      ],
+    );
 
     res.json({
       success: true,
@@ -1515,9 +1526,9 @@ app.put("/api/admin/users/:id", authMiddleware, async (req, res) => {
     const userId = req.params.id;
 
     const [result] = await dbQuery(
-        "UPDATE users SET username = ?, email = ?, full_name = ?, role = ?, status = ? WHERE id = ?",
-        [username, email, full_name, role, status, userId],
-      );
+      "UPDATE users SET username = ?, email = ?, full_name = ?, role = ?, status = ? WHERE id = ?",
+      [username, email, full_name, role, status, userId],
+    );
 
     if (result.affectedRows === 0) {
       return res.status(404).json({
@@ -1542,7 +1553,9 @@ app.put("/api/admin/users/:id", authMiddleware, async (req, res) => {
 // Delete user
 app.delete("/api/admin/users/:id", authMiddleware, async (req, res) => {
   try {
-    const [result] = await dbQuery("DELETE FROM users WHERE id = ?", [req.params.id]);
+    const [result] = await dbQuery("DELETE FROM users WHERE id = ?", [
+      req.params.id,
+    ]);
 
     if (result.affectedRows === 0) {
       return res.status(404).json({
@@ -1597,8 +1610,8 @@ app.get("/api/books/published", async (req, res) => {
 app.get("/api/authors/count", async (req, res) => {
   try {
     const [[{ count }]] = await dbQuery(
-        "SELECT COUNT(*) as count FROM authors a JOIN users u ON a.user_id = u.id WHERE u.status = 'active'",
-      );
+      "SELECT COUNT(*) as count FROM authors a JOIN users u ON a.user_id = u.id WHERE u.status = 'active'",
+    );
 
     res.json({
       success: true,
@@ -1617,8 +1630,8 @@ app.get("/api/authors/count", async (req, res) => {
 app.get("/api/training/count", async (req, res) => {
   try {
     const [[{ count }]] = await dbQuery(
-        "SELECT COUNT(*) as count FROM training_registrations WHERE status = 'completed'",
-      );
+      "SELECT COUNT(*) as count FROM training_registrations WHERE status = 'completed'",
+    );
 
     res.json({
       success: true,
@@ -1634,129 +1647,146 @@ app.get("/api/training/count", async (req, res) => {
 });
 
 // Author registration (public endpoint)
-app.post("/api/authors/register", upload.single("profile_image"), async (req, res) => {
-  try {
-    await ensureAuthorProfileColumns();
+app.post(
+  "/api/authors/register",
+  upload.single("profile_image"),
+  async (req, res) => {
+    try {
+      await ensureAuthorProfileColumns();
 
-    const {
-      full_name,
-      email,
-      phone,
-      faculty,
-      department,
-      staff_id,
-      password,
-      qualifications,
-      biography,
-      areas_of_expertise,
-      orcid_id,
-      google_scholar_id,
-      linkedin_url,
-    } = req.body;
+      const {
+        full_name,
+        email,
+        phone,
+        faculty,
+        department,
+        staff_id,
+        password,
+        qualifications,
+        biography,
+        areas_of_expertise,
+        orcid_id,
+        google_scholar_id,
+        linkedin_url,
+      } = req.body;
 
-    if (!full_name || !email || !staff_id || !password || !faculty || !department) {
-      return res.status(400).json({
-        success: false,
-        message: "Missing required fields for author registration",
-      });
-    }
-
-    const profileImagePath = getUploadPath(req.file);
-
-    const [existingUsers] = await dbQuery("SELECT id FROM users WHERE email = ?", [email]);
-
-    if (existingUsers.length > 0) {
-      return res.status(400).json({
-        success: false,
-        message: "User with this email already exists",
-      });
-    }
-
-    const [existingStaffId] = await dbQuery("SELECT id FROM authors WHERE staff_id = ?", [staff_id]);
-
-    if (existingStaffId.length > 0) {
-      return res.status(400).json({
-        success: false,
-        message: "Author with this staff ID already exists",
-      });
-    }
-
-    const hashedPassword = await bcrypt.hash(password, 10);
-    const userColumns = await getTableColumns("users");
-    const authorColumns = await getTableColumns("authors");
-
-    const userPayload = {
-      username: email,
-      email,
-      password: hashedPassword,
-      full_name,
-      role: "author",
-      status: "pending",
-      phone: toNullable(phone),
-      profile_image: profileImagePath,
-    };
-
-    const userInsertColumns = [];
-    const userInsertValues = [];
-    const userInsertPlaceholders = [];
-    for (const [key, value] of Object.entries(userPayload)) {
-      if (userColumns.has(key)) {
-        userInsertColumns.push(key);
-        userInsertValues.push(value);
-        userInsertPlaceholders.push("?");
+      if (
+        !full_name ||
+        !email ||
+        !staff_id ||
+        !password ||
+        !faculty ||
+        !department
+      ) {
+        return res.status(400).json({
+          success: false,
+          message: "Missing required fields for author registration",
+        });
       }
-    }
 
-    const [userResult] = await dbQuery(
-      `INSERT INTO users (${userInsertColumns.join(", ")}) VALUES (${userInsertPlaceholders.join(", ")})`,
-      userInsertValues,
-    );
+      const profileImagePath = getUploadPath(req.file);
 
-    const authorPayload = {
-      user_id: userResult.insertId,
-      staff_id: toNullable(staff_id),
-      faculty: toNullable(faculty),
-      department: toNullable(department),
-      qualifications: toNullable(qualifications),
-      biography: toNullable(biography),
-      areas_of_expertise: toNullable(areas_of_expertise),
-      orcid_id: toNullable(orcid_id),
-      google_scholar_id: toNullable(google_scholar_id),
-      linkedin_url: toNullable(linkedin_url),
-      status: "pending",
-    };
+      const [existingUsers] = await dbQuery(
+        "SELECT id FROM users WHERE email = ?",
+        [email],
+      );
 
-    const authorInsertColumns = [];
-    const authorInsertValues = [];
-    const authorInsertPlaceholders = [];
-    for (const [key, value] of Object.entries(authorPayload)) {
-      if (authorColumns.has(key)) {
-        authorInsertColumns.push(key);
-        authorInsertValues.push(value);
-        authorInsertPlaceholders.push("?");
+      if (existingUsers.length > 0) {
+        return res.status(400).json({
+          success: false,
+          message: "User with this email already exists",
+        });
       }
+
+      const [existingStaffId] = await dbQuery(
+        "SELECT id FROM authors WHERE staff_id = ?",
+        [staff_id],
+      );
+
+      if (existingStaffId.length > 0) {
+        return res.status(400).json({
+          success: false,
+          message: "Author with this staff ID already exists",
+        });
+      }
+
+      const hashedPassword = await bcrypt.hash(password, 10);
+      const userColumns = await getTableColumns("users");
+      const authorColumns = await getTableColumns("authors");
+
+      const userPayload = {
+        username: email,
+        email,
+        password: hashedPassword,
+        full_name,
+        role: "author",
+        status: "pending",
+        phone: toNullable(phone),
+        profile_image: profileImagePath,
+      };
+
+      const userInsertColumns = [];
+      const userInsertValues = [];
+      const userInsertPlaceholders = [];
+      for (const [key, value] of Object.entries(userPayload)) {
+        if (userColumns.has(key)) {
+          userInsertColumns.push(key);
+          userInsertValues.push(value);
+          userInsertPlaceholders.push("?");
+        }
+      }
+
+      const [userResult] = await dbQuery(
+        `INSERT INTO users (${userInsertColumns.join(", ")}) VALUES (${userInsertPlaceholders.join(", ")})`,
+        userInsertValues,
+      );
+
+      const authorPayload = {
+        user_id: userResult.insertId,
+        staff_id: toNullable(staff_id),
+        faculty: toNullable(faculty),
+        department: toNullable(department),
+        qualifications: toNullable(qualifications),
+        biography: toNullable(biography),
+        areas_of_expertise: toNullable(areas_of_expertise),
+        orcid_id: toNullable(orcid_id),
+        google_scholar_id: toNullable(google_scholar_id),
+        linkedin_url: toNullable(linkedin_url),
+        status: "pending",
+      };
+
+      const authorInsertColumns = [];
+      const authorInsertValues = [];
+      const authorInsertPlaceholders = [];
+      for (const [key, value] of Object.entries(authorPayload)) {
+        if (authorColumns.has(key)) {
+          authorInsertColumns.push(key);
+          authorInsertValues.push(value);
+          authorInsertPlaceholders.push("?");
+        }
+      }
+
+      const [authorResult] = await dbQuery(
+        `INSERT INTO authors (${authorInsertColumns.join(", ")}) VALUES (${authorInsertPlaceholders.join(", ")})`,
+        authorInsertValues,
+      );
+
+      res.json({
+        success: true,
+        message:
+          "Author registered successfully. Please wait for admin approval.",
+        userId: userResult.insertId,
+        authorId: authorResult.insertId,
+      });
+    } catch (error) {
+      console.error("Author registration error:", error);
+      res.status(500).json({
+        success: false,
+        message: "Failed to register author",
+      });
     }
-
-    const [authorResult] = await dbQuery(
-      `INSERT INTO authors (${authorInsertColumns.join(", ")}) VALUES (${authorInsertPlaceholders.join(", ")})`,
-      authorInsertValues,
-    );
-
-    res.json({
-      success: true,
-      message:
-        "Author registered successfully. Please wait for admin approval.",
-      userId: userResult.insertId,
-      authorId: authorResult.insertId,
-    });
-  } catch (error) {
-    console.error("Author registration error:", error);
-    res.status(500).json({
-      success: false,
-      message: "Failed to register author",
-    });
-  }
-});
+  },
+);
 
 // Author login (public endpoint)
 app.post("/api/authors/login", async (req, res) => {
@@ -1765,9 +1795,9 @@ app.post("/api/authors/login", async (req, res) => {
 
     // First authenticate against users table
     const [users] = await dbQuery(
-        "SELECT id, full_name, email, role, password, status FROM users WHERE email = ?",
-        [email],
-      );
+      "SELECT id, full_name, email, role, password, status FROM users WHERE email = ?",
+      [email],
+    );
 
     if (users.length === 0) {
       return res.status(401).json({
@@ -1796,16 +1826,17 @@ app.post("/api/authors/login", async (req, res) => {
 
     // Get author profile
     const [authors] = await dbQuery(
-        "SELECT id, staff_id, faculty, department FROM authors WHERE user_id = ?",
-        [user.id],
-      );
+      "SELECT id, staff_id, faculty, department FROM authors WHERE user_id = ?",
+      [user.id],
+    );
 
     const author = authors.length > 0 ? authors[0] : null;
 
     // Update last login
-    await dbQuery("UPDATE users SET last_login = CURRENT_TIMESTAMP WHERE id = ?", [
-        user.id,
-      ]);
+    await dbQuery(
+      "UPDATE users SET last_login = CURRENT_TIMESTAMP WHERE id = ?",
+      [user.id],
+    );
 
     // Generate JWT token
     const token = jwt.sign(
@@ -1952,14 +1983,14 @@ app.get("/api/about", async (req, res) => {
     const [[booksCount], [authorsCount], [trainingCount], [countriesReached]] =
       await Promise.all([
         dbQuery(
-            "SELECT COUNT(*) as count FROM books WHERE status = 'published'",
-          ),
+          "SELECT COUNT(*) as count FROM books WHERE status = 'published'",
+        ),
         dbQuery(
-            "SELECT COUNT(*) as count FROM authors a JOIN users u ON a.user_id = u.id WHERE u.status = 'active'",
-          ),
+          "SELECT COUNT(*) as count FROM authors a JOIN users u ON a.user_id = u.id WHERE u.status = 'active'",
+        ),
         dbQuery(
-            "SELECT COUNT(*) as count FROM training_registrations WHERE status = 'completed'",
-          ),
+          "SELECT COUNT(*) as count FROM training_registrations WHERE status = 'completed'",
+        ),
         dbQuery("SELECT '25' as count"),
       ]);
 
@@ -2041,44 +2072,42 @@ app.get("/api/admin/dashboard/stats", authMiddleware, async (req, res) => {
       [lowInventory],
     ] = await Promise.all([
       dbQuery(
-          "SELECT COUNT(*) as count FROM authors a JOIN users u ON a.user_id = u.id WHERE u.status = 'pending'",
-        ),
+        "SELECT COUNT(*) as count FROM authors a JOIN users u ON a.user_id = u.id WHERE u.status = 'pending'",
+      ),
       dbQuery(
-          "SELECT COUNT(*) as count FROM authors a JOIN users u ON a.user_id = u.id WHERE u.status = 'active'",
-        ),
+        "SELECT COUNT(*) as count FROM authors a JOIN users u ON a.user_id = u.id WHERE u.status = 'active'",
+      ),
       dbQuery("SELECT COUNT(*) as count FROM books"),
+      dbQuery("SELECT COUNT(*) as count FROM books WHERE status = 'published'"),
       dbQuery(
-          "SELECT COUNT(*) as count FROM books WHERE status = 'published'",
-        ),
+        "SELECT COUNT(*) as count FROM submissions WHERE status = 'pending'",
+      ),
       dbQuery(
-          "SELECT COUNT(*) as count FROM submissions WHERE status = 'pending'",
-        ),
-      dbQuery(
-          "SELECT COUNT(*) as count FROM training_registrations WHERE status = 'pending'",
-        ),
+        "SELECT COUNT(*) as count FROM training_registrations WHERE status = 'pending'",
+      ),
       dbQuery("SELECT COUNT(*) as count FROM contacts WHERE status = 'new'"),
       dbQuery(
-          "SELECT COUNT(*) as count FROM contracts WHERE status = 'draft' OR status = 'sent'",
-        ),
+        "SELECT COUNT(*) as count FROM contracts WHERE status = 'draft' OR status = 'sent'",
+      ),
       dbQuery(
-          "SELECT SUM(total_amount) as total FROM sales WHERE payment_status = 'paid' AND sale_date >= DATE_SUB(CURDATE(), INTERVAL 30 DAY)",
-        ),
+        "SELECT SUM(total_amount) as total FROM sales WHERE payment_status = 'paid' AND sale_date >= DATE_SUB(CURDATE(), INTERVAL 30 DAY)",
+      ),
       dbQuery(
-          "SELECT SUM(total_amount) as revenue FROM sales WHERE payment_status = 'paid' AND MONTH(sale_date) = MONTH(CURDATE())",
-        ),
+        "SELECT SUM(total_amount) as revenue FROM sales WHERE payment_status = 'paid' AND MONTH(sale_date) = MONTH(CURDATE())",
+      ),
       dbQuery(
-          "SELECT COUNT(*) as count FROM inventory WHERE available <= reorder_level",
-        ),
+        "SELECT COUNT(*) as count FROM inventory WHERE available <= reorder_level",
+      ),
     ]);
 
     // Get recent activities
     const [recentBooks] = await dbQuery(
-        "SELECT b.id, b.title, b.status, u.full_name as author, b.created_at FROM books b LEFT JOIN authors a ON b.author_id = a.id LEFT JOIN users u ON a.user_id = u.id ORDER BY b.created_at DESC LIMIT 5",
-      );
+      "SELECT b.id, b.title, b.status, u.full_name as author, b.created_at FROM books b LEFT JOIN authors a ON b.author_id = a.id LEFT JOIN users u ON a.user_id = u.id ORDER BY b.created_at DESC LIMIT 5",
+    );
 
     const [recentSubmissions] = await dbQuery(
-        "SELECT s.id, b.title, s.submission_type, s.status, s.submission_date FROM submissions s JOIN books b ON s.book_id = b.id ORDER BY s.submission_date DESC LIMIT 5",
-      );
+      "SELECT s.id, b.title, s.submission_type, s.status, s.submission_date FROM submissions s JOIN books b ON s.book_id = b.id ORDER BY s.submission_date DESC LIMIT 5",
+    );
 
     // Get monthly sales data for chart
     const [monthlySales] = await dbQuery(`
@@ -2211,9 +2240,10 @@ app.get("/api/admin/authors", authMiddleware, async (req, res) => {
 
     // Get book counts for each author
     for (const author of authors) {
-      const [[{ bookCount }]] = await dbQuery("SELECT COUNT(*) as bookCount FROM books WHERE author_id = ?", [
-          author.id,
-        ]);
+      const [[{ bookCount }]] = await dbQuery(
+        "SELECT COUNT(*) as bookCount FROM books WHERE author_id = ?",
+        [author.id],
+      );
       author.bookCount = bookCount;
     }
 
@@ -2239,12 +2269,12 @@ app.get("/api/admin/authors/:id", authMiddleware, async (req, res) => {
     await ensureAuthorProfileColumns();
 
     const [authors] = await dbQuery(
-        `SELECT a.*, u.id as user_id, u.username, u.email, u.full_name, u.phone, u.profile_image, u.status as user_status, u.created_at
+      `SELECT a.*, u.id as user_id, u.username, u.email, u.full_name, u.phone, u.profile_image, u.status as user_status, u.created_at
          FROM authors a
          LEFT JOIN users u ON a.user_id = u.id
          WHERE a.id = ?`,
-        [req.params.id],
-      );
+      [req.params.id],
+    );
 
     if (authors.length === 0) {
       return res
@@ -2256,9 +2286,9 @@ app.get("/api/admin/authors/:id", authMiddleware, async (req, res) => {
 
     // Get author's books
     const [books] = await dbQuery(
-        "SELECT id, title, status, created_at FROM books WHERE author_id = ? ORDER BY created_at DESC",
-        [author.id],
-      );
+      "SELECT id, title, status, created_at FROM books WHERE author_id = ? ORDER BY created_at DESC",
+      [author.id],
+    );
 
     // Get author's submissions
     const [submissions] = await dbQuery(
@@ -2274,9 +2304,9 @@ app.get("/api/admin/authors/:id", authMiddleware, async (req, res) => {
 
     // Get author's contracts
     const [contracts] = await dbQuery(
-        "SELECT * FROM contracts WHERE author_id = ? ORDER BY created_at DESC",
-        [author.id],
-      );
+      "SELECT * FROM contracts WHERE author_id = ? ORDER BY created_at DESC",
+      [author.id],
+    );
 
     res.json({
       success: true,
@@ -2306,7 +2336,10 @@ app.put("/api/admin/authors/:id/status", authMiddleware, async (req, res) => {
         .json({ success: false, message: "Invalid status" });
     }
 
-    const [authors] = await dbQuery("SELECT id, user_id FROM authors WHERE id = ?", [req.params.id]);
+    const [authors] = await dbQuery(
+      "SELECT id, user_id FROM authors WHERE id = ?",
+      [req.params.id],
+    );
 
     if (authors.length === 0) {
       return res
@@ -2338,10 +2371,10 @@ app.put("/api/admin/authors/:id/status", authMiddleware, async (req, res) => {
       }
     }
 
-    const [userResult] = await dbQuery("UPDATE users SET status = ? WHERE id = ?", [
-        userStatus,
-        author.user_id,
-      ]);
+    const [userResult] = await dbQuery(
+      "UPDATE users SET status = ? WHERE id = ?",
+      [userStatus, author.user_id],
+    );
 
     if (userResult.affectedRows === 0) {
       return res.status(404).json({
@@ -2458,15 +2491,16 @@ app.get("/api/admin/books", authMiddleware, async (req, res) => {
     for (const book of books) {
       // Get inventory
       const [inventory] = await dbQuery(
-          "SELECT format, quantity, available FROM inventory WHERE book_id = ?",
-          [book.id],
-        );
+        "SELECT format, quantity, available FROM inventory WHERE book_id = ?",
+        [book.id],
+      );
       book.inventory = inventory;
 
       // Get sales count
-      const [[{ salesCount }]] = await dbQuery("SELECT COUNT(*) as salesCount FROM sales WHERE book_id = ?", [
-          book.id,
-        ]);
+      const [[{ salesCount }]] = await dbQuery(
+        "SELECT COUNT(*) as salesCount FROM sales WHERE book_id = ?",
+        [book.id],
+      );
       book.salesCount = salesCount || 0;
     }
 
@@ -2508,21 +2542,21 @@ app.get("/api/admin/books/:id", authMiddleware, async (req, res) => {
 
     // Get submissions for this book
     const [submissions] = await dbQuery(
-        "SELECT * FROM submissions WHERE book_id = ? ORDER BY submission_date DESC",
-        [book.id],
-      );
+      "SELECT * FROM submissions WHERE book_id = ? ORDER BY submission_date DESC",
+      [book.id],
+    );
 
     // Get contracts for this book
     const [contracts] = await dbQuery(
-        "SELECT * FROM contracts WHERE book_id = ? ORDER BY created_at DESC",
-        [book.id],
-      );
+      "SELECT * FROM contracts WHERE book_id = ? ORDER BY created_at DESC",
+      [book.id],
+    );
 
     // Get production status
     const [production] = await dbQuery(
-        "SELECT * FROM production WHERE book_id = ? ORDER BY created_at DESC",
-        [book.id],
-      );
+      "SELECT * FROM production WHERE book_id = ? ORDER BY created_at DESC",
+      [book.id],
+    );
 
     // Get reviews for this book
     const [reviews] = await dbQuery(
@@ -2537,13 +2571,16 @@ app.get("/api/admin/books/:id", authMiddleware, async (req, res) => {
     );
 
     // Get inventory
-    const [inventory] = await dbQuery("SELECT * FROM inventory WHERE book_id = ?", [book.id]);
+    const [inventory] = await dbQuery(
+      "SELECT * FROM inventory WHERE book_id = ?",
+      [book.id],
+    );
 
     // Get sales history
     const [sales] = await dbQuery(
-        "SELECT * FROM sales WHERE book_id = ? ORDER BY sale_date DESC LIMIT 50",
-        [book.id],
-      );
+      "SELECT * FROM sales WHERE book_id = ? ORDER BY sale_date DESC LIMIT 50",
+      [book.id],
+    );
 
     res.json({
       success: true,
@@ -2587,9 +2624,9 @@ app.put("/api/admin/books/:id/status", authMiddleware, async (req, res) => {
     }
 
     const [result] = await dbQuery(
-        "UPDATE books SET status = ?, editor_notes = COALESCE(?, editor_notes) WHERE id = ?",
-        [status, notes, req.params.id],
-      );
+      "UPDATE books SET status = ?, editor_notes = COALESCE(?, editor_notes) WHERE id = ?",
+      [status, notes, req.params.id],
+    );
 
     if (result.affectedRows === 0) {
       return res
@@ -2623,10 +2660,10 @@ app.post(
 
       const coverPath = `/uploads/${req.file.filename}`;
 
-      const [result] = await dbQuery("UPDATE books SET cover_image = ? WHERE id = ?", [
-          coverPath,
-          req.params.id,
-        ]);
+      const [result] = await dbQuery(
+        "UPDATE books SET cover_image = ? WHERE id = ?",
+        [coverPath, req.params.id],
+      );
 
       if (result.affectedRows === 0) {
         return res
@@ -2764,9 +2801,9 @@ app.post(
       const { reviewer_id, due_date, priority } = req.body;
 
       const [result] = await dbQuery(
-          "UPDATE submissions SET assigned_to = ?, due_date = ?, priority = ?, status = 'assigned' WHERE id = ?",
-          [reviewer_id, due_date, priority, req.params.id],
-        );
+        "UPDATE submissions SET assigned_to = ?, due_date = ?, priority = ?, status = 'assigned' WHERE id = ?",
+        [reviewer_id, due_date, priority, req.params.id],
+      );
 
       if (result.affectedRows === 0) {
         return res
@@ -3194,7 +3231,9 @@ app.get("/api/admin/reports/financial", authMiddleware, async (req, res) => {
 // Get settings
 app.get("/api/admin/settings", authMiddleware, async (req, res) => {
   try {
-    const [settings] = await dbQuery("SELECT * FROM settings ORDER BY category, setting_key");
+    const [settings] = await dbQuery(
+      "SELECT * FROM settings ORDER BY category, setting_key",
+    );
 
     // Organize by category
     const organized = {};
@@ -3224,9 +3263,9 @@ app.post("/api/admin/settings", authMiddleware, async (req, res) => {
 
     for (const [key, value] of Object.entries(settings)) {
       await dbQuery(
-          "UPDATE settings SET setting_value = ?, updated_at = CURRENT_TIMESTAMP WHERE setting_key = ?",
-          [value, key],
-        );
+        "UPDATE settings SET setting_value = ?, updated_at = CURRENT_TIMESTAMP WHERE setting_key = ?",
+        [value, key],
+      );
     }
 
     res.json({
@@ -3247,16 +3286,16 @@ app.post("/api/admin/settings", authMiddleware, async (req, res) => {
 app.get("/api/admin/filters", authMiddleware, async (req, res) => {
   try {
     const [faculties] = await dbQuery(
-        "SELECT DISTINCT faculty FROM authors WHERE faculty IS NOT NULL AND faculty != '' ORDER BY faculty",
-      );
+      "SELECT DISTINCT faculty FROM authors WHERE faculty IS NOT NULL AND faculty != '' ORDER BY faculty",
+    );
 
     const [categories] = await dbQuery(
-        "SELECT DISTINCT category FROM books WHERE category IS NOT NULL AND category != '' ORDER BY category",
-      );
+      "SELECT DISTINCT category FROM books WHERE category IS NOT NULL AND category != '' ORDER BY category",
+    );
 
     const [authors] = await dbQuery(
-        "SELECT a.id, u.full_name, u.email FROM authors a JOIN users u ON a.user_id = u.id WHERE u.status = 'active' ORDER BY u.full_name",
-      );
+      "SELECT a.id, u.full_name, u.email FROM authors a JOIN users u ON a.user_id = u.id WHERE u.status = 'active' ORDER BY u.full_name",
+    );
 
     res.json({
       success: true,
@@ -3390,7 +3429,10 @@ app.put(
         linkedin_url,
       } = req.body;
 
-      const [authorRows] = await dbQuery("SELECT id FROM authors WHERE user_id = ?", [userId]);
+      const [authorRows] = await dbQuery(
+        "SELECT id FROM authors WHERE user_id = ?",
+        [userId],
+      );
 
       if (authorRows.length === 0) {
         return res.status(404).json({
@@ -3437,7 +3479,10 @@ app.put(
           .map((key) => `${key} = ?`)
           .join(", ");
         userValues.push(...Object.values(userUpdates), userId);
-        await dbQuery(`UPDATE users SET ${userSetClause} WHERE id = ?`, userValues);
+        await dbQuery(
+          `UPDATE users SET ${userSetClause} WHERE id = ?`,
+          userValues,
+        );
       }
 
       const authorUpdates = {};
@@ -3465,7 +3510,10 @@ app.put(
           .map((key) => `${key} = ?`)
           .join(", ");
         authorValues.push(...Object.values(authorUpdates), authorId);
-        await dbQuery(`UPDATE authors SET ${authorSetClause} WHERE id = ?`, authorValues);
+        await dbQuery(
+          `UPDATE authors SET ${authorSetClause} WHERE id = ?`,
+          authorValues,
+        );
       }
 
       const [rows] = await dbQuery(
@@ -3506,7 +3554,10 @@ app.get("/api/author/dashboard", authMiddleware, async (req, res) => {
     const userId = req.user.id;
 
     // Get author ID
-    const [authorRows] = await dbQuery("SELECT id FROM authors WHERE user_id = ?", [userId]);
+    const [authorRows] = await dbQuery(
+      "SELECT id FROM authors WHERE user_id = ?",
+      [userId],
+    );
 
     if (authorRows.length === 0) {
       return res.status(404).json({
@@ -3595,9 +3646,9 @@ app.get("/api/author/books/:id", authMiddleware, async (req, res) => {
 
     // Verify author owns the book
     const [authorRows] = await dbQuery(
-        "SELECT a.id FROM authors a JOIN books b ON a.id = b.author_id WHERE a.user_id = ? AND b.id = ?",
-        [userId, bookId],
-      );
+      "SELECT a.id FROM authors a JOIN books b ON a.id = b.author_id WHERE a.user_id = ? AND b.id = ?",
+      [userId, bookId],
+    );
 
     if (authorRows.length === 0) {
       return res.status(403).json({
@@ -3620,28 +3671,27 @@ app.get("/api/author/books/:id", authMiddleware, async (req, res) => {
 
     // Get progress tracking
     const [progress] = await dbQuery(
-        "SELECT * FROM book_progress WHERE book_id = ? ORDER BY start_date ASC",
-        [bookId],
-      );
+      "SELECT * FROM book_progress WHERE book_id = ? ORDER BY start_date ASC",
+      [bookId],
+    );
 
     // Get reviews
     const [book_reviews] = await dbQuery(
-        "SELECT * FROM book_reviews WHERE book_id = ? ORDER BY created_at DESC",
-        [bookId],
-      );
+      "SELECT * FROM book_reviews WHERE book_id = ? ORDER BY created_at DESC",
+      [bookId],
+    );
 
     // Get sales data (if sales_orders_items exists)
     const [sales] = await dbQuery(
-        "SELECT * FROM sales_orders WHERE id IN (SELECT order_id FROM sales_order_items WHERE book_id = ?) ORDER BY created_at DESC LIMIT 10",
-        [bookId],
-      )
-      .catch(() => [[]]);
+      "SELECT * FROM sales_orders WHERE id IN (SELECT order_id FROM sales_order_items WHERE book_id = ?) ORDER BY created_at DESC LIMIT 10",
+      [bookId],
+    ).catch(() => [[]]);
 
     // Get royalty statements
     const [royalties] = await dbQuery(
-        "SELECT * FROM royalty_statements WHERE book_id = ? ORDER BY period_end DESC",
-        [bookId],
-      );
+      "SELECT * FROM royalty_statements WHERE book_id = ? ORDER BY period_end DESC",
+      [bookId],
+    );
 
     res.json({
       success: true,
@@ -4065,6 +4115,27 @@ app.get("/admin", (req, res) => {
   res.sendFile(path.join(FRONTEND_DIR, "index.html"));
 });
 
+// Health check endpoint
+app.get("/api/health", async (req, res) => {
+  try {
+    await dbQuery("SELECT 1");
+    res.json({
+      success: true,
+      message: "Server is healthy",
+      timestamp: new Date(),
+      database: isPostgres ? "postgres" : dbConfig.database,
+      client: isPostgres ? "postgres" : "mysql",
+      uptime: process.uptime(),
+    });
+  } catch (error) {
+    res.status(503).json({
+      success: false,
+      message: "Database query failed",
+      error: error.message,
+    });
+  }
+});
+
 // Handle 404
 app.use((req, res) => {
   res.status(404).sendFile(path.join(FRONTEND_DIR, "index.html"));
@@ -4095,26 +4166,6 @@ async function initializeDatabase() {
   }
 }
 
-// Health check endpoint
-app.get("/api/health", async (req, res) => {
-  try {
-    await dbQuery("SELECT 1");
-    res.json({
-      success: true,
-      message: "Server is healthy",
-      timestamp: new Date(),
-      database: isPostgres ? "postgres" : dbConfig.database,
-      client: isPostgres ? "postgres" : "mysql",
-      uptime: process.uptime(),
-    });
-  } catch (error) {
-    res.status(503).json({
-      success: false,
-      message: "Database query failed",
-      error: error.message,
-    });
-  }
-});
 // ============== START SERVER ==============
 
 const PORT = process.env.PORT || 3001;
@@ -4190,5 +4241,3 @@ FILE UPLOADS:
 });
 
 // ============== END SERVER ==============
-
-
