@@ -10,17 +10,19 @@
 ### Prerequisites
 
 - **Node.js** v18.0.0 or higher
-- **MySQL** 8.0 or higher (or MariaDB 10.5+)
+- **Postgres** 14+ (Railway in production or local Postgres for dev)
 - **npm** v9.0.0 or higher
 
 ### 1. Database Setup
 
-Create MySQL database:
+Railway (recommended):
+- Create a Railway Postgres database and copy its `DATABASE_URL`.
+
+Local Postgres (optional):
 
 ```sql
-CREATE DATABASE babcock_publishing CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci;
+CREATE DATABASE babcock_publishing;
 ```
-
 ### 2. Backend Setup
 
 ```bash
@@ -51,8 +53,8 @@ Open in browser:
 - [x] middleware/ - auth.js, validation.js
 - [x] controllers/ - authController, adminController, authorController, publicationController
 - [x] routes/ - auth.js, admin.js, authors.js, books.js, public.js
-- [x] utils/ - supabaseClient.js, helpers.js
-- [x] supabase/ - config.js, migrations/001_initial_schema.sql
+- [x] migrations/mysql_to_postgres/ - Postgres migration scaffold
+- [x] scripts/mysql-to-postgres-migrate.js - Migration helper
 - [x] Utility scripts - setup-admin.js, test-db.js
 
 ### ✅ Frontend Structure
@@ -102,11 +104,9 @@ Open in browser:
 | ---------------- | -------------------- | ----------------- | ---------------------------------- |
 | `PORT`           | 3001                 | Server port       | Change for production              |
 | `NODE_ENV`       | development          | Environment       | Set to `production` for deployment |
-| `DB_HOST`        | localhost            | Database host     | Update for remote DB               |
-| `DB_PORT`        | 3306                 | Database port     | Standard MySQL port                |
-| `DB_USER`        | root                 | Database user     | Match your MySQL setup             |
-| `DB_PASSWORD`    | (empty)              | Database password | Set if needed                      |
-| `DB_NAME`        | babcock_publishing   | Database name     | Auto-created by setup script       |
+| `DB_CLIENT`     | postgres            | Database client | Use `postgres` for Railway |
+| `DATABASE_URL`  | (Railway URL)       | Postgres URL    | Provided by Railway        |
+| `DB_SSL`        | true                | SSL mode        | Required for Railway       |
 | `JWT_SECRET`     | (provided)           | JWT token secret  | Change to random string            |
 | `SESSION_SECRET` | (provided)           | Session secret    | Change to random string            |
 | `ADMIN_EMAIL`    | admin@babcock.edu.ng | Admin email       | For initial setup                  |
@@ -256,7 +256,7 @@ const API_BASE_URL =
 - `submissions` - Author submissions
 - `contracts` - Publication contracts
 
-See: `backend/supabase/migrations/001_initial_schema.sql`
+See: `backend/migrations/mysql_to_postgres/README.md`
 
 ---
 
@@ -277,9 +277,9 @@ kill -9 <PID>
 ### Database Connection Error
 
 ```bash
-# Verify MySQL is running
+# Verify Postgres is running (or Railway DATABASE_URL is set)
 # Check DB_HOST, DB_USER, DB_PASSWORD in .env
-# Create database if missing: CREATE DATABASE babcock_publishing;
+# Create database if using local Postgres: CREATE DATABASE babcock_publishing;
 ```
 
 ### CORS Errors
@@ -322,8 +322,6 @@ babcock-publishing/
 │   ├── middleware/         ✓ auth, validation
 │   ├── controllers/        ✓ Auth, admin, author, publication
 │   ├── routes/             ✓ All endpoints
-│   ├── utils/              ✓ Helpers, Supabase client
-│   └── supabase/           ✓ Config, migrations
 └── README.md + docs        ✓ Documentation
 ```
 
@@ -342,7 +340,7 @@ babcock-publishing/
 
 **Next Steps:**
 
-1. Ensure MySQL is running
+1. Ensure Postgres is running (or Railway DATABASE_URL is set)
 2. Run `cd backend && npm start`
 3. Run `node setup-admin.js` to create admin user
 4. Open index.html in browser

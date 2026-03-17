@@ -164,7 +164,12 @@ app.use("/uploads", express.static(path.join(__dirname, "uploads")));
 app.use(express.static(FRONTEND_DIR));
 app.use(express.static(FRONTEND_PUBLIC_DIR));
 
-const DB_CLIENT = (process.env.DB_CLIENT || "mysql").toLowerCase();
+const hasPostgresUrl = Boolean(
+  process.env.DATABASE_URL || process.env.PGHOST,
+);
+const DB_CLIENT = (
+  process.env.DB_CLIENT || (hasPostgresUrl ? "postgres" : "mysql")
+).toLowerCase();
 const isPostgres = DB_CLIENT === "postgres";
 const { Pool: PgPool } = pg;
 
@@ -192,7 +197,17 @@ function buildPostgresConfig() {
   const family = process.env.PG_FAMILY
     ? Number(process.env.PG_FAMILY)
     : undefined;
-  const sslEnabled = process.env.DB_SSL === "true";
+  const sslEnv = process.env.DB_SSL;
+  const sslFromEnv =
+    typeof sslEnv === "string" ? sslEnv.toLowerCase() === "true" : undefined;
+  const sslMode = parsed.searchParams.get("sslmode");
+  const sslModeRequires = sslMode
+    ? ["require", "verify-full", "verify-ca"].includes(sslMode.toLowerCase())
+    : false;
+  const sslEnabled =
+    sslFromEnv !== undefined
+      ? sslFromEnv
+      : sslModeRequires || process.env.NODE_ENV === "production";
 
   return {
     host: parsed.hostname,
@@ -4388,7 +4403,7 @@ Admin Panel: http://localhost:${PORT}/admin
 API Health: http://localhost:${PORT}/api/health
 
 DATABASE STATUS:
-   - Client: ${isPostgres ? "Postgres (Supabase-ready)" : "MySQL"}
+   - Client: ${isPostgres ? "Postgres (Railway-ready)" : "MySQL"}
    - Database: ${isPostgres ? "postgres" : dbConfig.database}
    - Tables: initialized in MySQL mode or pre-provisioned in Postgres mode
 

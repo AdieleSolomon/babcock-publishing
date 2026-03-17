@@ -1,0 +1,17 @@
+# 1. Check status
+git status
+
+# 2. Stage changes
+git add .
+
+# 3. Review staged changes
+git diff --staged
+
+# 4. Commit with message
+git commit -m "feat: implement search feature"
+
+# 5. Push to remote (if needed)
+git push origin branch-name
+
+# 6. Pull from remote (if needed)
+git pull origin branch-name

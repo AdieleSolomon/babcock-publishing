@@ -33,7 +33,7 @@ function validateRequiredEnv() {
   if (missing.length > 0) {
     throw new Error(
       `Missing environment values: ${missing.join(", ")}.\n` +
-        "Tip: create backend/.env.migration with MySQL source + Supabase target values.",
+        "Tip: create backend/.env.migration with MySQL source + Railway Postgres target values.",
     );
   }
 }

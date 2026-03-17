@@ -44,10 +44,9 @@
 ✅ routes/authors.js          - Author endpoints
 ✅ routes/books.js            - Book endpoints
 ✅ routes/public.js           - Public endpoints
-✅ utils/supabaseClient.js    - Supabase setup
+✅ migrations/mysql_to_postgres/ - Postgres migration scaffold
+✅ scripts/mysql-to-postgres-migrate.js - Migration helper
 ✅ utils/helpers.js           - Helper functions
-✅ supabase/config.js         - Supabase config
-✅ supabase/migrations/001_initial_schema.sql  - DB schema
 ✅ setup-admin.js             - Admin setup utility
 ✅ test-db.js                 - Database test utility
 ```
@@ -88,12 +87,9 @@
 
 ```
 ✅ DATABASE SECTION
-   ✅ DB_HOST = localhost
-   ✅ DB_PORT = 3306
-   ✅ DB_USER = root
-   ✅ DB_PASSWORD = (set appropriately)
-   ✅ DB_NAME = babcock_publishing
-   ✅ DB_SSL = false
+   ✅ DB_CLIENT = postgres
+   ✅ DATABASE_URL = (Railway Postgres URL)
+   ✅ DB_SSL = true
 
 ✅ SERVER SECTION
    ✅ PORT = 3001

@@ -13,15 +13,15 @@ This directory is the static frontend.
 ## 1. Update backend URL
 
 Edit `vercel.json` and replace:
-- `https://your-backend.onrender.com`
+- `https://your-backend.up.railway.app`
 
-with your real Render backend URL.
+with your real Railway backend URL.
 
 Also set runtime config in `public/config.js`:
 
 ```js
 window.APP_CONFIG = {
-  API_BASE_URL: "https://your-backend.onrender.com/api",
+  API_BASE_URL: "https://your-backend.up.railway.app/api",
 };
 ```
 
@@ -38,7 +38,7 @@ window.APP_CONFIG = {
 
 - Open the deployed frontend URL.
 - Test login and admin dashboard.
-- Confirm API requests succeed (network tab should hit Render URL).
+- Confirm API requests succeed (network tab should hit Railway URL).
 - Confirm uploads render via `/uploads/*` rewrite.
 
 ## 4. Common issues

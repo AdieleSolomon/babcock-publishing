@@ -80,7 +80,7 @@
 **Problem:**
 
 - .env file had duplicate entries
-- Confusing comments and unused Supabase configs
+- Confusing comments and unused legacy configs
 - Not organized by sections
 - Unclear which values need to be changed
 

@@ -1,4 +1,4 @@
-# Backend Deployment Checklist (Render + Supabase Migration)
+# Backend Deployment Checklist (Railway + Postgres)
 
 This directory is the Node.js backend API.
 
@@ -6,29 +6,25 @@ This directory is the Node.js backend API.
 
 - `server.js`
 - `.env`
-- `.env.render`
-- `.env.supabase`
+- `.env.railway`
 - `package.json`
-- `render.yaml`
 - `scripts/mysql-to-postgres-migrate.js`
 - `migrations/mysql_to_postgres/README.md`
-- `migrations/supabase_reset_public_schema.sql`
 
-## 1. Deploy backend to Render
+## 1. Deploy backend to Railway
 
-1. In Render, create a new **Web Service** from this repo.
-2. Use repo root `render.yaml` (Blueprint deploy) or set manually:
-   - Root dir: `backend`
-   - Build: `npm install`
-   - Start: `npm start`
-3. Configure env vars using `backend/.env.render` as template.
-4. Replace placeholder values:
+1. In Railway, create a new project and add a **Service** from this repo.
+2. Set the service root directory to `backend`.
+3. Build command: `npm install`
+4. Start command: `npm start`
+5. Add a Railway **PostgreSQL** database and copy its `DATABASE_URL`.
+6. Configure env vars using `backend/.env.railway` as a template.
+7. Replace placeholder values:
    - `FRONTEND_URL`
    - `CORS_ORIGIN`
-   - `DB_CLIENT` (`postgres` for Supabase, `mysql` for legacy local MySQL)
-   - DB credentials / `DATABASE_URL`
+   - `DATABASE_URL`
    - secrets (`JWT_SECRET`, `SESSION_SECRET`, SMTP)
-5. Deploy and verify health:
+8. Deploy and verify health:
    - `GET /api/health`
 
 ## 2. Production safety checklist
@@ -39,11 +35,11 @@ This directory is the Node.js backend API.
 - secrets not committed in git
 - rotate SMTP app password before go-live
 
-## 3. Prepare Supabase migration (Postgres)
+## 3. Prepare Postgres migration (Railway)
 
-When ready to move from MySQL to Supabase:
+If you need to migrate from MySQL to Railway Postgres:
 
-1. Fill `backend/.env.supabase`.
+1. Fill `backend/.env.migration` (see `.env.migration.example`).
 2. Run dry-run migration scaffold:
 
 ```bash
@@ -54,7 +50,7 @@ npm run migrate:mysql-to-pg
 - `migrations/mysql_to_postgres/generated_schema.sql`
 - `migrations/mysql_to_postgres/migration_summary.json`
 
-4. Apply migration to Supabase Postgres:
+4. Apply migration to Railway Postgres:
 
 ```bash
 npm run migrate:mysql-to-pg:apply
@@ -63,10 +59,10 @@ npm run migrate:mysql-to-pg:apply
 ## 4. Switch backend to Postgres mode
 
 - Set `DB_CLIENT=postgres`
-- Set `DATABASE_URL` (Supabase pooler URL)
+- Set `DATABASE_URL` (Railway Postgres URL)
 - Keep `DB_SSL=true`
 
-Note: `server.js` now uses a cross-DB query adapter for MySQL/Postgres with `DB_CLIENT`.
+Note: `server.js` uses a cross-DB query adapter for MySQL/Postgres with `DB_CLIENT`.
 
 ## 5. Smoke tests after deploy
 

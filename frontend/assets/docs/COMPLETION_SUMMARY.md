@@ -95,13 +95,12 @@ babcock-publishing/
 │   │   ├── ✅ authors.js
 │   │   ├── ✅ books.js
 │   │   └── ✅ public.js
+│   ├── migrations/
+│   │   └── ✅ mysql_to_postgres/ - Postgres migration scaffold
+│   ├── scripts/
+│   │   └── ✅ mysql-to-postgres-migrate.js
 │   ├── utils/
-│   │   ├── ✅ supabaseClient.js
 │   │   └── ✅ helpers.js
-│   ├── supabase/
-│   │   ├── ✅ config.js
-│   │   └── migrations/
-│   │       └── ✅ 001_initial_schema.sql
 │   ├── ✅ setup-admin.js
 │   └── ✅ test-db.js
 │
@@ -304,7 +303,7 @@ Then open: `http://localhost:5500/index.html` in browser
 
 ## 🎯 NEXT ACTIONS
 
-1. **Verify MySQL is running**
+1. **Verify Postgres is running (or Railway DATABASE_URL is set)**
 2. **Run: `cd backend && npm install`** (if needed)
 3. **Run: `cd backend && node setup-admin.js`**
 4. **Run: `cd backend && npm start`**

@@ -50,13 +50,12 @@ babcock-publishing/
 │   │   └── public.js                 # /api/public endpoints
 │   │
 │   ├── utils/
-│   │   ├── supabaseClient.js         # Supabase client setup
 │   │   └── helpers.js                # Utility functions
+│   ├── migrations/
+│   │   └── mysql_to_postgres/        # Postgres migration scaffold
+│   ├── scripts/
+│   │   └── mysql-to-postgres-migrate.js # Migration helper
 │   │
-│   ├── supabase/
-│   │   ├── config.js                 # Supabase configuration
-│   │   └── migrations/
-│   │       └── 001_initial_schema.sql  # Database schema
 │   │
 │   ├── setup-admin.js                # Admin user setup script
 │   ├── test-db.js                    # Database connection test
@@ -96,13 +95,13 @@ babcock-publishing/
 - Middleware properly separated (auth, validation)
 - Controllers organized by feature (auth, admin, author, publication)
 - Routes split into logical endpoint files
-- Database config and migrations in supabase/
+- Database migrations in backend/migrations/mysql_to_postgres/
 - Utility scripts (setup-admin.js, test-db.js) in backend/
 
 ### ❌ Files Removed/Cleaned
 
 - ✂️ Removed duplicate server.js, package.json, .env from root
-- ✂️ Removed old folder structure from root (controllers/, middleware/, routes/, utils/, supabase/)
+- ✂️ Removed old folder structure from root (controllers/, middleware/, routes/, utils/)
 - ✂️ Removed temporary files (server-output.log, git folder)
 - ✂️ Removed unused image (public/babcock-logo.svg)
 - ✂️ Removed old empty route files from root
@@ -127,7 +126,7 @@ babcock-publishing/
 | `backend/controllers/` | Business logic by feature             |
 | `backend/routes/`      | API endpoint definitions              |
 | `backend/utils/`       | Helper functions and clients          |
-| `backend/supabase/`    | Database config and migrations        |
+| `backend/migrations/mysql_to_postgres/` | Postgres migration scaffold        |
 
 ## File Statistics
 
@@ -174,7 +173,7 @@ node test-db.js       # Tests database connection
 - **Base URL**: `http://localhost:3001/api`
 - **Frontend Location**: Static HTML at root directory
 - **Backend Location**: Express server in backend/ folder
-- **Database**: MySQL/MariaDB (configured in backend/.env)
+- **Database**: Postgres (Railway in production) via `DATABASE_URL`
 
 ## Important Notes
 

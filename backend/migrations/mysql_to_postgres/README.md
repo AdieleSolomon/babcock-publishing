@@ -1,4 +1,4 @@
-# MySQL -> Supabase Postgres Migration Scaffold
+# MySQL -> Railway Postgres Migration Scaffold
 
 This folder stores generated migration artifacts from `scripts/mysql-to-postgres-migrate.js`.
 
@@ -14,9 +14,9 @@ This folder stores generated migration artifacts from `scripts/mysql-to-postgres
 - MySQL source:
   - `MYSQL_MIGRATION_HOST`, `MYSQL_MIGRATION_PORT`, `MYSQL_MIGRATION_DB`, `MYSQL_MIGRATION_USER`, `MYSQL_MIGRATION_PASSWORD`
   - or fallback `DB_HOST`, `DB_PORT`, `DB_USER`, `DB_PASSWORD`, `DB_NAME`
-- Postgres target (Supabase):
+- Postgres target (Railway):
   - `DATABASE_URL`
-  - `DB_SSL=true` (recommended for Supabase)
+  - `DB_SSL=true` (recommended)
 
 ## Notes
 
