@@ -20,6 +20,8 @@ const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
 const FRONTEND_DIR = path.resolve(__dirname, "..", "frontend");
 const FRONTEND_PUBLIC_DIR = path.join(FRONTEND_DIR, "public");
+const FRONTEND_INDEX = path.join(FRONTEND_DIR, "index.html");
+const frontendIndexExists = fs.existsSync(FRONTEND_INDEX);
 const LOCAL_CORS_ORIGINS = [
   "http://localhost:5500",
   "http://localhost:3000",
@@ -161,8 +163,10 @@ app.options("*", cors(corsOptions));
 app.use(bodyParser.json({ limit: "10mb" }));
 app.use(bodyParser.urlencoded({ extended: true, limit: "10mb" }));
 app.use("/uploads", express.static(path.join(__dirname, "uploads")));
-app.use(express.static(FRONTEND_DIR));
-app.use(express.static(FRONTEND_PUBLIC_DIR));
+if (frontendIndexExists) {
+  app.use(express.static(FRONTEND_DIR));
+  app.use(express.static(FRONTEND_PUBLIC_DIR));
+}
 
 const hasPostgresUrl = Boolean(
   process.env.DATABASE_URL || process.env.PGHOST,
@@ -4313,17 +4317,28 @@ app.get("/api/sales", authMiddleware, async (req, res) => {
 // Get authors with proper DataTable handling
 
 // Serve HTML pages
-app.get("/", (req, res) => {
-  res.sendFile(path.join(FRONTEND_DIR, "index.html"));
-});
+function sendFrontendOrRedirect(req, res) {
+  if (frontendIndexExists) {
+    res.sendFile(FRONTEND_INDEX);
+    return;
+  }
 
-app.get("/admin.html", (req, res) => {
-  res.sendFile(path.join(FRONTEND_DIR, "index.html"));
-});
+  const target = process.env.FRONTEND_URL;
+  if (target) {
+    res.redirect(302, target);
+    return;
+  }
 
-app.get("/admin", (req, res) => {
-  res.sendFile(path.join(FRONTEND_DIR, "index.html"));
-});
+  res.status(404).json({
+    success: false,
+    message:
+      "Frontend not bundled with this backend. Use the Vercel frontend URL.",
+  });
+}
+
+app.get("/", sendFrontendOrRedirect);
+app.get("/admin.html", sendFrontendOrRedirect);
+app.get("/admin", sendFrontendOrRedirect);
 
 // Health check endpoint
 app.get("/api/health", async (req, res) => {
@@ -4348,7 +4363,14 @@ app.get("/api/health", async (req, res) => {
 
 // Handle 404
 app.use((req, res) => {
-  res.status(404).sendFile(path.join(FRONTEND_DIR, "index.html"));
+  if (frontendIndexExists) {
+    res.status(404).sendFile(FRONTEND_INDEX);
+    return;
+  }
+  res.status(404).json({
+    success: false,
+    message: "Route not found",
+  });
 });
 
 // Error handling middleware

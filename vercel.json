@@ -2,6 +2,8 @@
   "version": 2,
   "cleanUrls": true,
   "rewrites": [
+    { "source": "/robots.txt", "destination": "/frontend/robots.txt" },
+    { "source": "/sitemap.xml", "destination": "/frontend/sitemap.xml" },
     { "source": "/assets/:path*", "destination": "/frontend/assets/:path*" },
     { "source": "/public/:path*", "destination": "/frontend/public/:path*" },
     { "source": "/(.*)", "destination": "/frontend/index.html" }
