@@ -44,6 +44,15 @@ function normalizeOrigin(origin) {
   return origin.trim().replace(/\/+$/, "").toLowerCase();
 }
 
+function isLocalOrigin(origin) {
+  try {
+    const { hostname } = new URL(origin);
+    return hostname === "localhost" || hostname === "127.0.0.1";
+  } catch (error) {
+    return false;
+  }
+}
+
 function wildcardToRegExp(pattern) {
   const escaped = pattern
     .replace(/[.+?^${}()|[\]\\]/g, "\\$&")
@@ -79,7 +88,7 @@ const allowAllOrigins =
 const corsOptions = {
   origin: (origin, callback) => {
     // Allow non-browser clients and same-origin requests.
-    if (!origin || allowAllOrigins) {
+    if (!origin || allowAllOrigins || isLocalOrigin(origin)) {
       callback(null, true);
       return;
     }
