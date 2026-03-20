@@ -1483,9 +1483,14 @@ function updateAuthorsSectionSummary(authors) {
 }
 
 async function loadRegisteredUsers() {
+  const tbody = document.getElementById("usersTableBody");
+
   try {
     const token = localStorage.getItem("authToken");
-    if (!token) return;
+    if (!token) {
+      renderAdminTableMessage(tbody, 8, "Please login again");
+      return;
+    }
 
     const response = await fetch(`${API_BASE_URL}/admin/users?limit=100`, {
       headers: {
@@ -1493,69 +1498,120 @@ async function loadRegisteredUsers() {
         Accept: "application/json",
       },
     });
-
-    const data = await response.json();
-    const tbody = document.getElementById("usersTableBody");
+    let data = {};
+    try {
+      data = await response.json();
+    } catch (error) {
+      throw new Error("Invalid server response");
+    }
 
     if (!tbody) return;
 
+    if (response.status === 401 || response.status === 403) {
+      renderAdminTableMessage(tbody, 8, data.message || "Please login again");
+      handleAdminSectionAuthFailure(data.message || "Please login again");
+      return;
+    }
+
     if (!response.ok || !data.success) {
-      tbody.innerHTML = `
-        <tr>
-          <td colspan="7" style="text-align: center; padding: 20px">
-            Failed to load users
-          </td>
-        </tr>
-      `;
+      renderAdminTableMessage(
+        tbody,
+        8,
+        escapeHtml(data.message || "Failed to load users"),
+      );
       return;
     }
 
     if (!data.users || data.users.length === 0) {
-      tbody.innerHTML = `
-        <tr>
-          <td colspan="7" style="text-align: center; padding: 20px">
-            No registered users found
-          </td>
-        </tr>
-      `;
+      renderAdminTableMessage(tbody, 8, "No registered users found");
       return;
     }
 
     tbody.innerHTML = data.users
       .map((user) => {
+        const userId = Number(user.id);
+        const status = (user.status || "pending").toLowerCase();
+        const statusLabel = formatDashboardLabel(status, "Pending");
         const lastLogin = user.last_login
           ? new Date(user.last_login).toLocaleString()
           : "Never";
         const registeredOn = user.created_at
           ? new Date(user.created_at).toLocaleDateString()
           : "N/A";
+        const actionMarkup =
+          status === "pending" && Number.isFinite(userId)
+            ? `<button class="table-action-btn success" onclick="approveRegisteredUser(${userId})">Approve</button>`
+            : `<span class="admin-author-meta">No approval needed</span>`;
 
         return `
           <tr>
-            <td>${user.full_name || "N/A"}</td>
-            <td>${user.email || "N/A"}</td>
-            <td>${user.username || "N/A"}</td>
-            <td style="text-transform: capitalize;">${user.role || "user"}</td>
-            <td><span class="status-badge status-${user.status || "pending"}">${user.status || "pending"}</span></td>
-            <td>${lastLogin}</td>
-            <td>${registeredOn}</td>
+            <td>${escapeHtml(user.full_name || "N/A")}</td>
+            <td>${escapeHtml(user.email || "N/A")}</td>
+            <td>${escapeHtml(user.username || "N/A")}</td>
+            <td style="text-transform: capitalize;">${escapeHtml(formatDashboardLabel(user.role || "user", "User"))}</td>
+            <td><span class="status-badge status-${escapeHtml(status)}">${escapeHtml(statusLabel)}</span></td>
+            <td>${escapeHtml(lastLogin)}</td>
+            <td>${escapeHtml(registeredOn)}</td>
+            <td>${actionMarkup}</td>
           </tr>
         `;
       })
       .join("");
   } catch (error) {
     console.error("Error loading registered users:", error);
-    const tbody = document.getElementById("usersTableBody");
     if (tbody) {
-      tbody.innerHTML = `
-        <tr>
-          <td colspan="7" style="text-align: center; padding: 20px">
-            Error loading users
-          </td>
-        </tr>
-      `;
+      renderAdminTableMessage(tbody, 8, "Error loading users");
     }
   }
+}
+
+async function updateRegisteredUserStatus(userId, status) {
+  try {
+    const token = localStorage.getItem("authToken");
+    if (!token) {
+      showNotification("Please login again", "error");
+      return;
+    }
+
+    const response = await fetch(`${API_BASE_URL}/admin/users/${userId}/status`, {
+      method: "PUT",
+      headers: {
+        Authorization: `Bearer ${token}`,
+        "Content-Type": "application/json",
+        Accept: "application/json",
+      },
+      body: JSON.stringify({ status }),
+    });
+
+    let data = {};
+    try {
+      data = await response.json();
+    } catch (error) {
+      throw new Error("Invalid server response");
+    }
+
+    if (response.status === 401 || response.status === 403) {
+      handleAdminSectionAuthFailure(data.message || "Please login again");
+      return;
+    }
+
+    if (!response.ok || !data.success) {
+      showNotification(data.message || "Failed to update user status", "error");
+      return;
+    }
+
+    showNotification(data.message || "User status updated successfully", "success");
+    await loadRegisteredUsers();
+    await loadAdminDashboard();
+  } catch (error) {
+    console.error("Update registered user status error:", error);
+    showNotification("Failed to update user status", "error");
+  }
+}
+
+function approveRegisteredUser(userId) {
+  if (!confirm("Approve this user registration?")) return;
+  updateRegisteredUserStatus(userId, "approved");
 }
 
 async function loadBooks() {

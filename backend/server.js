@@ -2024,176 +2024,243 @@ app.get("/api/admin/health", authMiddleware, async (req, res) => {
 // ============== ADMIN USERS MANAGEMENT ==============
 
 // Get all admin users
-app.get("/api/admin/users", authMiddleware, async (req, res) => {
-  try {
-    const { role, status, search, page = 1, limit = 20 } = req.query;
-    const offset = (page - 1) * limit;
+app.get(
+  "/api/admin/users",
+  authMiddleware,
+  roleMiddleware(["admin"]),
+  async (req, res) => {
+    try {
+      const { role, status, search, page = 1, limit = 20 } = req.query;
+      const offset = (page - 1) * limit;
 
-    let query =
-      "SELECT id, username, email, full_name, role, status, last_login, created_at FROM users WHERE 1=1";
-    let countQuery = "SELECT COUNT(*) as total FROM users WHERE 1=1";
-    const params = [];
-    const countParams = [];
+      let query =
+        "SELECT id, username, email, full_name, role, status, last_login, created_at FROM users WHERE 1=1";
+      let countQuery = "SELECT COUNT(*) as total FROM users WHERE 1=1";
+      const params = [];
+      const countParams = [];
 
-    if (role) {
-      query += " AND role = ?";
-      countQuery += " AND role = ?";
-      params.push(role);
-      countParams.push(role);
+      if (role) {
+        query += " AND role = ?";
+        countQuery += " AND role = ?";
+        params.push(role);
+        countParams.push(role);
+      }
+
+      if (status) {
+        query += " AND status = ?";
+        countQuery += " AND status = ?";
+        params.push(status);
+        countParams.push(status);
+      }
+
+      if (search) {
+        query += " AND (username LIKE ? OR email LIKE ? OR full_name LIKE ?)";
+        countQuery +=
+          " AND (username LIKE ? OR email LIKE ? OR full_name LIKE ?)";
+        const searchTerm = `%${search}%`;
+        params.push(searchTerm, searchTerm, searchTerm);
+        countParams.push(searchTerm, searchTerm, searchTerm);
+      }
+
+      query += " ORDER BY created_at DESC LIMIT ? OFFSET ?";
+      params.push(parseInt(limit), offset);
+
+      const [users] = await dbQuery(query, params);
+      const [[{ total }]] = await dbQuery(countQuery, countParams);
+
+      res.json({
+        success: true,
+        users,
+        pagination: {
+          total,
+          page: parseInt(page),
+          limit: parseInt(limit),
+          pages: Math.ceil(total / limit),
+        },
+      });
+    } catch (error) {
+      console.error("Get admin users error:", error);
+      res.status(500).json({
+        success: false,
+        message: "Failed to load users",
+      });
     }
-
-    if (status) {
-      query += " AND status = ?";
-      countQuery += " AND status = ?";
-      params.push(status);
-      countParams.push(status);
-    }
-
-    if (search) {
-      query += " AND (username LIKE ? OR email LIKE ? OR full_name LIKE ?)";
-      countQuery +=
-        " AND (username LIKE ? OR email LIKE ? OR full_name LIKE ?)";
-      const searchTerm = `%${search}%`;
-      params.push(searchTerm, searchTerm, searchTerm);
-      countParams.push(searchTerm, searchTerm, searchTerm);
-    }
-
-    query += " ORDER BY created_at DESC LIMIT ? OFFSET ?";
-    params.push(parseInt(limit), offset);
-
-    const [users] = await dbQuery(query, params);
-    const [[{ total }]] = await dbQuery(countQuery, countParams);
-
-    res.json({
-      success: true,
-      users,
-      pagination: {
-        total,
-        page: parseInt(page),
-        limit: parseInt(limit),
-        pages: Math.ceil(total / limit),
-      },
-    });
-  } catch (error) {
-    console.error("Get admin users error:", error);
-    res.status(500).json({
-      success: false,
-      message: "Failed to load users",
-    });
-  }
-});
+  },
+);
 
 // Create new admin user
-app.post("/api/admin/users", authMiddleware, async (req, res) => {
-  try {
-    const { username, email, password, full_name, role, status } = req.body;
+app.post(
+  "/api/admin/users",
+  authMiddleware,
+  roleMiddleware(["admin"]),
+  async (req, res) => {
+    try {
+      const { username, email, password, full_name, role, status } = req.body;
 
-    if (!username || !email || !password || !full_name || !role) {
-      return res.status(400).json({
+      if (!username || !email || !password || !full_name || !role) {
+        return res.status(400).json({
+          success: false,
+          message: "Required fields are missing",
+        });
+      }
+
+      // Check if user already exists
+      const [existing] = await dbQuery(
+        "SELECT id FROM users WHERE email = ? OR username = ?",
+        [email, username],
+      );
+
+      if (existing.length > 0) {
+        return res.status(400).json({
+          success: false,
+          message: "User with this email or username already exists",
+        });
+      }
+
+      const hashedPassword = await bcrypt.hash(password, 10);
+
+      const [result] = await dbQuery(
+        "INSERT INTO users (username, email, password, full_name, role, status, email_verified) VALUES (?, ?, ?, ?, ?, ?, ?)",
+        [
+          username,
+          email,
+          hashedPassword,
+          full_name,
+          role,
+          status || "active",
+          true,
+        ],
+      );
+
+      res.json({
+        success: true,
+        message: "User created successfully",
+        userId: result.insertId,
+      });
+    } catch (error) {
+      console.error("Create user error:", error);
+      res.status(500).json({
         success: false,
-        message: "Required fields are missing",
+        message: "Failed to create user",
       });
     }
-
-    // Check if user already exists
-    const [existing] = await dbQuery(
-      "SELECT id FROM users WHERE email = ? OR username = ?",
-      [email, username],
-    );
-
-    if (existing.length > 0) {
-      return res.status(400).json({
-        success: false,
-        message: "User with this email or username already exists",
-      });
-    }
-
-    const hashedPassword = await bcrypt.hash(password, 10);
-
-    const [result] = await dbQuery(
-      "INSERT INTO users (username, email, password, full_name, role, status, email_verified) VALUES (?, ?, ?, ?, ?, ?, ?)",
-      [
-        username,
-        email,
-        hashedPassword,
-        full_name,
-        role,
-        status || "active",
-        true,
-      ],
-    );
-
-    res.json({
-      success: true,
-      message: "User created successfully",
-      userId: result.insertId,
-    });
-  } catch (error) {
-    console.error("Create user error:", error);
-    res.status(500).json({
-      success: false,
-      message: "Failed to create user",
-    });
-  }
-});
+  },
+);
 
 // Update user
-app.put("/api/admin/users/:id", authMiddleware, async (req, res) => {
-  try {
-    const { username, email, full_name, role, status } = req.body;
-    const userId = req.params.id;
+app.put(
+  "/api/admin/users/:id",
+  authMiddleware,
+  roleMiddleware(["admin"]),
+  async (req, res) => {
+    try {
+      const { username, email, full_name, role, status } = req.body;
+      const userId = req.params.id;
 
-    const [result] = await dbQuery(
-      "UPDATE users SET username = ?, email = ?, full_name = ?, role = ?, status = ? WHERE id = ?",
-      [username, email, full_name, role, status, userId],
-    );
+      const [result] = await dbQuery(
+        "UPDATE users SET username = ?, email = ?, full_name = ?, role = ?, status = ? WHERE id = ?",
+        [username, email, full_name, role, status, userId],
+      );
 
-    if (result.affectedRows === 0) {
-      return res.status(404).json({
+      if (result.affectedRows === 0) {
+        return res.status(404).json({
+          success: false,
+          message: "User not found",
+        });
+      }
+
+      res.json({
+        success: true,
+        message: "User updated successfully",
+      });
+    } catch (error) {
+      console.error("Update user error:", error);
+      res.status(500).json({
         success: false,
-        message: "User not found",
+        message: "Failed to update user",
       });
     }
+  },
+);
 
-    res.json({
-      success: true,
-      message: "User updated successfully",
-    });
-  } catch (error) {
-    console.error("Update user error:", error);
-    res.status(500).json({
-      success: false,
-      message: "Failed to update user",
-    });
-  }
-});
+// Update user account status
+app.put(
+  "/api/admin/users/:id/status",
+  authMiddleware,
+  roleMiddleware(["admin"]),
+  async (req, res) => {
+    try {
+      const rawStatus = `${req.body?.status || ""}`.trim().toLowerCase();
+      const status = rawStatus === "approved" ? "active" : rawStatus;
+      const allowedStatuses = ["pending", "active", "inactive", "suspended"];
+
+      if (!allowedStatuses.includes(status)) {
+        return res.status(400).json({
+          success: false,
+          message: "Invalid status",
+        });
+      }
+
+      const [result] = await dbQuery("UPDATE users SET status = ? WHERE id = ?", [
+        status,
+        req.params.id,
+      ]);
+
+      if (result.affectedRows === 0) {
+        return res.status(404).json({
+          success: false,
+          message: "User not found",
+        });
+      }
+
+      res.json({
+        success: true,
+        message:
+          status === "active"
+            ? "User approved successfully"
+            : "User status updated successfully",
+      });
+    } catch (error) {
+      console.error("Update user status error:", error);
+      res.status(500).json({
+        success: false,
+        message: "Failed to update user status",
+      });
+    }
+  },
+);
 
 // Delete user
-app.delete("/api/admin/users/:id", authMiddleware, async (req, res) => {
-  try {
-    const [result] = await dbQuery("DELETE FROM users WHERE id = ?", [
-      req.params.id,
-    ]);
+app.delete(
+  "/api/admin/users/:id",
+  authMiddleware,
+  roleMiddleware(["admin"]),
+  async (req, res) => {
+    try {
+      const [result] = await dbQuery("DELETE FROM users WHERE id = ?", [
+        req.params.id,
+      ]);
 
-    if (result.affectedRows === 0) {
-      return res.status(404).json({
+      if (result.affectedRows === 0) {
+        return res.status(404).json({
+          success: false,
+          message: "User not found",
+        });
+      }
+
+      res.json({
+        success: true,
+        message: "User deleted successfully",
+      });
+    } catch (error) {
+      console.error("Delete user error:", error);
+      res.status(500).json({
         success: false,
-        message: "User not found",
+        message: "Failed to delete user",
       });
     }
-
-    res.json({
-      success: true,
-      message: "User deleted successfully",
-    });
-  } catch (error) {
-    console.error("Delete user error:", error);
-    res.status(500).json({
-      success: false,
-      message: "Failed to delete user",
-    });
-  }
-});
+  },
+);
 
 // ============== HOMEPAGE API ROUTES ==============
 
