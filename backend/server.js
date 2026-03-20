@@ -33,6 +33,10 @@ const LOCAL_CORS_ORIGINS = [
   "http://127.0.0.1:3001",
   "http://127.0.0.1:5173",
 ];
+const DEFAULT_PRODUCTION_CORS_ORIGINS = [
+  "https://babcock-publishing.vercel.app",
+  "https://babcock-publishing-*.vercel.app",
+];
 
 function parseOrigins(value) {
   if (!value) return [];
@@ -63,10 +67,17 @@ function wildcardToRegExp(pattern) {
   return new RegExp(`^${escaped}$`, "i");
 }
 
-const configuredOrigins = [
-  ...parseOrigins(process.env.CORS_ORIGIN),
-  ...parseOrigins(process.env.FRONTEND_URL),
-];
+const configuredOrigins = Array.from(
+  new Set(
+    [
+      ...DEFAULT_PRODUCTION_CORS_ORIGINS,
+      ...parseOrigins(process.env.CORS_ORIGIN),
+      ...parseOrigins(process.env.FRONTEND_URL),
+    ]
+      .map((origin) => normalizeOrigin(origin))
+      .filter(Boolean),
+  ),
+);
 
 const resolvedOrigins =
   process.env.NODE_ENV === "production"
