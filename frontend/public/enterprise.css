@@ -136,13 +136,55 @@ video {
 }
 
 .press-brand-mark {
-  width: 48px;
-  height: 48px;
-  border-radius: 14px;
+  width: 56px;
+  height: 56px;
+  flex-shrink: 0;
+  border-radius: 18px;
   object-fit: contain;
   background: linear-gradient(145deg, #ffffff 0%, #eef4f0 100%);
-  box-shadow: 0 8px 16px rgba(13, 34, 57, 0.08);
-  padding: 7px;
+  border: 1px solid rgba(15, 105, 77, 0.12);
+  box-shadow: 0 12px 24px rgba(13, 34, 57, 0.08);
+  padding: 6px;
+}
+
+.enterprise-brand {
+  display: inline-flex;
+  align-items: center;
+  gap: 14px;
+  min-width: 0;
+}
+
+.enterprise-brand img {
+  width: 58px;
+  height: 58px;
+  flex-shrink: 0;
+  object-fit: contain;
+  border-radius: 18px;
+  padding: 6px;
+  background: linear-gradient(145deg, #ffffff 0%, #eef4f0 100%);
+  border: 1px solid rgba(15, 105, 77, 0.12);
+  box-shadow: 0 12px 24px rgba(13, 34, 57, 0.08);
+}
+
+.enterprise-brand-copy {
+  min-width: 0;
+}
+
+.enterprise-brand-copy span {
+  display: block;
+  margin-bottom: 2px;
+  font-size: 0.7rem;
+  font-weight: 700;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+  color: rgba(20, 38, 31, 0.54);
+}
+
+.enterprise-brand-copy strong {
+  display: block;
+  font-size: 0.94rem;
+  line-height: 1.2;
+  color: var(--press-ink);
 }
 
 .press-brand-copy {

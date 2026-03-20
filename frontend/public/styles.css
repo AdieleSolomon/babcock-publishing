@@ -1565,10 +1565,13 @@ textarea.form-control {
 }
 
 .admin-dashboard .logo-img {
-  width: 40px;
-  height: 40px;
-  border-radius: 10px;
-  object-fit: cover;
+  width: 48px;
+  height: 48px;
+  border-radius: 12px;
+  object-fit: contain;
+  padding: 4px;
+  background: #ffffff;
+  box-shadow: 0 10px 20px rgba(0, 103, 71, 0.12);
 }
 
 .admin-dashboard .logo-text h2 {
@@ -2494,8 +2497,8 @@ textarea.form-control {
 }
 
 .author-brand-mark {
-  width: 52px;
-  height: 52px;
+  width: 58px;
+  height: 58px;
   border-radius: 16px;
   background: linear-gradient(145deg, #ffffff 0%, #edf4ef 100%);
   border: 1px solid rgba(0, 103, 71, 0.12);
@@ -2506,8 +2509,8 @@ textarea.form-control {
 }
 
 .author-brand-mark img {
-  width: 34px;
-  height: 34px;
+  width: 42px;
+  height: 42px;
   object-fit: contain;
 }
 
