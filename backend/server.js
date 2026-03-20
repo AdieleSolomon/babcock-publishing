@@ -67,6 +67,20 @@ function wildcardToRegExp(pattern) {
   return new RegExp(`^${escaped}$`, "i");
 }
 
+function convertMySqlDateFormatPattern(pattern) {
+  return String(pattern)
+    .replaceAll("%Y", "YYYY")
+    .replaceAll("%y", "YY")
+    .replaceAll("%m", "MM")
+    .replaceAll("%d", "DD")
+    .replaceAll("%H", "HH24")
+    .replaceAll("%h", "HH12")
+    .replaceAll("%I", "HH12")
+    .replaceAll("%i", "MI")
+    .replaceAll("%s", "SS")
+    .replaceAll("%S", "SS");
+}
+
 const configuredOrigins = Array.from(
   new Set(
     [
@@ -371,6 +385,11 @@ function convertQuestionParams(sql) {
 function normalizeSqlForPostgres(sql) {
   let normalized = sql;
   normalized = normalized.replace(
+    /DATE_FORMAT\s*\(\s*([^,]+?)\s*,\s*'([^']+)'\s*\)/gi,
+    (_, valueExpression, formatPattern) =>
+      `TO_CHAR(${valueExpression.trim()}, '${convertMySqlDateFormatPattern(formatPattern)}')`,
+  );
+  normalized = normalized.replace(
     /DATE_SUB\s*\(\s*CURDATE\(\)\s*,\s*INTERVAL\s+(\d+)\s+DAY\s*\)/gi,
     "CURRENT_DATE - INTERVAL '$1 day'",
   );
@@ -463,6 +482,11 @@ function toNullable(value) {
   if (value === undefined || value === null) return null;
   const text = String(value).trim();
   return text === "" ? null : text;
+}
+
+function toNumber(value, fallback = 0) {
+  const parsed = Number(value);
+  return Number.isFinite(parsed) ? parsed : fallback;
 }
 
 function getUploadPath(file) {
@@ -2831,37 +2855,59 @@ app.get("/api/admin/dashboard/stats", authMiddleware, async (req, res) => {
       LIMIT 8
     `);
 
+    const pendingAuthorsCount = toNumber(pendingAuthors[0]?.count);
+    const approvedAuthorsCount = toNumber(approvedAuthors[0]?.count);
+    const totalBooksCount = toNumber(totalBooks[0]?.count);
+    const publishedBooksCount = toNumber(publishedBooks[0]?.count);
+    const pendingSubmissionsCount = toNumber(pendingSubmissions[0]?.count);
+    const pendingTrainingCount = toNumber(pendingTraining[0]?.count);
+    const newContactsCount = toNumber(newContacts[0]?.count);
+    const pendingContractsCount = toNumber(pendingContracts[0]?.count);
+    const totalSalesValue = toNumber(totalSales[0]?.total);
+    const monthlyRevenueValue = toNumber(monthlyRevenue[0]?.revenue);
+    const lowInventoryCount = toNumber(lowInventory[0]?.count);
+    const monthlySalesData = monthlySales.map((entry) => ({
+      ...entry,
+      revenue: toNumber(entry.revenue),
+      transactions: toNumber(entry.transactions),
+    }));
+    const categoryDistributionData = categoryDistribution.map((entry) => ({
+      ...entry,
+      count: toNumber(entry.count),
+      percentage: toNumber(entry.percentage),
+    }));
+
     res.json({
       success: true,
       stats: {
         authors: {
-          pending: pendingAuthors[0].count,
-          approved: approvedAuthors[0].count,
-          total: pendingAuthors[0].count + approvedAuthors[0].count,
+          pending: pendingAuthorsCount,
+          approved: approvedAuthorsCount,
+          total: pendingAuthorsCount + approvedAuthorsCount,
         },
         books: {
-          total: totalBooks[0].count,
-          published: publishedBooks[0].count,
-          in_progress: totalBooks[0].count - publishedBooks[0].count,
+          total: totalBooksCount,
+          published: publishedBooksCount,
+          in_progress: totalBooksCount - publishedBooksCount,
         },
         submissions: {
-          pending: pendingSubmissions[0].count,
+          pending: pendingSubmissionsCount,
         },
         training: {
-          pending: pendingTraining[0].count,
+          pending: pendingTrainingCount,
         },
         contacts: {
-          new: newContacts[0].count,
+          new: newContactsCount,
         },
         contracts: {
-          pending: pendingContracts[0].count,
+          pending: pendingContractsCount,
         },
         sales: {
-          total_last_30_days: totalSales[0].total || 0,
-          monthly_revenue: monthlyRevenue[0].revenue || 0,
+          total_last_30_days: totalSalesValue,
+          monthly_revenue: monthlyRevenueValue,
         },
         inventory: {
-          low_stock: lowInventory[0].count,
+          low_stock: lowInventoryCount,
         },
       },
       recent: {
@@ -2869,8 +2915,8 @@ app.get("/api/admin/dashboard/stats", authMiddleware, async (req, res) => {
         submissions: recentSubmissions,
       },
       charts: {
-        monthly_sales: monthlySales,
-        categories: categoryDistribution,
+        monthly_sales: monthlySalesData,
+        categories: categoryDistributionData,
       },
     });
   } catch (error) {
