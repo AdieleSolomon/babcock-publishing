@@ -24,6 +24,8 @@ let currentPage = 1;
 const itemsPerPage = 6;
 const ADMIN_ROLES = ["admin", "editor", "reviewer"];
 const DEFAULT_ADMIN_SECTION = "dashboard";
+let pendingPasswordResetAudience = "author";
+let pendingPasswordResetEmail = "";
 
 // Initialize the application
 document.addEventListener("DOMContentLoaded", function () {
@@ -34,6 +36,7 @@ document.addEventListener("DOMContentLoaded", function () {
   initAdminLayout();
   loadAboutInfo();
   initAnimations();
+  handlePasswordResetLinkState();
 });
 
 // ============================================
@@ -194,7 +197,15 @@ function updateMobileMenu() {
   if (!mobileAuthButtons) return;
 
   if (currentUser) {
+    const dashboardButton =
+      ADMIN_ROLES.includes(currentUser.role)
+        ? '<button class="btn btn-primary" onclick="showAdminDashboard()"><i class="fas fa-columns"></i> Dashboard</button>'
+        : currentUser.role === "author"
+          ? '<button class="btn btn-primary" onclick="showAuthorDashboard()"><i class="fas fa-columns"></i> Dashboard</button>'
+          : "";
+
     mobileAuthButtons.innerHTML = `
+            ${dashboardButton}
             <button class="btn btn-outline" onclick="logout()">
                 <i class="fas fa-sign-out-alt"></i> Logout
             </button>
@@ -388,6 +399,65 @@ function showAdminLogin() {
   }, 100);
 }
 
+function getLoginEmailFieldId(audience) {
+  if (audience === "admin") return "adminLoginEmail";
+  if (audience === "user") return "userLoginEmail";
+  return "authorLoginEmail";
+}
+
+function clearPasswordResetUrl() {
+  const url = new URL(window.location.href);
+  url.searchParams.delete("mode");
+  url.searchParams.delete("reset_token");
+  window.history.replaceState({}, document.title, `${url.pathname}${url.search}${url.hash}`);
+}
+
+function handlePasswordResetLinkState() {
+  const params = new URLSearchParams(window.location.search);
+  const resetToken = params.get("reset_token");
+  const mode = params.get("mode");
+
+  if (resetToken) {
+    showPasswordResetConfirm(resetToken);
+    return;
+  }
+
+  if (mode === "reset-password") {
+    showPasswordResetRequest("author");
+  }
+}
+
+function showPasswordResetRequest(defaultAudience = "author") {
+  pendingPasswordResetAudience = defaultAudience || "author";
+
+  const emailField = document.getElementById(
+    getLoginEmailFieldId(pendingPasswordResetAudience),
+  );
+  const requestEmail = document.getElementById("passwordResetEmail");
+  const audienceSelect = document.getElementById("passwordResetAudience");
+
+  if (requestEmail) {
+    requestEmail.value = emailField?.value?.trim() || pendingPasswordResetEmail;
+  }
+  if (audienceSelect) {
+    audienceSelect.value = pendingPasswordResetAudience;
+  }
+
+  closeModal("loginModal");
+  showModal("passwordResetRequestModal");
+}
+
+function showPasswordResetConfirm(token = "") {
+  const tokenInput = document.getElementById("passwordResetToken");
+  if (tokenInput) {
+    tokenInput.value = token || "";
+  }
+
+  closeModal("loginModal");
+  closeModal("passwordResetRequestModal");
+  showModal("passwordResetConfirmModal");
+}
+
 function switchAuthTab(tabName) {
   document
     .querySelectorAll(".auth-tab-btn")
@@ -441,6 +511,144 @@ async function handleAdminLogin(e) {
   const email = document.getElementById("adminLoginEmail").value;
   const password = document.getElementById("adminLoginPassword").value;
   await login(email, password, "admin");
+}
+
+async function handlePasswordResetRequest(e) {
+  e.preventDefault();
+
+  try {
+    showLoading("Preparing password reset...");
+
+    const email = document.getElementById("passwordResetEmail").value.trim();
+    const audience = document.getElementById("passwordResetAudience").value;
+
+    if (!email) {
+      showNotification("Please enter the account email address", "error");
+      return;
+    }
+
+    pendingPasswordResetAudience = audience || "author";
+    pendingPasswordResetEmail = email;
+
+    const response = await fetch(`${API_BASE_URL}/auth/password-reset/request`, {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+        Accept: "application/json",
+      },
+      body: JSON.stringify({ email, audience: pendingPasswordResetAudience }),
+    });
+
+    const data = await response.json();
+    if (!response.ok || !data.success) {
+      showNotification(data.message || "Failed to start password reset", "error");
+      return;
+    }
+
+    document.getElementById("passwordResetRequestForm").reset();
+
+    if (data.reset_token) {
+      showNotification(
+        "Reset token generated locally. Choose your new password now.",
+        "info",
+      );
+      showPasswordResetConfirm(data.reset_token);
+      return;
+    }
+
+    closeModal("passwordResetRequestModal");
+    showNotification(
+      "If the email exists, reset instructions have been sent.",
+      "success",
+    );
+  } catch (error) {
+    console.error("Password reset request error:", error);
+    showNotification("Failed to start password reset", "error");
+  } finally {
+    hideLoading();
+  }
+}
+
+async function handlePasswordResetConfirm(e) {
+  e.preventDefault();
+
+  try {
+    showLoading("Resetting password...");
+
+    const token = document.getElementById("passwordResetToken").value.trim();
+    const password = document
+      .getElementById("passwordResetNewPassword")
+      .value.trim();
+    const confirmPassword = document
+      .getElementById("passwordResetConfirmPassword")
+      .value.trim();
+
+    if (!token) {
+      showNotification("Reset token is missing. Request a new reset link.", "error");
+      return;
+    }
+
+    if (password.length < 6) {
+      showNotification("Password must be at least 6 characters long", "error");
+      return;
+    }
+
+    if (password !== confirmPassword) {
+      showNotification("Passwords do not match", "error");
+      return;
+    }
+
+    const response = await fetch(`${API_BASE_URL}/auth/password-reset/confirm`, {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+        Accept: "application/json",
+      },
+      body: JSON.stringify({
+        token,
+        password,
+        confirm_password: confirmPassword,
+      }),
+    });
+
+    const data = await response.json();
+    if (!response.ok || !data.success) {
+      showNotification(data.message || "Failed to reset password", "error");
+      return;
+    }
+
+    document.getElementById("passwordResetConfirmForm").reset();
+    closeModal("passwordResetConfirmModal");
+    clearPasswordResetUrl();
+
+    showNotification(
+      data.message || "Password reset successful. Please log in.",
+      "success",
+    );
+
+    showLoginModal();
+    setTimeout(() => {
+      if (pendingPasswordResetAudience === "admin") {
+        switchAuthTab("adminLogin");
+      } else if (pendingPasswordResetAudience === "user") {
+        switchAuthTab("userLogin");
+      } else {
+        switchAuthTab("authorLogin");
+      }
+
+      const loginEmailField = document.getElementById(
+        getLoginEmailFieldId(pendingPasswordResetAudience),
+      );
+      if (loginEmailField && pendingPasswordResetEmail) {
+        loginEmailField.value = pendingPasswordResetEmail;
+      }
+    }, 100);
+  } catch (error) {
+    console.error("Password reset confirm error:", error);
+    showNotification("Failed to reset password", "error");
+  } finally {
+    hideLoading();
+  }
 }
 
 async function handleUserRegistration(e) {
@@ -871,9 +1079,12 @@ function loadMorePublications() {
 
   // Hide button if no more books
   if (endIndex >= publications.length) {
-    document.querySelector(
+    const loadMoreButton = document.querySelector(
       '.btn[onclick="loadMorePublications()"]',
-    ).style.display = "none";
+    );
+    if (loadMoreButton) {
+      loadMoreButton.style.display = "none";
+    }
   }
 }
 
@@ -951,9 +1162,25 @@ function setupDashboardNavigation() {
   const sidebarMenu = document.querySelector(".sidebar-menu");
   if (sidebarMenu) {
     sidebarMenu.addEventListener("click", function (e) {
-      const navItem = e.target.closest(".nav-item[data-section]");
-      if (!navItem) return;
+      const navItem = e.target.closest("a.nav-item");
+      if (!navItem || !sidebarMenu.contains(navItem)) return;
       e.preventDefault();
+
+      if (!navItem.dataset.section) {
+        return;
+      }
+
+      if (!currentUser || !ADMIN_ROLES.includes(currentUser.role)) {
+        showNotification("Please login to access admin tools", "error");
+        showAdminLogin();
+        return;
+      }
+
+      if (navItem.dataset.section === localStorage.getItem("activeAdminSection")) {
+        showDashboardSection(navItem.dataset.section);
+        return;
+      }
+
       const section = navItem.dataset.section;
       showDashboardSection(section);
     });
@@ -974,15 +1201,49 @@ function setupDashboardNavigation() {
   }
 }
 
+function setDashboardSectionVisibility(activeSectionId) {
+  const sections = document.querySelectorAll("#adminDashboard .content-section");
+  sections.forEach((section) => {
+    const isActive = section.id === activeSectionId;
+    section.classList.toggle("active", isActive);
+    section.hidden = !isActive;
+    section.setAttribute("aria-hidden", String(!isActive));
+  });
+}
+
+function renderAdminTableMessage(tbody, colspan, message) {
+  if (!tbody) return;
+  tbody.innerHTML = `
+    <tr>
+      <td colspan="${colspan}" style="text-align: center; padding: 20px">
+        ${message}
+      </td>
+    </tr>
+  `;
+}
+
+function handleAdminSectionAuthFailure(message) {
+  localStorage.removeItem("authToken");
+  currentUser = null;
+  updateAuthUI();
+  updateMobileMenu();
+  showNotification(message || "Please login again", "error");
+  showAdminLogin();
+}
+
 function showDashboardSection(sectionId) {
   const targetSection = document.getElementById(sectionId);
   if (!targetSection) return;
 
   localStorage.setItem("activeAdminSection", sectionId);
 
-  const navItems = document.querySelectorAll(".nav-item[data-section]");
+  const navItems = document.querySelectorAll(
+    "#adminDashboard .nav-item[data-section]",
+  );
   navItems.forEach((nav) => {
-    nav.classList.toggle("active", nav.dataset.section === sectionId);
+    const isActive = nav.dataset.section === sectionId;
+    nav.classList.toggle("active", isActive);
+    nav.setAttribute("aria-current", isActive ? "page" : "false");
   });
 
   const activeNav = document.querySelector(
@@ -993,13 +1254,7 @@ function showDashboardSection(sectionId) {
     pageTitle.textContent = activeNav.textContent;
   }
 
-  const sections = document.querySelectorAll(".content-section");
-  sections.forEach((section) => {
-    section.classList.remove("active");
-    if (section.id === sectionId) {
-      section.classList.add("active");
-    }
-  });
+  setDashboardSectionVisibility(sectionId);
 
   if (sectionId === "dashboard") {
     loadAdminDashboard();
@@ -1039,9 +1294,32 @@ async function loadAdminDashboard() {
       },
     });
 
-    const data = await response.json();
+    let data = {};
+    try {
+      data = await response.json();
+    } catch (error) {
+      throw new Error("Invalid server response");
+    }
 
-    if (data.success) {
+    if (!response.ok) {
+      if (response.status === 401) {
+        localStorage.removeItem("authToken");
+        currentUser = null;
+        updateAuthUI();
+        updateMobileMenu();
+        showNotification(data.message || "Please login again", "error");
+        showAdminLogin();
+        return;
+      }
+
+      showNotification(
+        data.message || `Failed to load dashboard stats (${response.status})`,
+        "error",
+      );
+      return;
+    }
+
+    if (data.success && data.stats) {
       const stats = data.stats;
 
       // Update dashboard stats
@@ -1054,15 +1332,20 @@ async function loadAdminDashboard() {
       document.getElementById("pendingTrainingCount").textContent =
         stats.training.pending || 0;
     } else {
-      showNotification("Failed to load dashboard stats", "error");
+      showNotification(
+        data.message || "Failed to load dashboard stats",
+        "error",
+      );
     }
   } catch (error) {
     console.error("Error loading dashboard:", error);
-    showNotification("Failed to load dashboard", "error");
+    showNotification(error.message || "Failed to load dashboard", "error");
   }
 }
 
 async function loadAuthors() {
+  const tbody = document.getElementById("authorsTableBody");
+
   try {
     const token = localStorage.getItem("authToken");
     if (!token) return;
@@ -1075,47 +1358,128 @@ async function loadAuthors() {
     });
 
     const data = await response.json();
-    const tbody = document.getElementById("authorsTableBody");
+    if (!tbody) return;
 
-    if (data.success && tbody) {
-      if (data.authors && data.authors.length > 0) {
-        tbody.innerHTML = data.authors
-          .map(
-            (author) => `
-                    <tr>
-                        <td>${author.full_name || "N/A"}</td>
-                        <td>${author.email || "N/A"}</td>
-                        <td>${author.faculty || "N/A"}</td>
-                        <td><span class="status-badge status-${author.user_status || "pending"}">${author.user_status || "pending"}</span></td>
-                        <td>${author.bookCount || 0}</td>
-                        <td>
-                            <button class="btn btn-info btn-sm" onclick="viewAuthor(${author.id})">View</button>
-                            ${
-                              author.user_status === "pending"
-                                ? `
-                                  <button class="btn btn-success btn-sm" onclick="approveAuthor(${author.id})">Approve</button>
-                                  <button class="btn btn-danger btn-sm" onclick="rejectAuthor(${author.id})">Reject</button>
-                                `
-                                : ``
-                            }
-                        </td>
-                    </tr>
-                `,
-          )
-          .join("");
-      } else {
-        tbody.innerHTML = `
-                    <tr>
-                        <td colspan="6" style="text-align: center; padding: 20px">
-                            No authors found
-                        </td>
-                    </tr>
-                `;
-      }
+    if (!response.ok || !data.success) {
+      updateAuthorsSectionSummary([]);
+      tbody.innerHTML = `
+        <tr>
+          <td colspan="6" class="admin-empty-state">
+            ${escapeHtml(data.message || "Failed to load authors")}
+          </td>
+        </tr>
+      `;
+      return;
     }
+
+    const authors = Array.isArray(data.authors) ? data.authors : [];
+    updateAuthorsSectionSummary(authors);
+
+    if (authors.length === 0) {
+      tbody.innerHTML = `
+        <tr>
+          <td colspan="6" class="admin-empty-state">
+            No author records found
+          </td>
+        </tr>
+      `;
+      return;
+    }
+
+    tbody.innerHTML = authors
+      .map((author) => {
+        const displayStatus = formatDashboardLabel(
+          author.user_status || "pending",
+          "Pending",
+        );
+        const facultyLabel = author.faculty || "No faculty assigned";
+        const departmentLabel = author.department || "Department not set";
+        const staffIdLabel = author.staff_id || "No ID";
+        const joinedDate = author.created_at
+          ? new Date(author.created_at).toLocaleDateString()
+          : "Unknown";
+
+        return `
+          <tr>
+            <td>
+              <div class="admin-author-primary">
+                <strong class="admin-author-name">${escapeHtml(author.full_name || "N/A")}</strong>
+                <span class="admin-author-meta">${escapeHtml(staffIdLabel)} • Joined ${escapeHtml(joinedDate)}</span>
+              </div>
+            </td>
+            <td>
+              <div class="admin-author-contact">
+                <span>${escapeHtml(author.email || "N/A")}</span>
+                <span class="admin-author-meta">${escapeHtml(author.phone || author.username || "No secondary contact")}</span>
+              </div>
+            </td>
+            <td>
+              <div class="admin-author-campus">
+                <strong>${escapeHtml(facultyLabel)}</strong>
+                <span class="admin-author-meta">${escapeHtml(departmentLabel)}</span>
+              </div>
+            </td>
+            <td>
+              <span class="status-badge status-${escapeHtml(author.user_status || "pending")}">${escapeHtml(displayStatus)}</span>
+            </td>
+            <td>
+              <span class="admin-author-count">${escapeHtml(author.bookCount || 0)}</span>
+            </td>
+            <td>
+              <div class="table-action-group">
+                <button class="table-action-btn info" onclick="viewAuthor(${author.id})">View</button>
+                ${
+                  author.user_status === "pending"
+                    ? `
+                      <button class="table-action-btn success" onclick="approveAuthor(${author.id})">Approve</button>
+                      <button class="table-action-btn danger" onclick="rejectAuthor(${author.id})">Reject</button>
+                    `
+                    : ""
+                }
+              </div>
+            </td>
+          </tr>
+        `;
+      })
+      .join("");
   } catch (error) {
     console.error("Error loading authors:", error);
+    updateAuthorsSectionSummary([]);
+    if (tbody) {
+      tbody.innerHTML = `
+        <tr>
+          <td colspan="6" class="admin-empty-state">
+            Failed to load authors
+          </td>
+        </tr>
+      `;
+    }
   }
+}
+
+function updateAuthorsSectionSummary(authors) {
+  const list = Array.isArray(authors) ? authors : [];
+  const totalAuthors = list.length;
+  const pendingAuthors = list.filter(
+    (author) => (author.user_status || "pending") === "pending",
+  ).length;
+  const approvedAuthors = list.filter(
+    (author) => (author.user_status || "") === "active",
+  ).length;
+  const totalBooks = list.reduce(
+    (sum, author) => sum + (Number(author.bookCount) || 0),
+    0,
+  );
+
+  const totalNode = document.getElementById("authorsTotalCount");
+  const pendingNode = document.getElementById("authorsPendingCount");
+  const approvedNode = document.getElementById("authorsApprovedCount");
+  const booksNode = document.getElementById("authorsBooksCount");
+
+  if (totalNode) totalNode.textContent = totalAuthors;
+  if (pendingNode) pendingNode.textContent = pendingAuthors;
+  if (approvedNode) approvedNode.textContent = approvedAuthors;
+  if (booksNode) booksNode.textContent = totalBooks;
 }
 
 async function loadRegisteredUsers() {
@@ -1310,9 +1674,14 @@ function rejectAuthor(authorId) {
 }
 
 async function loadSubmissions() {
+  const tbody = document.getElementById("submissionsTableBody");
+
   try {
     const token = localStorage.getItem("authToken");
-    if (!token) return;
+    if (!token) {
+      renderAdminTableMessage(tbody, 6, "Please login again");
+      return;
+    }
 
     const response = await fetch(
       `${API_BASE_URL}/admin/submissions?limit=100`,
@@ -1323,29 +1692,32 @@ async function loadSubmissions() {
         },
       },
     );
-    const data = await response.json();
-    const tbody = document.getElementById("submissionsTableBody");
+    let data = {};
+    try {
+      data = await response.json();
+    } catch (error) {
+      throw new Error("Invalid server response");
+    }
+
     if (!tbody) return;
 
+    if (response.status === 401 || response.status === 403) {
+      renderAdminTableMessage(tbody, 6, data.message || "Please login again");
+      handleAdminSectionAuthFailure(data.message);
+      return;
+    }
+
     if (!response.ok || !data.success) {
-      tbody.innerHTML = `
-        <tr>
-          <td colspan="6" style="text-align: center; padding: 20px">
-            Failed to load submissions
-          </td>
-        </tr>
-      `;
+      renderAdminTableMessage(
+        tbody,
+        6,
+        data.message || "Failed to load submissions",
+      );
       return;
     }
 
     if (!data.submissions || data.submissions.length === 0) {
-      tbody.innerHTML = `
-        <tr>
-          <td colspan="6" style="text-align: center; padding: 20px">
-            No submissions found
-          </td>
-        </tr>
-      `;
+      renderAdminTableMessage(tbody, 6, "No submissions found");
       return;
     }
 
@@ -1370,23 +1742,19 @@ async function loadSubmissions() {
       .join("");
   } catch (error) {
     console.error("Error loading submissions:", error);
-    const tbody = document.getElementById("submissionsTableBody");
-    if (tbody) {
-      tbody.innerHTML = `
-        <tr>
-          <td colspan="6" style="text-align: center; padding: 20px">
-            Error loading submissions
-          </td>
-        </tr>
-      `;
-    }
+    renderAdminTableMessage(tbody, 6, "Error loading submissions");
   }
 }
 
 async function loadContracts() {
+  const tbody = document.getElementById("contractsTableBody");
+
   try {
     const token = localStorage.getItem("authToken");
-    if (!token) return;
+    if (!token) {
+      renderAdminTableMessage(tbody, 6, "Please login again");
+      return;
+    }
 
     const response = await fetch(`${API_BASE_URL}/admin/contracts?limit=100`, {
       headers: {
@@ -1394,29 +1762,32 @@ async function loadContracts() {
         Accept: "application/json",
       },
     });
-    const data = await response.json();
-    const tbody = document.getElementById("contractsTableBody");
+    let data = {};
+    try {
+      data = await response.json();
+    } catch (error) {
+      throw new Error("Invalid server response");
+    }
+
     if (!tbody) return;
 
+    if (response.status === 401 || response.status === 403) {
+      renderAdminTableMessage(tbody, 6, data.message || "Please login again");
+      handleAdminSectionAuthFailure(data.message);
+      return;
+    }
+
     if (!response.ok || !data.success) {
-      tbody.innerHTML = `
-        <tr>
-          <td colspan="6" style="text-align: center; padding: 20px">
-            Failed to load contracts
-          </td>
-        </tr>
-      `;
+      renderAdminTableMessage(
+        tbody,
+        6,
+        data.message || "Failed to load contracts",
+      );
       return;
     }
 
     if (!data.contracts || data.contracts.length === 0) {
-      tbody.innerHTML = `
-        <tr>
-          <td colspan="6" style="text-align: center; padding: 20px">
-            No contracts found
-          </td>
-        </tr>
-      `;
+      renderAdminTableMessage(tbody, 6, "No contracts found");
       return;
     }
 
@@ -1436,16 +1807,7 @@ async function loadContracts() {
       .join("");
   } catch (error) {
     console.error("Error loading contracts:", error);
-    const tbody = document.getElementById("contractsTableBody");
-    if (tbody) {
-      tbody.innerHTML = `
-        <tr>
-          <td colspan="6" style="text-align: center; padding: 20px">
-            Error loading contracts
-          </td>
-        </tr>
-      `;
-    }
+    renderAdminTableMessage(tbody, 6, "Error loading contracts");
   }
 }
 
@@ -1527,8 +1889,16 @@ function showAddAuthorModal() {
 }
 
 function showAddBookModal() {
-  // Implement add book modal
-  showNotification("Add book functionality coming soon", "info");
+  if (
+    !currentUser ||
+    !["author", "admin", "editor"].includes(currentUser.role)
+  ) {
+    showNotification("Please login as an author to submit a manuscript", "error");
+    showAuthorLogin();
+    return;
+  }
+
+  showModal("submitBookModal");
 }
 
 function showAddContractModal() {
@@ -1690,6 +2060,13 @@ function escapeHtml(value) {
     .replaceAll("'", "&#39;");
 }
 
+function formatDashboardLabel(value, fallback = "N/A") {
+  if (!value) return fallback;
+  return String(value)
+    .replaceAll("_", " ")
+    .replace(/\b\w/g, (character) => character.toUpperCase());
+}
+
 async function loadAuthorDashboard() {
   try {
     const token = localStorage.getItem("authToken");
@@ -1716,14 +2093,20 @@ async function loadAuthorDashboard() {
     if (dashboardData.success && dashboardData.data) {
       const stats = dashboardData.data.stats || {};
       const royalties = dashboardData.data.royalties || {};
+      const inProgressCount =
+        (Number(stats.submitted_books) || 0) +
+        (Number(stats.under_review_books) || 0) +
+        (Number(stats.revision_books) || 0) +
+        (Number(stats.in_production_books) || 0);
       document.getElementById("authorTotalBooks").textContent = stats.total_books || 0;
       document.getElementById("authorPublishedBooks").textContent =
         stats.published_books || 0;
       document.getElementById("authorInProgressBooks").textContent =
-        stats.in_production_books || 0;
+        inProgressCount;
       document.getElementById("authorTotalRoyalties").textContent = `₦${(
         Number(royalties.total_royalties) || 0
       ).toLocaleString()}`;
+      renderAuthorBooks(dashboardData.data.books || []);
     }
 
     if (profileData.success && profileData.author) {
@@ -1758,6 +2141,124 @@ async function loadAuthorDashboard() {
   } catch (error) {
     console.error("Error loading author dashboard:", error);
     showNotification("Failed to load author dashboard", "error");
+  }
+}
+
+function renderAuthorBooks(books) {
+  const tbody = document.getElementById("authorBooksTableBody");
+  if (!tbody) return;
+
+  if (!Array.isArray(books) || books.length === 0) {
+    tbody.innerHTML = `
+      <tr>
+        <td colspan="6" class="author-empty-state">
+          No manuscripts yet. Use "Submit Manuscript" to send your first file to the publishing team.
+        </td>
+      </tr>
+    `;
+    return;
+  }
+
+  tbody.innerHTML = books
+    .map((book) => {
+      const submittedDate = book.created_at
+        ? new Date(book.created_at).toLocaleDateString()
+        : "N/A";
+      const bookStatus = book.status || "submitted";
+      const submissionStatus = book.latest_submission_status || "pending";
+      const submissionType = formatDashboardLabel(
+        book.latest_submission_type || "publishing",
+        "Publishing",
+      );
+      const manuscriptLink = book.manuscript_file
+        ? `<a class="manuscript-link" href="${escapeHtml(resolveAssetUrl(book.manuscript_file))}" target="_blank" rel="noopener noreferrer">Open file</a>`
+        : "No file";
+
+      return `
+        <tr>
+          <td>
+            <div class="author-manuscript-title">
+              <strong>${escapeHtml(book.title || "Untitled manuscript")}</strong>
+              <span class="author-manuscript-meta">${escapeHtml(submissionType)}</span>
+            </div>
+          </td>
+          <td>${escapeHtml(book.category || "N/A")}</td>
+          <td><span class="status-badge status-${escapeHtml(bookStatus)}">${escapeHtml(formatDashboardLabel(bookStatus, "Submitted"))}</span></td>
+          <td><span class="status-badge status-${escapeHtml(submissionStatus)}">${escapeHtml(formatDashboardLabel(submissionStatus, "Pending"))}</span></td>
+          <td>${escapeHtml(submittedDate)}</td>
+          <td>${manuscriptLink}</td>
+        </tr>
+      `;
+    })
+    .join("");
+}
+
+async function handleManuscriptSubmission(e) {
+  e.preventDefault();
+
+  try {
+    const token = localStorage.getItem("authToken");
+    if (!token) {
+      showNotification("Please login again to continue", "error");
+      return;
+    }
+
+    const manuscriptFile = document.getElementById("bookManuscriptFile").files[0];
+    if (!manuscriptFile) {
+      showNotification("Please select a manuscript file", "error");
+      return;
+    }
+
+    showLoading("Submitting manuscript...");
+
+    const formData = new FormData();
+    formData.append("title", document.getElementById("bookTitle").value);
+    formData.append("subtitle", document.getElementById("bookSubtitle").value);
+    formData.append("category", document.getElementById("bookCategory").value);
+    formData.append(
+      "submission_type",
+      document.getElementById("bookSubmissionType").value,
+    );
+    formData.append("keywords", document.getElementById("bookKeywords").value);
+    formData.append("language", document.getElementById("bookLanguage").value);
+    formData.append("abstract", document.getElementById("bookAbstract").value);
+    formData.append(
+      "description",
+      document.getElementById("bookDescription").value,
+    );
+    formData.append(
+      "author_notes",
+      document.getElementById("bookAuthorNotes").value,
+    );
+    formData.append("manuscript_file", manuscriptFile);
+
+    const response = await fetch(`${API_BASE_URL}/author/books`, {
+      method: "POST",
+      headers: {
+        Authorization: `Bearer ${token}`,
+        Accept: "application/json",
+      },
+      body: formData,
+    });
+
+    const data = await response.json();
+    if (!response.ok || !data.success) {
+      showNotification(data.message || "Failed to submit manuscript", "error");
+      return;
+    }
+
+    showNotification(
+      data.message || "Manuscript submitted successfully",
+      "success",
+    );
+    document.getElementById("submitBookForm").reset();
+    closeModal("submitBookModal");
+    await loadAuthorDashboard();
+  } catch (error) {
+    console.error("Manuscript submission error:", error);
+    showNotification("Failed to submit manuscript", "error");
+  } finally {
+    hideLoading();
   }
 }
 
@@ -1884,31 +2385,140 @@ async function viewAuthor(authorId) {
     const content = document.getElementById("authorDetailsContent");
     if (!content) return;
 
+    const statusLabel = formatDashboardLabel(
+      author.user_status || "pending",
+      "Pending",
+    );
+    const books = Array.isArray(author.books) ? author.books : [];
+    const submissions = Array.isArray(author.submissions)
+      ? author.submissions
+      : [];
+    const contracts = Array.isArray(author.contracts) ? author.contracts : [];
+    const recentBooksMarkup =
+      books.length > 0
+        ? books
+            .slice(0, 4)
+            .map(
+              (book) => `
+                <li>
+                  <strong>${escapeHtml(book.title || "Untitled book")}</strong>
+                  <span>${escapeHtml(formatDashboardLabel(book.status || "draft", "Draft"))}</span>
+                </li>
+              `,
+            )
+            .join("")
+        : `<li class="author-details-empty">No books linked yet.</li>`;
+    const recentSubmissionsMarkup =
+      submissions.length > 0
+        ? submissions
+            .slice(0, 4)
+            .map(
+              (submission) => `
+                <li>
+                  <strong>${escapeHtml(submission.title || "Untitled submission")}</strong>
+                  <span>${escapeHtml(formatDashboardLabel(submission.status || "pending", "Pending"))}</span>
+                </li>
+              `,
+            )
+            .join("")
+        : `<li class="author-details-empty">No submissions found.</li>`;
+    const recentContractsMarkup =
+      contracts.length > 0
+        ? contracts
+            .slice(0, 4)
+            .map(
+              (contract) => `
+                <li>
+                  <strong>${escapeHtml(contract.contract_type || "Publishing contract")}</strong>
+                  <span>${escapeHtml(formatDashboardLabel(contract.status || "pending", "Pending"))}</span>
+                </li>
+              `,
+            )
+            .join("")
+        : `<li class="author-details-empty">No contracts recorded.</li>`;
+
     content.innerHTML = `
-      <div style="display:flex; gap:16px; align-items:center; margin-bottom:16px; flex-wrap:wrap;">
-        <img src="${escapeHtml(profileImage)}" alt="Profile" style="width:88px; height:88px; border-radius:50%; object-fit:cover; border:2px solid #e9ecef;" />
-        <div>
-          <h4 style="margin:0 0 4px 0;">${escapeHtml(author.full_name || "N/A")}</h4>
-          <p style="margin:0; color:#6c757d;">${escapeHtml(author.email || "N/A")}</p>
-          <p style="margin:4px 0 0 0; color:#6c757d; text-transform:capitalize;">Status: ${escapeHtml(author.user_status || "pending")}</p>
+      <div class="author-details-profile">
+        <img src="${escapeHtml(profileImage)}" alt="Profile" class="author-details-avatar" />
+        <div class="author-details-header-copy">
+          <span class="author-details-kicker">Author Record</span>
+          <h4>${escapeHtml(author.full_name || "N/A")}</h4>
+          <p>${escapeHtml(author.email || "N/A")}</p>
+          <div class="author-details-status-row">
+            <span class="status-badge status-${escapeHtml(author.user_status || "pending")}">${escapeHtml(statusLabel)}</span>
+            <span class="author-details-meta">${escapeHtml(author.staff_id || "No staff ID")}</span>
+          </div>
         </div>
       </div>
-      <div class="stats-grid" style="margin-bottom: 0;">
-        <div><strong>Phone:</strong> ${escapeHtml(author.phone || "N/A")}</div>
-        <div><strong>Staff/Student ID:</strong> ${escapeHtml(author.staff_id || "N/A")}</div>
-        <div><strong>Faculty:</strong> ${escapeHtml(author.faculty || "N/A")}</div>
-        <div><strong>Department:</strong> ${escapeHtml(author.department || "N/A")}</div>
-        <div><strong>Qualification:</strong> ${escapeHtml(author.qualifications || "N/A")}</div>
-        <div><strong>Expertise:</strong> ${escapeHtml(author.areas_of_expertise || "N/A")}</div>
-        <div><strong>ORCID iD:</strong> ${escapeHtml(author.orcid_id || "N/A")}</div>
-        <div><strong>Scholar ID:</strong> ${escapeHtml(author.google_scholar_id || "N/A")}</div>
+
+      <div class="author-details-summary-grid">
+        <article class="author-details-summary-card">
+          <span>Books</span>
+          <strong>${escapeHtml(books.length)}</strong>
+        </article>
+        <article class="author-details-summary-card">
+          <span>Submissions</span>
+          <strong>${escapeHtml(submissions.length)}</strong>
+        </article>
+        <article class="author-details-summary-card">
+          <span>Contracts</span>
+          <strong>${escapeHtml(contracts.length)}</strong>
+        </article>
       </div>
-      <div class="form-group" style="margin-top:16px;">
-        <strong>Biography</strong>
-        <p style="margin-top:8px;">${escapeHtml(author.biography || "N/A")}</p>
+
+      <div class="author-details-grid">
+        <div class="author-details-field">
+          <span>Phone</span>
+          <strong>${escapeHtml(author.phone || "N/A")}</strong>
+        </div>
+        <div class="author-details-field">
+          <span>Staff / Student ID</span>
+          <strong>${escapeHtml(author.staff_id || "N/A")}</strong>
+        </div>
+        <div class="author-details-field">
+          <span>Faculty</span>
+          <strong>${escapeHtml(author.faculty || "N/A")}</strong>
+        </div>
+        <div class="author-details-field">
+          <span>Department</span>
+          <strong>${escapeHtml(author.department || "N/A")}</strong>
+        </div>
+        <div class="author-details-field">
+          <span>Qualification</span>
+          <strong>${escapeHtml(author.qualifications || "N/A")}</strong>
+        </div>
+        <div class="author-details-field">
+          <span>Expertise</span>
+          <strong>${escapeHtml(author.areas_of_expertise || "N/A")}</strong>
+        </div>
+        <div class="author-details-field">
+          <span>ORCID iD</span>
+          <strong>${escapeHtml(author.orcid_id || "N/A")}</strong>
+        </div>
+        <div class="author-details-field">
+          <span>Scholar ID</span>
+          <strong>${escapeHtml(author.google_scholar_id || "N/A")}</strong>
+        </div>
       </div>
-      <div style="margin-top:8px; color:#6c757d;">
-        <small>Books: ${Array.isArray(author.books) ? author.books.length : 0} | Submissions: ${Array.isArray(author.submissions) ? author.submissions.length : 0} | Contracts: ${Array.isArray(author.contracts) ? author.contracts.length : 0}</small>
+
+      <div class="author-details-biography">
+        <span>Biography</span>
+        <p>${escapeHtml(author.biography || "No biography provided.")}</p>
+      </div>
+
+      <div class="author-details-activity-grid">
+        <section class="author-details-activity-panel">
+          <h5>Recent Books</h5>
+          <ul>${recentBooksMarkup}</ul>
+        </section>
+        <section class="author-details-activity-panel">
+          <h5>Recent Submissions</h5>
+          <ul>${recentSubmissionsMarkup}</ul>
+        </section>
+        <section class="author-details-activity-panel">
+          <h5>Contracts</h5>
+          <ul>${recentContractsMarkup}</ul>
+        </section>
       </div>
     `;
 

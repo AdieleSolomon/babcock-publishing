@@ -1,8 +1,12 @@
 {
   "version": 2,
-  "cleanUrls": true,
+  "cleanUrls": false,
   "rewrites": [
-    { "source": "/(.*)", "destination": "/index.html" }
+    { "source": "/", "destination": "/index.html" },
+    { "source": "/staff", "destination": "/staff.html" },
+    { "source": "/services", "destination": "/services.html" },
+    { "source": "/publications", "destination": "/publications.html" },
+    { "source": "/gallery", "destination": "/gallery.html" }
   ]
 }
 

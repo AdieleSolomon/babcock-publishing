@@ -5,11 +5,15 @@
   "type": "module",
   "main": "server.js",
   "scripts": {
+    "predev": "node ../tools/dev-ports.mjs check 3001 backend",
     "start": "node server.js",
     "dev": "nodemon server.js",
+    "stop:dev": "node ../tools/dev-ports.mjs stop 3001",
+    "dev:reset": "npm run stop:dev && npm run dev",
     "test": "node test-db.js",
     "init-db": "node init-database.js",
     "setup-admin": "node setup-admin.js",
+    "set-user-password": "node scripts/set-user-password.js",
     "migrate:mysql-to-pg": "node scripts/mysql-to-postgres-migrate.js --dry-run",
     "migrate:mysql-to-pg:apply": "node scripts/mysql-to-postgres-migrate.js --apply"
   },

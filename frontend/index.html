@@ -3,55 +3,41 @@
   <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>Babcock University Publishing Company</title>
+    <title>Babcock University Press | Publishing, Printing, and Editorial Services</title>
     <meta
       name="description"
-      content="Babcock University Publishing Company provides academic publishing, printing, editing, and training services for scholars and students."
-    />
+      content="Babcock University Press provides publishing, printing, editorial, consultancy, and training services for the Babcock University community." />
     <meta name="robots" content="index, follow" />
     <link rel="canonical" href="https://babcock-publishing.vercel.app/" />
     <link rel="icon" type="image/svg+xml" href="public/favicon.svg" />
-    <link rel="icon" type="image/webp" href="assets/OIP.webp" />
-    <link rel="apple-touch-icon" href="assets/OIP.webp" />
-    <meta name="theme-color" content="#0b2a4d" />
-    <meta
-      property="og:title"
-      content="Babcock University Publishing Company"
-    />
+    <link rel="icon" type="image/png" href="assets/legacy/main_logo.png" />
+    <link rel="apple-touch-icon" href="assets/legacy/main_logo.png" />
+    <meta name="theme-color" content="#0f694d" />
+    <meta property="og:title" content="Babcock University Press" />
     <meta
       property="og:description"
-      content="Academic publishing, printing, editing, and training services that connect scholars with global audiences."
-    />
+      content="Publishing, printing, editorial, and training services rebuilt from the legacy BU Press structure." />
     <meta property="og:type" content="website" />
-    <meta
-      property="og:url"
-      content="https://babcock-publishing.vercel.app/"
-    />
+    <meta property="og:url" content="https://babcock-publishing.vercel.app/" />
     <meta
       property="og:image"
-      content="https://babcock-publishing.vercel.app/assets/OIP.webp"
-    />
+      content="https://babcock-publishing.vercel.app/assets/legacy/bu_press/banner.jpg" />
     <meta
       property="og:image:alt"
-      content="Babcock University Publishing Company logo"
-    />
+      content="Babcock University Press banner" />
     <meta
       property="og:site_name"
-      content="Babcock University Publishing Company"
-    />
+      content="Babcock University Press" />
     <meta name="twitter:card" content="summary_large_image" />
     <meta
       name="twitter:title"
-      content="Babcock University Publishing Company"
-    />
+      content="Babcock University Press" />
     <meta
       name="twitter:description"
-      content="Academic publishing, printing, editing, and training services for scholars and students."
-    />
+      content="Publishing, printing, editorial, and training services for the Babcock University community." />
     <meta
       name="twitter:image"
-      content="https://babcock-publishing.vercel.app/assets/OIP.webp"
-    />
+      content="https://babcock-publishing.vercel.app/assets/legacy/bu_press/banner.jpg" />
     <link
       rel="stylesheet"
       href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" />
@@ -62,55 +48,163 @@
       rel="stylesheet"
       href="https://cdn.datatables.net/1.13.6/css/jquery.dataTables.min.css" />
     <link rel="stylesheet" href="public/styles.css" />
+    <link rel="stylesheet" href="public/enterprise.css" />
   </head>
   <body>
     <!-- ============= HOMEPAGE ============= -->
-    <div id="homepage">
-      <header class="site-header">
-        <div class="container header-container">
-          <div class="logo-area">
-            <img
-              src="assets/OIP.webp"
-              alt="Babcock University Logo"
-              class="logo-img" />
-            <div class="logo-text">
-              <h1>Babcock University</h1>
-              <p>Publishing Company</p>
+    <div id="homepage" class="press-home">
+      <header class="site-header press-site-header">
+        <div class="press-utility-bar">
+          <div class="container press-utility-inner">
+            <div class="press-utility-links">
+              <a href="https://umis.babcock.edu.ng" target="_blank" rel="noopener noreferrer">UMIS</a>
+              <a href="https://publication.babcock.edu.ng" target="_blank" rel="noopener noreferrer">Publications</a>
+              <a href="https://legacy.babcock.edu.ng/oer/bu_oer_intro.php" target="_blank" rel="noopener noreferrer">OER</a>
+              <a href="https://legacy.babcock.edu.ng/Virtual_tour/Babcock.html" target="_blank" rel="noopener noreferrer">Virtual Tour</a>
+              <a href="https://babcock.edu.ng/library" target="_blank" rel="noopener noreferrer">Library</a>
+            </div>
+            <div class="press-utility-meta">
+              <span>Mon-Thu 9am-5pm, Fri 9am-1pm</span>
+              <a href="https://legacy.babcock.edu.ng/search" target="_blank" rel="noopener noreferrer">Search</a>
             </div>
           </div>
-          <nav class="main-nav">
-            <ul class="nav-links">
-              <li><a href="#home">Home</a></li>
-              <li><a href="#publications">Publications</a></li>
-              <li><a href="#services">Services</a></li>
-              <li><a href="#about">About Us</a></li>
-              <li><a href="#contact">Contact</a></li>
-            </ul>
-            <div class="auth-buttons" id="authButtons">
-              <button class="btn btn-outline" onclick="showLoginModal()">
-                <i class="fas fa-sign-in-alt"></i> Login
-              </button>
-              <button class="btn btn-primary" onclick="showRegisterModal()">
-                <i class="fas fa-user-plus"></i> Register
-              </button>
+        </div>
+
+        <div class="press-primary-bar">
+          <div class="container press-primary-row">
+            <a href="index.html" class="press-brand">
+              <img
+                class="press-brand-mark"
+                src="assets/legacy/main_logo.png"
+                alt="Babcock University logo" />
+              <div class="press-brand-copy">
+                <span>Babcock University</span>
+                <strong>Babcock University Press</strong>
+              </div>
+            </a>
+
+            <nav class="press-global-nav" aria-label="University navigation">
+              <ul class="press-menu-list">
+                <li class="press-menu-item">
+                  <a class="press-menu-trigger" href="https://legacy.babcock.edu.ng/about" target="_blank" rel="noopener noreferrer">
+                    About <i class="fas fa-chevron-down"></i>
+                  </a>
+                  <div class="press-dropdown-panel">
+                    <a href="https://legacy.babcock.edu.ng/about" target="_blank" rel="noopener noreferrer">About Us</a>
+                    <a href="https://legacy.babcock.edu.ng/about/our-journey" target="_blank" rel="noopener noreferrer">Our Journey</a>
+                    <a href="https://legacy.babcock.edu.ng/about/administration" target="_blank" rel="noopener noreferrer">Administration</a>
+                    <a href="https://legacy.babcock.edu.ng/about/organogram" target="_blank" rel="noopener noreferrer">Organogram</a>
+                  </div>
+                </li>
+                <li class="press-menu-item">
+                  <a class="press-menu-trigger" href="https://legacy.babcock.edu.ng/undergraduate" target="_blank" rel="noopener noreferrer">
+                    Academics <i class="fas fa-chevron-down"></i>
+                  </a>
+                  <div class="press-dropdown-panel">
+                    <a href="https://legacy.babcock.edu.ng/assets/docs/programs.pdf" target="_blank" rel="noopener noreferrer">Study at Babcock</a>
+                    <a href="https://legacy.babcock.edu.ng/undergraduate" target="_blank" rel="noopener noreferrer">Undergraduate</a>
+                    <a href="https://legacy.babcock.edu.ng/postgraduate" target="_blank" rel="noopener noreferrer">Postgraduate</a>
+                    <a href="https://legacy.babcock.edu.ng/undergraduate/programs" target="_blank" rel="noopener noreferrer">All Programs</a>
+                  </div>
+                </li>
+                <li class="press-menu-item">
+                  <a class="press-menu-trigger" href="https://legacy.babcock.edu.ng/admission" target="_blank" rel="noopener noreferrer">
+                    Admissions <i class="fas fa-chevron-down"></i>
+                  </a>
+                  <div class="press-dropdown-panel">
+                    <a href="https://legacy.babcock.edu.ng/admission/how-to" target="_blank" rel="noopener noreferrer">How to Apply</a>
+                    <a href="https://application2.babcock.edu.ng" target="_blank" rel="noopener noreferrer">Apply Now</a>
+                    <a href="https://legacy.babcock.edu.ng/admission/requirements" target="_blank" rel="noopener noreferrer">Requirements</a>
+                    <a href="https://legacy.babcock.edu.ng/admission/finance" target="_blank" rel="noopener noreferrer">Tuition and Fees</a>
+                  </div>
+                </li>
+                <li class="press-menu-item">
+                  <a class="press-menu-trigger" href="https://legacy.babcock.edu.ng/bu_press" target="_blank" rel="noopener noreferrer">
+                    Resources <i class="fas fa-chevron-down"></i>
+                  </a>
+                  <div class="press-dropdown-panel">
+                    <a href="https://legacy.babcock.edu.ng/bu_press" target="_blank" rel="noopener noreferrer">BU Press</a>
+                    <a href="https://legacy.babcock.edu.ng/library" target="_blank" rel="noopener noreferrer">Library</a>
+                    <a href="https://journal.babcock.edu.ng" target="_blank" rel="noopener noreferrer">Journal</a>
+                    <a href="https://legacy.babcock.edu.ng/news" target="_blank" rel="noopener noreferrer">News and Events</a>
+                  </div>
+                </li>
+                <li class="press-menu-item">
+                  <a class="press-menu-trigger" href="https://legacy.babcock.edu.ng/Virtual_tour/Babcock.html" target="_blank" rel="noopener noreferrer">
+                    Quick Links <i class="fas fa-chevron-down"></i>
+                  </a>
+                  <div class="press-dropdown-panel">
+                    <a href="https://legacy.babcock.edu.ng/Virtual_tour/Babcock.html" target="_blank" rel="noopener noreferrer">Virtual Tour</a>
+                    <a href="https://legacy.babcock.edu.ng/church" target="_blank" rel="noopener noreferrer">Pioneer Church</a>
+                    <a href="https://legacy.babcock.edu.ng/alumni" target="_blank" rel="noopener noreferrer">Alumni</a>
+                    <a href="https://legacy.babcock.edu.ng/buth" target="_blank" rel="noopener noreferrer">Teaching Hospital</a>
+                  </div>
+                </li>
+              </ul>
+            </nav>
+
+            <div class="press-primary-actions">
+              <a
+                class="press-ghost-action"
+                href="https://legacy.babcock.edu.ng/bu_press"
+                target="_blank"
+                rel="noopener noreferrer">
+                <i class="fas fa-arrow-up-right-from-square"></i> Legacy BU Press
+              </a>
+              <div class="press-auth-buttons" id="authButtons">
+                <button class="btn btn-outline" onclick="showLoginModal()">
+                  <i class="fas fa-sign-in-alt"></i> Login
+                </button>
+                <button class="btn btn-primary" onclick="showRegisterModal()">
+                  <i class="fas fa-user-plus"></i> Register
+                </button>
+              </div>
             </div>
-          </nav>
-          <button class="hamburger-menu" id="hamburgerMenu" title="Toggle navigation menu">
-            <span></span><span></span><span></span>
-          </button>
+
+            <button class="press-menu-toggle" id="hamburgerMenu" title="Toggle navigation menu">
+              <span></span><span></span><span></span>
+            </button>
+          </div>
+        </div>
+
+        <div class="press-subnav">
+          <div class="container press-subnav-row">
+            <div class="press-subnav-links">
+              <a href="index.html" class="is-active" data-page-link>Home</a>
+              <a href="staff.html" data-page-link>Staff</a>
+              <a href="services.html" data-page-link>Services</a>
+              <a href="publications.html" data-page-link>Publications</a>
+              <a href="gallery.html" data-page-link>Gallery</a>
+            </div>
+          </div>
         </div>
       </header>
 
-      <div class="mobile-menu-overlay" id="mobileMenuOverlay"></div>
-      <div class="mobile-menu" id="mobileMenu">
-        <ul class="mobile-nav-links">
-          <li><a href="#home">Home</a></li>
-          <li><a href="#publications">Publications</a></li>
-          <li><a href="#services">Services</a></li>
-          <li><a href="#about">About Us</a></li>
-          <li><a href="#contact">Contact</a></li>
-        </ul>
-        <div class="mobile-auth-buttons" id="mobileAuthButtons">
+      <div class="press-overlay" id="mobileMenuOverlay"></div>
+      <aside class="press-mobile-drawer" id="mobileMenu">
+        <div class="press-mobile-section">
+          <h3>BU Press Pages</h3>
+          <ul class="press-mobile-links">
+            <li><a href="index.html">Home</a></li>
+            <li><a href="staff.html">Staff</a></li>
+            <li><a href="services.html">Services</a></li>
+            <li><a href="publications.html">Publications</a></li>
+            <li><a href="gallery.html">Gallery</a></li>
+            <li><a href="#publications">Live Catalog</a></li>
+            <li><a href="#contact">Contact</a></li>
+          </ul>
+        </div>
+        <div class="press-mobile-section">
+          <h3>University Links</h3>
+          <ul class="press-mobile-list">
+            <li><a href="https://umis.babcock.edu.ng" target="_blank" rel="noopener noreferrer">UMIS</a></li>
+            <li><a href="https://publication.babcock.edu.ng" target="_blank" rel="noopener noreferrer">Publications</a></li>
+            <li><a href="https://babcock.edu.ng/library" target="_blank" rel="noopener noreferrer">Library</a></li>
+            <li><a href="https://legacy.babcock.edu.ng/Virtual_tour/Babcock.html" target="_blank" rel="noopener noreferrer">Virtual Tour</a></li>
+            <li><a href="https://legacy.babcock.edu.ng/bu_press" target="_blank" rel="noopener noreferrer">Legacy BU Press</a></li>
+          </ul>
+        </div>
+        <div class="press-mobile-auth" id="mobileAuthButtons">
           <button class="btn btn-outline" onclick="showLoginModal()">
             <i class="fas fa-sign-in-alt"></i> Login
           </button>
@@ -118,500 +212,459 @@
             <i class="fas fa-user-plus"></i> Register
           </button>
         </div>
-      </div>
+      </aside>
 
-      <section class="hero-section" id="home">
-        <div class="container">
-          <div class="hero-content">
-            <h1 class="hero-title">Excellence in Academic Publishing</h1>
-            <p class="hero-subtitle">
-              Babcock University Publishing Company provides world-class
-              publishing services, connecting scholars with global audiences
-              through rigorous academic standards.
-            </p>
-            <div class="hero-buttons">
-              <button
-                class="btn btn-secondary"
-                onclick="showAuthorRegistration()">
-                <i class="fas fa-user-plus"></i> Become an Author
-              </button>
-              <button
-                class="btn btn-outline-white"
-                onclick="showTrainingRegistration()">
-                <i class="fas fa-graduation-cap"></i> Student Training
-              </button>
-            </div>
-            <div class="hero-stats">
-              <div class="stat-item">
-                <div class="stat-number" id="publishedBooks">150+</div>
-                <div class="stat-label">Published Books</div>
-              </div>
-              <div class="stat-item">
-                <div class="stat-number" id="activeAuthors">85+</div>
-                <div class="stat-label">Active Authors</div>
-              </div>
-              <div class="stat-item">
-                <div class="stat-number" id="studentsTrained">1200+</div>
-                <div class="stat-label">Students Trained</div>
-              </div>
-              <div class="stat-item">
-                <div class="stat-number" id="yearsExperience">15+</div>
-                <div class="stat-label">Years Experience</div>
-              </div>
-            </div>
-          </div>
-        </div>
-      </section>
-
-      <section class="features-section" id="services">
-        <div class="container">
-          <div class="section-header">
-            <h2 class="section-title">Our Publishing Services</h2>
-            <p class="section-subtitle">
-              Comprehensive publishing solutions from manuscript review to
-              global distribution
-            </p>
-          </div>
-          <div class="features-grid">
-            <div class="feature-card">
-              <div class="feature-icon"><i class="fas fa-book-open"></i></div>
-              <h3 class="feature-title">Academic Publishing</h3>
-              <p>
-                Professional publishing of textbooks, research papers, and
-                academic journals with rigorous peer-review process.
-              </p>
-            </div>
-            <div class="feature-card">
-              <div class="feature-icon"><i class="fas fa-print"></i></div>
-              <h3 class="feature-title">Printing Services</h3>
-              <p>
-                High-quality offset and digital printing with various binding
-                options for all academic materials.
-              </p>
-            </div>
-            <div class="feature-card">
-              <div class="feature-icon"><i class="fas fa-edit"></i></div>
-              <h3 class="feature-title">Editing & Proofreading</h3>
-              <p>
-                Comprehensive editing services including copyediting,
-                substantive editing, and proofreading by subject experts.
-              </p>
-            </div>
-            <div class="feature-card">
-              <div class="feature-icon">
-                <i class="fas fa-graduation-cap"></i>
-              </div>
-              <h3 class="feature-title">Student Training</h3>
-              <p>
-                Workshops and training programs in publishing, editing,
-                copyright, and academic writing for students.
-              </p>
-            </div>
-            <div class="feature-card">
-              <div class="feature-icon"><i class="fas fa-globe"></i></div>
-              <h3 class="feature-title">Global Distribution</h3>
-              <p>
-                Worldwide distribution through major academic channels and
-                online platforms for maximum reach.
-              </p>
-            </div>
-            <div class="feature-card">
-              <div class="feature-icon">
-                <i class="fas fa-file-contract"></i>
-              </div>
-              <h3 class="feature-title">Copyright Management</h3>
-              <p>
-                Expert guidance on copyright, licensing, and intellectual
-                property protection for authors.
-              </p>
-            </div>
-          </div>
-        </div>
-      </section>
-
-      <!-- Enhanced About Us Section -->
-      <section class="about-section" id="about">
-        <div class="container">
-          <div class="section-header">
-            <h2 class="section-title">About Babcock University Publishing</h2>
-            <p class="section-subtitle">Empowering scholars since 2009</p>
-          </div>
-
-          <div class="about-content-wrapper">
-            <div class="about-hero animate-fade-in-up">
-              <div class="about-hero-text">
-                <h3>Excellence in Academic Publishing</h3>
-                <p>
-                  Babcock University Publishing is a premier academic publishing
-                  platform dedicated to advancing knowledge and fostering
-                  intellectual excellence in the African academic community.
-                </p>
-              </div>
-            </div>
-
-            <div class="mission-vision-grid">
-              <div class="mission-card animate-fade-in-up delay-1">
-                <div class="card-icon">
-                  <i class="fas fa-bullseye"></i>
-                </div>
-                <h4>Our Mission</h4>
-                <p>
-                  To advance scholarly communication by providing innovative
-                  publishing solutions that empower researchers, educators, and
-                  students to share their work with the global academic
-                  community.
-                </p>
-              </div>
-
-              <div class="vision-card animate-fade-in-up delay-2">
-                <div class="card-icon">
-                  <i class="fas fa-eye"></i>
-                </div>
-                <h4>Our Vision</h4>
-                <p>
-                  To become the leading academic publishing platform in Africa,
-                  recognized globally for excellence in scholarly communication
-                  and innovation in publishing technology.
-                </p>
-              </div>
-            </div>
-
-            <div class="history-section animate-fade-in-up delay-3">
-              <h3>Our Journey</h3>
-              <p>
-                Founded in 2009 as part of Babcock University's commitment to
-                scholarly excellence, we have grown from publishing a handful of
-                local textbooks to becoming a comprehensive academic publishing
-                house serving scholars across Africa and beyond.
-              </p>
-
-              <div class="timeline">
-                <div class="timeline-item">
-                  <div class="timeline-year">2009</div>
-                  <div class="timeline-content">
-                    <h5>Foundation</h5>
-                    <p>Babcock University Publishing Company established</p>
-                  </div>
-                </div>
-                <div class="timeline-item">
-                  <div class="timeline-year">2012</div>
-                  <div class="timeline-content">
-                    <h5>First International Publication</h5>
-                    <p>
-                      Published our first internationally distributed textbook
-                    </p>
-                  </div>
-                </div>
-                <div class="timeline-item">
-                  <div class="timeline-year">2018</div>
-                  <div class="timeline-content">
-                    <h5>Digital Transformation</h5>
-                    <p>
-                      Launched digital publishing platform and e-book
-                      distribution
-                    </p>
-                  </div>
-                </div>
-                <div class="timeline-item">
-                  <div class="timeline-year">2023</div>
-                  <div class="timeline-content">
-                    <h5>Global Recognition</h5>
-                    <p>
-                      Publications now reach readers in 25+ countries worldwide
-                    </p>
-                  </div>
-                </div>
-              </div>
-            </div>
-
-            <div class="values-section animate-fade-in-up">
-              <h3>Our Core Values</h3>
-              <div class="values-grid">
-                <div class="value-card">
-                  <div class="value-icon">
-                    <i class="fas fa-graduation-cap"></i>
-                  </div>
-                  <h4>Academic Excellence</h4>
-                  <p>
-                    Upholding the highest standards of scholarly rigor and
-                    quality
-                  </p>
-                </div>
-                <div class="value-card">
-                  <div class="value-icon">
-                    <i class="fas fa-shield-alt"></i>
-                  </div>
-                  <h4>Integrity</h4>
-                  <p>
-                    Maintaining ethical standards and transparent publishing
-                    practices
-                  </p>
-                </div>
-                <div class="value-card">
-                  <div class="value-icon"><i class="fas fa-lightbulb"></i></div>
-                  <h4>Innovation</h4>
-                  <p>
-                    Embracing new technologies to enhance scholarly
-                    communication
-                  </p>
-                </div>
-                <div class="value-card">
-                  <div class="value-icon"><i class="fas fa-globe"></i></div>
-                  <h4>Global Reach</h4>
-                  <p>
-                    Connecting African scholars with international academic
-                    communities
-                  </p>
-                </div>
-              </div>
-            </div>
-
-            <div class="team-preview animate-fade-in-up delay-1">
-              <h3>Leadership Team</h3>
-              <div class="team-grid">
-                <div class="team-member">
-                  <div class="member-avatar">
-                    <i class="fas fa-user-tie"></i>
-                  </div>
-                  <h5>Dr. Sam Okere</h5>
-                  <p class="member-role">Director of Publishing</p>
-                </div>
-                <div class="team-member">
-                  <div class="member-avatar">
-                    <i class="fas fa-user-graduate"></i>
-                  </div>
-                  <h5>Prof. Mary Johnson</h5>
-                  <p class="member-role">Editor-in-Chief</p>
-                </div>
-                <div class="team-member">
-                  <div class="member-avatar">
-                    <i class="fas fa-chart-line"></i>
-                  </div>
-                  <h5>Dr. Samuel Ojo</h5>
-                  <p class="member-role">Operations Director</p>
-                </div>
-              </div>
-            </div>
-          </div>
-        </div>
-      </section>
-
-      <section class="publications-section" id="publications">
-        <div class="container">
-          <div class="section-header">
-            <h2 class="section-title">Featured Publications</h2>
-            <p class="section-subtitle">
-              Discover our latest academic publications from Babcock University
-              scholars
-            </p>
-          </div>
-          <div class="publications-filter">
-            <button
-              class="filter-btn active"
-              data-category="all"
-              onclick="filterPublications('all')">
-              All Publications
-            </button>
-            <button
-              class="filter-btn"
-              data-category="textbook"
-              onclick="filterPublications('textbook')">
-              Textbooks
-            </button>
-            <button
-              class="filter-btn"
-              data-category="research"
-              onclick="filterPublications('research')">
-              Research
-            </button>
-            <button
-              class="filter-btn"
-              data-category="journal"
-              onclick="filterPublications('journal')">
-              Journals
-            </button>
-          </div>
-          <div class="publications-grid" id="publicationsGrid">
-            <!-- Publications will be loaded dynamically -->
-          </div>
-          <div style="text-align: center; margin-top: 30px">
-            <button class="btn btn-primary" onclick="loadMorePublications()">
-              <i class="fas fa-book-open"></i> Load More Publications
-            </button>
-          </div>
-        </div>
-      </section>
-
-      <section class="stats-section">
-        <div class="container">
-          <div class="section-header">
-            <h2 class="section-title">Our Impact in Numbers</h2>
-            <p class="section-subtitle">
-              Building academic excellence through quality publishing
-            </p>
-          </div>
-          <div class="stats-grid">
-            <div class="stats-item">
-              <div class="stats-number" id="totalBooksPublished">150+</div>
-              <div class="stats-label">Books Published</div>
-            </div>
-            <div class="stats-item">
-              <div class="stats-number" id="authorsPublished">85+</div>
-              <div class="stats-label">Authors Published</div>
-            </div>
-            <div class="stats-item">
-              <div class="stats-number">25+</div>
-              <div class="stats-label">Countries Reached</div>
-            </div>
-            <div class="stats-item">
-              <div class="stats-number">98%</div>
-              <div class="stats-label">Author Satisfaction</div>
-            </div>
-          </div>
-        </div>
-      </section>
-
-      <section class="cta-section">
-        <div class="container">
-          <div class="cta-content">
-            <h2 class="cta-title">Ready to Publish Your Work?</h2>
-            <p style="font-size: 1.2rem; opacity: 0.9; margin-bottom: 30px">
-              Join our community of scholars and share your research with the
-              world.
-            </p>
-            <div class="cta-buttons">
-              <button
-                class="btn btn-secondary"
-                onclick="showAuthorRegistration()">
-                <i class="fas fa-pen-alt"></i> Submit Manuscript
-              </button>
-              <button
-                class="btn btn-outline-white"
-                onclick="showContactModal()">
-                <i class="fas fa-envelope"></i> Contact Our Team
-              </button>
-            </div>
-          </div>
-        </div>
-      </section>
-
-      <footer class="site-footer" id="contact">
-        <div class="container">
-          <div class="footer-grid">
-            <div class="footer-column">
-              <h3>Babcock University Publishing</h3>
-              <p style="color: var(--gray-400); margin-bottom: 20px">
-                Excellence in academic publishing since 2009. Committed to
-                advancing scholarship through quality publications.
-              </p>
-              <div class="social-links">
-                <a href="#"><i class="fab fa-facebook-f"></i></a>
-                <a href="#"><i class="fab fa-twitter"></i></a>
-                <a href="#"><i class="fab fa-linkedin-in"></i></a>
-                <a href="#"><i class="fab fa-instagram"></i></a>
-                <a href="#"><i class="fab fa-youtube"></i></a>
-              </div>
-            </div>
-            <div class="footer-column">
-              <h3>Quick Links</h3>
-              <ul class="footer-links">
-                <li>
-                  <a href="#home"><i class="fas fa-chevron-right"></i> Home</a>
-                </li>
-                <li>
-                  <a href="#publications"
-                    ><i class="fas fa-chevron-right"></i> Publications</a
-                  >
-                </li>
-                <li>
-                  <a href="#services"
-                    ><i class="fas fa-chevron-right"></i> Services</a
-                  >
-                </li>
-                <li>
-                  <a href="#about"
-                    ><i class="fas fa-chevron-right"></i> About Us</a
-                  >
-                </li>
-                <li>
-                  <a href="#contact"
-                    ><i class="fas fa-chevron-right"></i> Contact</a
-                  >
-                </li>
-              </ul>
-            </div>
-            <div class="footer-column">
-              <h3>Author Services</h3>
-              <ul class="footer-links">
-                <li>
-                  <a href="#" onclick="showAuthorRegistration()"
-                    ><i class="fas fa-chevron-right"></i> Register as Author</a
-                  >
-                </li>
-                <li>
-                  <a href="#" onclick="showAuthorLogin()"
-                    ><i class="fas fa-chevron-right"></i> Author Login</a
-                  >
-                </li>
-                <li>
-                  <a href="#" onclick="showContactModal()"
-                    ><i class="fas fa-chevron-right"></i> Submit Manuscript</a
-                  >
-                </li>
-                <li>
-                  <a href="#" onclick="showTrainingRegistration()"
-                    ><i class="fas fa-chevron-right"></i> Training Programs</a
-                  >
-                </li>
-                <li>
-                  <a href="#" onclick="showFaqModal()"
-                    ><i class="fas fa-chevron-right"></i> Author Guidelines</a
-                  >
-                </li>
-              </ul>
-            </div>
-            <div class="footer-column">
-              <h3>Contact Info</h3>
-              <ul class="footer-links">
-                <li>
-                  <a href="#"
-                    ><i class="fas fa-map-marker-alt"></i> Babcock University,
-                    Ilishan-Remo, Ogun State</a
-                  >
-                </li>
-                <li>
-                  <a href="tel:+2348031234567"
-                    ><i class="fas fa-phone"></i> +234 (0) 803 123 4567</a
-                  >
-                </li>
-                <li>
-                  <a href="mailto:publishing@babcock.edu.ng"
-                    ><i class="fas fa-envelope"></i>
-                    publishing@babcock.edu.ng</a
-                  >
-                </li>
-                <li>
-                  <a href="#"
-                    ><i class="fas fa-clock"></i> Mon-Fri: 8:00 AM - 5:00 PM</a
-                  >
-                </li>
-              </ul>
-            </div>
-          </div>
-          <div class="footer-bottom">
+      <section class="press-hero" id="home">
+        <div class="container press-hero-grid">
+          <div class="press-hero-copy">
+            <span class="press-kicker">
+              <i class="fas fa-book-open-reader"></i>
+              Official publishing house of Babcock University
+            </span>
+            <h1>Publishing, print production, and editorial services rebuilt with a cleaner professional structure.</h1>
             <p>
-              &copy; 2024 Babcock University Publishing Company. All Rights
-              Reserved.
+              This redesign uses the legacy BU Press source as the foundation:
+              university quick links, a BU Press sub-navigation, the official
+              about story, staff visibility, service categories, and a stronger
+              way to connect visitors into the live portal in this project.
             </p>
-            <p style="margin-top: 10px; font-size: 0.85rem">
-              <a href="#" style="color: #adb5bd; margin: 0 10px"
-                >Privacy Policy</a
-              >
-              |
-              <a href="#" style="color: #adb5bd; margin: 0 10px"
-                >Terms of Service</a
-              >
+            <div class="press-hero-actions">
+              <button class="press-button press-button-primary" onclick="showAuthorRegistration()">
+                <i class="fas fa-pen-nib"></i> Submit Manuscript
+              </button>
+              <button class="press-button press-button-secondary" onclick="showTrainingRegistration()">
+                <i class="fas fa-graduation-cap"></i> Training Registration
+              </button>
+              <a class="press-button press-button-light" href="services.html">
+                <i class="fas fa-gears"></i> Explore Services
+              </a>
+            </div>
+            <div class="press-stat-grid">
+              <div class="press-stat-card">
+                <strong id="publishedBooks">150+</strong>
+                <span>Published books and academic titles</span>
+              </div>
+              <div class="press-stat-card">
+                <strong id="activeAuthors">85+</strong>
+                <span>Authors and contributors in the publishing network</span>
+              </div>
+              <div class="press-stat-card">
+                <strong id="studentsTrained">1200+</strong>
+                <span>Learners reached through training and publishing support</span>
+              </div>
+              <div class="press-stat-card">
+                <strong id="yearsExperience">17+</strong>
+                <span>Years since the 2009 BU Press era referenced in the source</span>
+              </div>
+            </div>
+          </div>
+
+          <div class="press-hero-aside">
+            <article class="press-card press-media-panel">
+              <img src="assets/legacy/bu_press/banner.jpg" alt="Babcock University Press banner" />
+              <div class="press-media-body">
+                <h3>Integrated press system</h3>
+                <p>
+                  The legacy home page describes BU Press as a university-backed
+                  publishing arm with responsibility for book development, print
+                  production, and research dissemination.
+                </p>
+                <ul class="press-media-list">
+                  <li><i class="fas fa-check-circle"></i><span>Publishing and editorial guidance for manuscripts and academic projects.</span></li>
+                  <li><i class="fas fa-check-circle"></i><span>Graphics, pre-press, finishing, and production support under one roof.</span></li>
+                  <li><i class="fas fa-check-circle"></i><span>Direct access to live author, admin, and publication flows in this project.</span></li>
+                </ul>
+              </div>
+            </article>
+
+            <article class="press-card press-hero-dossier">
+              <span class="press-eyebrow">Press Desk</span>
+              <h3>A stronger public front door for BU Press</h3>
+              <p>
+                The site now guides visitors from discovery to action with
+                clearer pathways for submissions, training, services, and live
+                publication browsing.
+              </p>
+              <div class="press-dossier-grid">
+                <div class="press-dossier-item">
+                  <strong>Editorial</strong>
+                  <span>Review, copyediting, proofreading, and manuscript shaping.</span>
+                </div>
+                <div class="press-dossier-item">
+                  <strong>Production</strong>
+                  <span>Graphics, pre-press setup, finishing, and print delivery.</span>
+                </div>
+                <div class="press-dossier-item">
+                  <strong>Training</strong>
+                  <span>Workshops and consultancy for academic publishing workflows.</span>
+                </div>
+                <div class="press-dossier-item">
+                  <strong>Access</strong>
+                  <span>Direct routes into the live portal, catalog, and BU Press pages.</span>
+                </div>
+              </div>
+              <div class="press-inline-links">
+                <a href="mailto:bupress@babcock.edu.ng"><i class="fas fa-envelope"></i> Email Press Desk</a>
+                <a href="tel:+2348039758648"><i class="fas fa-phone"></i> Call BU Press</a>
+              </div>
+            </article>
+          </div>
+        </div>
+      </section>
+
+      <section class="press-section">
+        <div class="container">
+          <div class="press-section-heading">
+            <span class="press-eyebrow">About BU Press</span>
+            <h2>Publishing support for scholarship, teaching, and institutional communication</h2>
+            <p>
+              Babcock University Press exists to develop books and research
+              outputs for the university community while also supporting diverse
+              print and publishing needs. The rebuilt page keeps that official
+              identity, but arranges it in a more modern and readable way.
             </p>
+          </div>
+
+          <div class="press-about-grid">
+            <article class="press-card">
+              <div class="press-card-title">
+                <i class="fas fa-landmark"></i>
+                <h3>What the press does</h3>
+              </div>
+              <p>
+                BU Press serves as Babcock University's formal publishing arm.
+                It supports book development, academic dissemination, journal
+                and periodical visibility, and broader print execution across
+                the university environment.
+              </p>
+              <div class="press-note-strip" style="margin-top: 20px">
+                <i class="fas fa-circle-info"></i>
+                <span>The legacy source calls BU Press an integrated press system. That idea now drives the entire public structure of this rebuild.</span>
+              </div>
+              <div class="press-inline-links">
+                <a href="staff.html"><i class="fas fa-users"></i> Meet the team</a>
+                <a href="services.html"><i class="fas fa-gears"></i> View services</a>
+                <a href="publications.html"><i class="fas fa-book-open"></i> Browse publication formats</a>
+              </div>
+            </article>
+
+            <article class="press-card">
+              <div class="press-logo-lockup">
+                <img src="assets/legacy/bu_press/logo.jpg" alt="BU Press logo" />
+                <div>
+                  <span class="press-eyebrow">Identity</span>
+                  <h3>Vision and mission</h3>
+                  <p>
+                    The official source describes a world-class integrated press
+                    system focused on impactful academic and life-changing
+                    resources in multiple formats.
+                  </p>
+                </div>
+              </div>
+              <ul class="press-list">
+                <li><i class="fas fa-check-circle"></i><span><strong>Vision:</strong> To be a world-class integrated press system.</span></li>
+                <li><i class="fas fa-check-circle"></i><span><strong>Mission:</strong> Publish impactful academic and life-changing resources while delivering strong print production service.</span></li>
+              </ul>
+              <div class="press-metric-strip">
+                <div>
+                  <strong>150+</strong>
+                  <span>Books published</span>
+                </div>
+                <div>
+                  <strong>85+</strong>
+                  <span>Authors published</span>
+                </div>
+              </div>
+            </article>
+          </div>
+        </div>
+      </section>
+
+      <section class="press-section press-section-soft" id="services">
+        <div class="container press-split-grid">
+          <article class="press-card press-profile-card">
+            <div class="press-profile-header">
+              <img class="press-portrait-safe" src="public/dr_okere.jpg" alt="Associate Professor Samuel Okere" />
+              <div>
+                <span>Director</span>
+                <h3>Associate Professor Samuel Okere</h3>
+                <p>Leadership for publishing strategy, academic direction, and institutional press engagement.</p>
+              </div>
+            </div>
+            <p>
+              The official staff material presents Dr. Okere as a publishing
+              leader with decades of experience across university press and
+              private publishing contexts. This section brings that leadership
+              role forward on the homepage instead of burying it.
+            </p>
+            <div class="press-contact-list">
+              <div class="press-contact-item">
+                <i class="fas fa-envelope"></i>
+                <div>
+                  <strong>bupress@babcock.edu.ng</strong>
+                  <div>Primary press contact</div>
+                </div>
+              </div>
+              <div class="press-contact-item">
+                <i class="fas fa-phone"></i>
+                <div>
+                  <strong>+234 803 975 8648</strong>
+                  <div>+234 805 829 9445</div>
+                </div>
+              </div>
+              <div class="press-contact-item">
+                <i class="fas fa-location-dot"></i>
+                <div>
+                  <strong>Babcock University Press</strong>
+                  <div>Ilishan-Remo, Ogun State, Nigeria</div>
+                </div>
+              </div>
+            </div>
+          </article>
+
+          <article class="press-card">
+            <span class="press-eyebrow">Press Focus</span>
+            <h2>A stronger page arrangement for the same official content</h2>
+            <p>
+              The source site already had the right ingredients: clear staff,
+              clear services, and a university context around BU Press. This
+              rebuild turns those ingredients into a professional information
+              flow that is easier to navigate on desktop and mobile.
+            </p>
+            <ul class="press-list" style="margin-top: 20px">
+              <li><i class="fas fa-check-circle"></i><span>University quick links remain visible at the top of the experience.</span></li>
+              <li><i class="fas fa-check-circle"></i><span>BU Press now has its own dedicated page structure: Staff, Services, Publications, and Gallery.</span></li>
+              <li><i class="fas fa-check-circle"></i><span>The project still keeps its login, registration, author, and admin workflows.</span></li>
+            </ul>
+          </article>
+        </div>
+      </section>
+
+      <section class="press-section">
+        <div class="container">
+          <div class="press-section-heading">
+            <span class="press-eyebrow">Services</span>
+            <h2>Core BU Press service categories from the legacy source</h2>
+            <p>
+              The original BU Press content lists a strong mix of editorial,
+              graphics, finishing, lithography, print, consultancy, and
+              packaging functions. Those services now sit in a clearer grid.
+            </p>
+          </div>
+
+          <div class="press-service-grid">
+            <article class="press-card press-service-card">
+              <i class="fas fa-file-pen"></i>
+              <h3>Publishing and editorial</h3>
+              <p>List building, text development, copyediting, and proofreading for academic and institutional content.</p>
+            </article>
+            <article class="press-card press-service-card">
+              <i class="fas fa-pen-ruler"></i>
+              <h3>Graphics</h3>
+              <p>Art direction, cover support, and pre-press design for more polished publication outcomes.</p>
+            </article>
+            <article class="press-card press-service-card">
+              <i class="fas fa-layer-group"></i>
+              <h3>Finishing and bindery</h3>
+              <p>Spiral binding, case binding, perfect binding, saddle stitching, and rebinding services.</p>
+            </article>
+            <article class="press-card press-service-card">
+              <i class="fas fa-print"></i>
+              <h3>Lithography</h3>
+              <p>Digital imaging, colour separation, filming, plating, and production preparation support.</p>
+            </article>
+            <article class="press-card press-service-card">
+              <i class="fas fa-box-archive"></i>
+              <h3>Print solutions</h3>
+              <p>Books, journals, magazines, posters, invitations, file jackets, exercise books, and more.</p>
+            </article>
+            <article class="press-card press-service-card">
+              <i class="fas fa-chalkboard-user"></i>
+              <h3>Training and consultancy</h3>
+              <p>Seminars, workshops, publishing advisory work, feasibility studies, and print consultancy.</p>
+            </article>
+          </div>
+        </div>
+      </section>
+
+      <section class="press-section press-section-soft" id="publications">
+        <div class="container">
+          <div class="press-section-heading">
+            <span class="press-eyebrow">Live Catalog</span>
+            <h2>Featured publications from the project backend</h2>
+            <p>
+              The public catalog below continues to use the live publication
+              data already available in this project, now placed inside the
+              rebuilt BU Press presentation.
+            </p>
+          </div>
+
+          <div class="press-split-grid">
+            <article class="press-card">
+              <div class="publications-filter">
+                <button class="filter-btn active" data-category="all">All Publications</button>
+                <button class="filter-btn" data-category="textbook">Textbooks</button>
+                <button class="filter-btn" data-category="research">Research</button>
+                <button class="filter-btn" data-category="journal">Journals</button>
+              </div>
+              <div class="publications-grid" id="publicationsGrid"></div>
+              <div class="press-publication-actions">
+                <button class="btn btn-primary" onclick="loadMorePublications()">
+                  <i class="fas fa-book-open"></i> Load More Publications
+                </button>
+              </div>
+            </article>
+
+            <aside class="press-card press-publication-shell">
+              <h3>Publication directions</h3>
+              <p>
+                The legacy BU Press content points to books, journals,
+                periodicals, magazines, newspapers, yearbooks, and broader
+                institutional print output.
+              </p>
+              <ul class="press-list">
+                <li><i class="fas fa-check-circle"></i><span>Textbooks and monographs for teaching and scholarship.</span></li>
+                <li><i class="fas fa-check-circle"></i><span>Journals and recurring print formats for research communication.</span></li>
+                <li><i class="fas fa-check-circle"></i><span>Corporate, student, and branded materials for the university community.</span></li>
+              </ul>
+              <div class="press-inline-links">
+                <a href="publications.html"><i class="fas fa-arrow-right"></i> Open publications page</a>
+                <a href="#" onclick="showAuthorRegistration(); return false;"><i class="fas fa-pen-nib"></i> Publish with BU Press</a>
+              </div>
+            </aside>
+          </div>
+        </div>
+      </section>
+
+      <section class="press-section">
+        <div class="container press-video-grid">
+          <article class="press-card press-video-card">
+            <video controls preload="metadata" poster="assets/legacy/bu_press/banner.jpg">
+              <source src="https://legacy.babcock.edu.ng/assets/video/bu_press.mp4" type="video/mp4" />
+            </video>
+            <div class="press-media-body">
+              <h3>About Babcock University Press</h3>
+              <p>
+                The legacy home page includes an official BU Press video. This
+                rebuilt homepage keeps that media component and gives it proper
+                visual weight.
+              </p>
+            </div>
+          </article>
+
+          <article class="press-card">
+            <span class="press-eyebrow">Explore More</span>
+            <h2>Dedicated BU Press pages instead of a single crowded landing page</h2>
+            <p>
+              One of the main improvements in this rebuild is simple:
+              meaningful sections now have dedicated pages. Visitors can move
+              straight to the team, services, publication context, or visual
+              gallery without losing the core portal actions.
+            </p>
+            <div class="press-link-grid" style="margin-top: 24px">
+              <a class="press-card press-link-card" href="staff.html">
+                <i class="fas fa-users"></i>
+                <h3>Staff</h3>
+                <p>Leadership and core BU Press personnel from the legacy source.</p>
+              </a>
+              <a class="press-card press-link-card" href="services.html">
+                <i class="fas fa-gears"></i>
+                <h3>Services</h3>
+                <p>Editorial, graphics, print, consultancy, and packaging support.</p>
+              </a>
+              <a class="press-card press-link-card" href="publications.html">
+                <i class="fas fa-book-open"></i>
+                <h3>Publications</h3>
+                <p>Publication formats and catalog direction for BU Press output.</p>
+              </a>
+              <a class="press-card press-link-card" href="gallery.html">
+                <i class="fas fa-image"></i>
+                <h3>Gallery</h3>
+                <p>Official visuals and video collected from the legacy BU Press site.</p>
+              </a>
+            </div>
+          </article>
+        </div>
+      </section>
+
+      <section class="press-section press-section-soft">
+        <div class="container">
+          <div class="press-section-heading">
+            <span class="press-eyebrow">Impact</span>
+            <h2>Numbers that reinforce the public story</h2>
+            <p>
+              These figures preserve the existing project's dynamic counts while
+              aligning them with the more grounded BU Press presentation.
+            </p>
+          </div>
+          <div class="press-impact-grid">
+            <article class="press-card press-impact-band">
+              <div class="press-impact-card">
+                <strong id="totalBooksPublished">150+</strong>
+                <span>Books published through the press experience</span>
+              </div>
+            </article>
+            <article class="press-card press-impact-band">
+              <div class="press-impact-card">
+                <strong id="authorsPublished">85+</strong>
+                <span>Authors represented across the publication network</span>
+              </div>
+            </article>
+            <article class="press-card press-impact-band">
+              <div class="press-impact-card">
+                <strong>25+</strong>
+                <span>Countries reached through academic and institutional distribution</span>
+              </div>
+            </article>
+          </div>
+        </div>
+      </section>
+
+      <footer class="press-site-footer" id="contact">
+        <div class="container">
+          <div class="press-footer-grid">
+            <div>
+              <div class="press-footer-brand">
+                <img src="assets/legacy/bu_logo.png" alt="Babcock University logo" />
+                <div>
+                  <h3>Babcock University Press</h3>
+                  <p>Publishing, printing, and editorial support for Babcock University's academic community.</p>
+                </div>
+              </div>
+              <p>Ilishan-Remo, Ogun State, Nigeria</p>
+              <p>info@babcock.edu.ng | admissions@babcock.edu.ng</p>
+            </div>
+            <div>
+              <h4>BU Press</h4>
+              <ul>
+                <li><a href="staff.html">Staff</a></li>
+                <li><a href="services.html">Services</a></li>
+                <li><a href="publications.html">Publications</a></li>
+                <li><a href="gallery.html">Gallery</a></li>
+              </ul>
+            </div>
+            <div>
+              <h4>Contact</h4>
+              <ul>
+                <li><a href="mailto:bupress@babcock.edu.ng">bupress@babcock.edu.ng</a></li>
+                <li><a href="tel:+2348039758648">+234 803 975 8648</a></li>
+                <li><a href="#" onclick="showContactModal(); return false;">Send an enquiry</a></li>
+                <li><a href="#" onclick="showTrainingRegistration(); return false;">Register for training</a></li>
+              </ul>
+            </div>
+            <div>
+              <h4>University Links</h4>
+              <ul>
+                <li><a href="https://legacy.babcock.edu.ng/about" target="_blank" rel="noopener noreferrer">About Us</a></li>
+                <li><a href="https://legacy.babcock.edu.ng/admission" target="_blank" rel="noopener noreferrer">Admissions</a></li>
+                <li><a href="https://legacy.babcock.edu.ng/student-life" target="_blank" rel="noopener noreferrer">Student Life</a></li>
+                <li><a href="https://maps.google.com/?q=Babcock+University+Ilishan-Remo" target="_blank" rel="noopener noreferrer">Geo-location</a></li>
+              </ul>
+            </div>
+          </div>
+          <div class="press-footer-bottom">
+            <span>&copy; 2026 Babcock University. All rights reserved.</span>
+            <span>Legacy BU Press structure rebuilt into a cleaner public-facing project shell.</span>
           </div>
         </div>
       </footer>
@@ -664,6 +717,14 @@
                 <button type="submit" class="btn btn-primary btn-block">
                   Login as User
                 </button>
+                <div class="auth-inline-action">
+                  <button
+                    type="button"
+                    class="link-button"
+                    onclick="showPasswordResetRequest('user')">
+                    Forgot password?
+                  </button>
+                </div>
               </form>
             </div>
             <div id="authorLogin" class="auth-tab-content">
@@ -687,6 +748,14 @@
                 <button type="submit" class="btn btn-primary btn-block">
                   Login as Author
                 </button>
+                <div class="auth-inline-action">
+                  <button
+                    type="button"
+                    class="link-button"
+                    onclick="showPasswordResetRequest('author')">
+                    Forgot password?
+                  </button>
+                </div>
               </form>
             </div>
             <div id="adminLogin" class="auth-tab-content">
@@ -710,8 +779,102 @@
                 <button type="submit" class="btn btn-primary btn-block">
                   Login as Admin
                 </button>
+                <div class="auth-inline-action">
+                  <button
+                    type="button"
+                    class="link-button"
+                    onclick="showPasswordResetRequest('admin')">
+                    Forgot password?
+                  </button>
+                </div>
               </form>
             </div>
+          </div>
+        </div>
+      </div>
+
+      <div class="modal" id="passwordResetRequestModal">
+        <div class="modal-content">
+          <div class="modal-header">
+            <h3>Reset Password</h3>
+            <button
+              class="modal-close"
+              onclick="closeModal('passwordResetRequestModal')">
+              &times;
+            </button>
+          </div>
+          <div class="modal-body">
+            <p class="form-hint">
+              Enter the account email address and we will prepare password
+              reset instructions.
+            </p>
+            <form
+              id="passwordResetRequestForm"
+              onsubmit="handlePasswordResetRequest(event)">
+              <div class="form-group">
+                <label>Email Address *</label>
+                <input
+                  type="email"
+                  id="passwordResetEmail"
+                  class="form-control"
+                  required />
+              </div>
+              <div class="form-group">
+                <label>Account Type</label>
+                <select id="passwordResetAudience" class="form-control">
+                  <option value="author">Author</option>
+                  <option value="user">User</option>
+                  <option value="admin">Admin</option>
+                </select>
+              </div>
+              <button type="submit" class="btn btn-primary btn-block">
+                Send Reset Instructions
+              </button>
+            </form>
+          </div>
+        </div>
+      </div>
+
+      <div class="modal" id="passwordResetConfirmModal">
+        <div class="modal-content">
+          <div class="modal-header">
+            <h3>Choose New Password</h3>
+            <button
+              class="modal-close"
+              onclick="closeModal('passwordResetConfirmModal')">
+              &times;
+            </button>
+          </div>
+          <div class="modal-body">
+            <p class="form-hint">
+              Enter your new password below. Reset links expire after one hour.
+            </p>
+            <form
+              id="passwordResetConfirmForm"
+              onsubmit="handlePasswordResetConfirm(event)">
+              <input type="hidden" id="passwordResetToken" />
+              <div class="form-group">
+                <label>New Password *</label>
+                <input
+                  type="password"
+                  id="passwordResetNewPassword"
+                  class="form-control"
+                  minlength="6"
+                  required />
+              </div>
+              <div class="form-group">
+                <label>Confirm New Password *</label>
+                <input
+                  type="password"
+                  id="passwordResetConfirmPassword"
+                  class="form-control"
+                  minlength="6"
+                  required />
+              </div>
+              <button type="submit" class="btn btn-primary btn-block">
+                Reset Password
+              </button>
+            </form>
           </div>
         </div>
       </div>
@@ -1084,7 +1247,10 @@
                 <p>Admin Panel</p>
               </div>
             </div>
-            <button class="toggle-sidebar" id="toggleSidebar" aria-label="Toggle sidebar">
+            <button
+              class="toggle-sidebar"
+              id="toggleSidebar"
+              aria-label="Toggle sidebar">
               <i class="fas fa-chevron-left"></i>
             </button>
           </div>
@@ -1152,7 +1318,10 @@
         <div class="main-content" id="mainContent">
           <header class="main-header">
             <div class="header-left">
-              <button class="mobile-menu-toggle" id="mobileMenuToggle" aria-label="Open menu">
+              <button
+                class="mobile-menu-toggle"
+                id="mobileMenuToggle"
+                aria-label="Open menu">
                 <i class="fas fa-bars"></i>
               </button>
               <h1 class="header-title" id="pageTitle">Dashboard</h1>
@@ -1177,14 +1346,25 @@
               <div class="welcome-banner">
                 <div class="welcome-content">
                   <h1>Welcome back</h1>
-                  <p>Track approvals, submissions, and publishing activity at a glance.</p>
+                  <p>
+                    Track approvals, submissions, and publishing activity at a
+                    glance.
+                  </p>
                 </div>
               </div>
 
               <div class="stats-grid">
                 <div class="stat-card">
                   <div class="stat-header">
-                    <div class="stat-icon" style="background: linear-gradient(135deg, #ff6b6b 0%, #ee5a52 100%);">
+                    <div
+                      class="stat-icon"
+                      style="
+                        background: linear-gradient(
+                          135deg,
+                          #ff6b6b 0%,
+                          #ee5a52 100%
+                        );
+                      ">
                       <i class="fas fa-user-clock"></i>
                     </div>
                   </div>
@@ -1194,7 +1374,15 @@
 
                 <div class="stat-card">
                   <div class="stat-header">
-                    <div class="stat-icon" style="background: linear-gradient(135deg, #006747 0%, #005035 100%);">
+                    <div
+                      class="stat-icon"
+                      style="
+                        background: linear-gradient(
+                          135deg,
+                          #006747 0%,
+                          #005035 100%
+                        );
+                      ">
                       <i class="fas fa-book"></i>
                     </div>
                   </div>
@@ -1204,7 +1392,15 @@
 
                 <div class="stat-card">
                   <div class="stat-header">
-                    <div class="stat-icon" style="background: linear-gradient(135deg, #ffd700 0%, #e6c200 100%);">
+                    <div
+                      class="stat-icon"
+                      style="
+                        background: linear-gradient(
+                          135deg,
+                          #ffd700 0%,
+                          #e6c200 100%
+                        );
+                      ">
                       <i class="fas fa-file-upload"></i>
                     </div>
                   </div>
@@ -1214,7 +1410,15 @@
 
                 <div class="stat-card">
                   <div class="stat-header">
-                    <div class="stat-icon" style="background: linear-gradient(135deg, #3b82f6 0%, #2563eb 100%);">
+                    <div
+                      class="stat-icon"
+                      style="
+                        background: linear-gradient(
+                          135deg,
+                          #3b82f6 0%,
+                          #2563eb 100%
+                        );
+                      ">
                       <i class="fas fa-graduation-cap"></i>
                     </div>
                   </div>
@@ -1225,33 +1429,99 @@
             </section>
 
             <section id="authors" class="content-section">
-              <div class="data-section">
-                <div class="section-header">
-                  <h2 class="section-title">Author Management</h2>
-                  <button class="btn btn-primary" onclick="showAddAuthorModal()">
-                    <i class="fas fa-user-plus"></i> Add Author
-                  </button>
+              <div class="data-section authors-management-section">
+                <div class="authors-management-header">
+                  <div class="authors-management-copy">
+                    <span class="authors-management-eyebrow">
+                      Author Portfolio
+                    </span>
+                    <h2 class="section-title">Author Management</h2>
+                    <p class="authors-management-subtitle">
+                      Review registrations, keep institutional profiles clean,
+                      and monitor the publishing activity tied to each author
+                      account.
+                    </p>
+                  </div>
+                  <div class="authors-management-actions">
+                    <button class="btn btn-outline" onclick="loadAuthors()">
+                      <i class="fas fa-sync-alt"></i> Refresh
+                    </button>
+                    <button
+                      class="btn btn-primary"
+                      onclick="showAddAuthorModal()">
+                      <i class="fas fa-user-plus"></i> Add Author
+                    </button>
+                  </div>
                 </div>
-                <div class="data-table-container">
-                  <table class="data-table" id="authorsTable">
-                    <thead>
-                      <tr>
-                        <th>Name</th>
-                        <th>Email</th>
-                        <th>Faculty</th>
-                        <th>Status</th>
-                        <th>Books</th>
-                        <th>Actions</th>
-                      </tr>
-                    </thead>
-                    <tbody id="authorsTableBody">
-                      <tr>
-                        <td colspan="6" style="text-align: center; padding: 20px">
-                          Loading authors...
-                        </td>
-                      </tr>
-                    </tbody>
-                  </table>
+
+                <div class="authors-summary-grid">
+                  <article class="authors-summary-card">
+                    <span class="authors-summary-label">Total Authors</span>
+                    <strong class="authors-summary-value" id="authorsTotalCount">
+                      0
+                    </strong>
+                    <p>All author profiles currently in the publishing system.</p>
+                  </article>
+                  <article class="authors-summary-card">
+                    <span class="authors-summary-label">Pending Review</span>
+                    <strong
+                      class="authors-summary-value"
+                      id="authorsPendingCount">
+                      0
+                    </strong>
+                    <p>Registrations still waiting for approval or rejection.</p>
+                  </article>
+                  <article class="authors-summary-card">
+                    <span class="authors-summary-label">Approved</span>
+                    <strong
+                      class="authors-summary-value"
+                      id="authorsApprovedCount">
+                      0
+                    </strong>
+                    <p>Profiles that can already access the author workspace.</p>
+                  </article>
+                  <article class="authors-summary-card">
+                    <span class="authors-summary-label">Linked Books</span>
+                    <strong
+                      class="authors-summary-value"
+                      id="authorsBooksCount">
+                      0
+                    </strong>
+                    <p>Total books and manuscript records tied to authors.</p>
+                  </article>
+                </div>
+
+                <div class="authors-table-shell">
+                  <div class="authors-table-toolbar">
+                    <div>
+                      <h3>Author Records</h3>
+                      <p>
+                        Inspect identity, faculty affiliation, approval state,
+                        and publishing output from one table.
+                      </p>
+                    </div>
+                  </div>
+                  <div class="data-table-container authors-table-container">
+                    <table class="data-table" id="authorsTable">
+                      <thead>
+                        <tr>
+                          <th>Name</th>
+                          <th>Contact</th>
+                          <th>Faculty</th>
+                          <th>Status</th>
+                          <th>Books</th>
+                          <th>Actions</th>
+                        </tr>
+                      </thead>
+                      <tbody id="authorsTableBody">
+                        <tr>
+                          <td colspan="6" class="admin-empty-state">
+                            Loading authors...
+                          </td>
+                        </tr>
+                      </tbody>
+                    </table>
+                  </div>
                 </div>
               </div>
             </section>
@@ -1260,7 +1530,9 @@
               <div class="data-section">
                 <div class="section-header">
                   <h2 class="section-title">Registered Users</h2>
-                  <button class="btn btn-primary" onclick="loadRegisteredUsers()">
+                  <button
+                    class="btn btn-primary"
+                    onclick="loadRegisteredUsers()">
                     <i class="fas fa-sync-alt"></i> Refresh
                   </button>
                 </div>
@@ -1279,7 +1551,9 @@
                     </thead>
                     <tbody id="usersTableBody">
                       <tr>
-                        <td colspan="7" style="text-align: center; padding: 20px">
+                        <td
+                          colspan="7"
+                          style="text-align: center; padding: 20px">
                           Loading registered users...
                         </td>
                       </tr>
@@ -1311,7 +1585,9 @@
                     </thead>
                     <tbody id="booksTableBody">
                       <tr>
-                        <td colspan="6" style="text-align: center; padding: 20px">
+                        <td
+                          colspan="6"
+                          style="text-align: center; padding: 20px">
                           Loading books...
                         </td>
                       </tr>
@@ -1343,7 +1619,9 @@
                     </thead>
                     <tbody id="submissionsTableBody">
                       <tr>
-                        <td colspan="6" style="text-align: center; padding: 20px">
+                        <td
+                          colspan="6"
+                          style="text-align: center; padding: 20px">
                           Loading submissions...
                         </td>
                       </tr>
@@ -1357,7 +1635,9 @@
               <div class="data-section">
                 <div class="section-header">
                   <h2 class="section-title">Contract Management</h2>
-                  <button class="btn btn-primary" onclick="showAddContractModal()">
+                  <button
+                    class="btn btn-primary"
+                    onclick="showAddContractModal()">
                     <i class="fas fa-file-contract"></i> New Contract
                   </button>
                 </div>
@@ -1375,7 +1655,9 @@
                     </thead>
                     <tbody id="contractsTableBody">
                       <tr>
-                        <td colspan="6" style="text-align: center; padding: 20px">
+                        <td
+                          colspan="6"
+                          style="text-align: center; padding: 20px">
                           Loading contracts...
                         </td>
                       </tr>
@@ -1389,7 +1671,9 @@
               <div class="data-section">
                 <div class="section-header">
                   <h2 class="section-title">Training Programs</h2>
-                  <button class="btn btn-primary" onclick="loadTrainingRegistrations()">
+                  <button
+                    class="btn btn-primary"
+                    onclick="loadTrainingRegistrations()">
                     <i class="fas fa-sync-alt"></i> Refresh
                   </button>
                 </div>
@@ -1407,7 +1691,9 @@
                     </thead>
                     <tbody id="trainingTableBody">
                       <tr>
-                        <td colspan="6" style="text-align: center; padding: 20px">
+                        <td
+                          colspan="6"
+                          style="text-align: center; padding: 20px">
                           Loading training registrations...
                         </td>
                       </tr>
@@ -1421,213 +1707,474 @@
       </div>
     </div>
 
-<!-- ============= AUTHOR DASHBOARD ============= -->
-    <div id="authorDashboard" class="dashboard-container">
-      <header class="dashboard-header">
-        <div style="display: flex; align-items: center; gap: 10px">
-          <img
-            src="assets/OIP.webp"
-            alt="Logo"
-            style="width: 40px; height: 40px" />
+    <!-- ============= AUTHOR DASHBOARD ============= -->
+    <div id="authorDashboard" class="dashboard-container author-dashboard">
+      <header class="dashboard-header author-header">
+        <div class="author-brand">
+          <div class="author-brand-mark">
+            <img src="assets/OIP.webp" alt="Babcock Publishing logo" />
+          </div>
           <div>
-            <h2
-              style="
-                font-size: 18px;
-                font-weight: 700;
-                color: #006747;
-                margin: 0;
-              ">
-              Author Dashboard
-            </h2>
-            <p style="font-size: 12px; color: #6c757d; margin: 0">
-              Babcock Publishing
-            </p>
+            <p class="author-brand-kicker">Babcock Publishing</p>
+            <h2 class="author-brand-title">Author Workspace</h2>
           </div>
         </div>
-        <div style="display: flex; align-items: center; gap: 15px">
-          <span
-            style="color: var(--primary-color); font-weight: 600"
-            id="authorUserName"></span>
-          <button
-            class="btn btn-secondary"
-            onclick="logout()"
-            style="padding: 8px 16px; font-size: 12px">
-            Logout
+        <div class="author-header-actions">
+          <div class="author-user-chip">
+            <span class="author-user-label">Signed in as</span>
+            <strong id="authorUserName"></strong>
+          </div>
+          <button class="btn btn-outline" onclick="logout()">
+            <i class="fas fa-sign-out-alt"></i> Logout
           </button>
         </div>
       </header>
 
-      <main class="dashboard-main">
-        <div class="page-header">
-          <h1>My Publications</h1>
-          <button class="btn btn-primary" onclick="showAddBookModal()">
-            <i class="fas fa-plus"></i> New Book
-          </button>
-        </div>
-        <div class="stats-grid">
-          <div class="stat-card">
-            <div
-              class="stat-icon"
-              style="
-                background: linear-gradient(135deg, #006747 0%, #005035 100%);
-              ">
+      <main class="dashboard-main author-dashboard-main">
+        <section class="author-hero">
+          <div class="author-hero-copy">
+            <span class="author-eyebrow">Editorial Workflow</span>
+            <h1>Manage submissions with the same care you write them.</h1>
+            <p>
+              Keep your academic profile current, track every manuscript in
+              review, and send new work to the publishing team from one focused
+              author workspace.
+            </p>
+          </div>
+          <div class="author-hero-actions">
+            <button class="btn btn-primary" onclick="showAddBookModal()">
+              <i class="fas fa-file-upload"></i> Submit Manuscript
+            </button>
+            <button
+              class="btn btn-outline"
+              onclick="document.getElementById('authorProfileForm').scrollIntoView({ behavior: 'smooth', block: 'start' })">
+              <i class="fas fa-id-card"></i> Update Profile
+            </button>
+          </div>
+        </section>
+
+        <section class="author-stats-grid">
+          <article class="author-stat-card">
+            <div class="author-stat-icon author-stat-icon-books">
               <i class="fas fa-book"></i>
             </div>
-            <div class="stat-content">
+            <div class="author-stat-content">
+              <span class="author-stat-label">Total Titles</span>
               <h3 id="authorTotalBooks">0</h3>
-              <p>Total Books</p>
+              <p>All manuscripts and books connected to your author record.</p>
             </div>
-          </div>
-          <div class="stat-card">
-            <div
-              class="stat-icon"
-              style="
-                background: linear-gradient(135deg, #28a745 0%, #218838 100%);
-              ">
+          </article>
+          <article class="author-stat-card">
+            <div class="author-stat-icon author-stat-icon-published">
               <i class="fas fa-check-circle"></i>
             </div>
-            <div class="stat-content">
+            <div class="author-stat-content">
+              <span class="author-stat-label">Published</span>
               <h3 id="authorPublishedBooks">0</h3>
-              <p>Published</p>
+              <p>Titles already cleared, produced, and available to readers.</p>
             </div>
-          </div>
-          <div class="stat-card">
-            <div
-              class="stat-icon"
-              style="
-                background: linear-gradient(135deg, #ffc107 0%, #e0a800 100%);
-              ">
+          </article>
+          <article class="author-stat-card">
+            <div class="author-stat-icon author-stat-icon-progress">
               <i class="fas fa-hourglass-half"></i>
             </div>
-            <div class="stat-content">
+            <div class="author-stat-content">
+              <span class="author-stat-label">In Review</span>
               <h3 id="authorInProgressBooks">0</h3>
-              <p>In Progress</p>
+              <p>Projects currently moving through editorial and production.</p>
             </div>
-          </div>
-          <div class="stat-card">
-            <div
-              class="stat-icon"
-              style="
-                background: linear-gradient(135deg, #17a2b8 0%, #138496 100%);
-              ">
+          </article>
+          <article class="author-stat-card">
+            <div class="author-stat-icon author-stat-icon-royalty">
               <i class="fas fa-money-bill-wave"></i>
             </div>
-            <div class="stat-content">
+            <div class="author-stat-content">
+              <span class="author-stat-label">Royalties</span>
               <h3 id="authorTotalRoyalties">₦0</h3>
-              <p>Total Royalties</p>
+              <p>Your running earnings summary across approved statements.</p>
             </div>
-          </div>
+          </article>
+        </section>
+
+        <div class="author-content-grid">
+          <section class="author-panel author-profile-panel">
+            <div class="author-panel-header">
+              <div>
+                <span class="author-panel-eyebrow">Profile</span>
+                <h2 class="author-panel-title">
+                  Author identity and academic record
+                </h2>
+                <p class="author-panel-copy">
+                  Editors use these details across review, contracts,
+                  discoverability, and publication metadata.
+                </p>
+              </div>
+            </div>
+
+            <form
+              id="authorProfileForm"
+              class="author-profile-form"
+              onsubmit="handleAuthorProfileUpdate(event)">
+              <div class="author-profile-top">
+                <div class="author-profile-summary">
+                  <img
+                    id="authorProfileImagePreview"
+                    src="assets/OIP.webp"
+                    alt="Author profile"
+                    class="author-profile-avatar" />
+                  <div class="author-profile-text">
+                    <h3>Public-facing profile</h3>
+                    <p>
+                      Use a professional photograph and current institutional
+                      details so editorial, contracts, and catalog pages stay
+                      consistent.
+                    </p>
+                  </div>
+                </div>
+                <div class="form-group author-upload-group">
+                  <label>Change Profile Picture</label>
+                  <input
+                    type="file"
+                    id="authorProfilePicture"
+                    class="form-control"
+                    accept="image/png,image/jpeg,image/jpg,image/gif" />
+                </div>
+              </div>
+
+              <div class="author-form-section">
+                <div class="author-form-section-header">
+                  <h3>Core Details</h3>
+                  <p>Primary identity and university information.</p>
+                </div>
+                <div class="author-form-grid">
+                  <div class="form-group">
+                    <label>Full Name *</label>
+                    <input
+                      type="text"
+                      id="authorProfileFullName"
+                      class="form-control"
+                      required />
+                  </div>
+                  <div class="form-group">
+                    <label>Email *</label>
+                    <input
+                      type="email"
+                      id="authorProfileEmail"
+                      class="form-control"
+                      required />
+                  </div>
+                  <div class="form-group">
+                    <label>Phone</label>
+                    <input
+                      type="tel"
+                      id="authorProfilePhone"
+                      class="form-control" />
+                  </div>
+                  <div class="form-group">
+                    <label>Staff/Student ID</label>
+                    <input
+                      type="text"
+                      id="authorProfileStaffId"
+                      class="form-control" />
+                  </div>
+                  <div class="form-group">
+                    <label>Faculty</label>
+                    <input
+                      type="text"
+                      id="authorProfileFaculty"
+                      class="form-control" />
+                  </div>
+                  <div class="form-group">
+                    <label>Department</label>
+                    <input
+                      type="text"
+                      id="authorProfileDepartment"
+                      class="form-control" />
+                  </div>
+                </div>
+              </div>
+
+              <div class="author-form-section">
+                <div class="author-form-section-header">
+                  <h3>Scholar Profile</h3>
+                  <p>Academic signals that support indexing and discovery.</p>
+                </div>
+                <div class="author-form-grid">
+                  <div class="form-group">
+                    <label>Highest Qualification</label>
+                    <input
+                      type="text"
+                      id="authorProfileQualification"
+                      class="form-control" />
+                  </div>
+                  <div class="form-group">
+                    <label>Research Interests / Expertise</label>
+                    <input
+                      type="text"
+                      id="authorProfileExpertise"
+                      class="form-control" />
+                  </div>
+                  <div class="form-group">
+                    <label>ORCID iD</label>
+                    <input
+                      type="text"
+                      id="authorProfileOrcidId"
+                      class="form-control" />
+                  </div>
+                  <div class="form-group">
+                    <label>Google Scholar ID</label>
+                    <input
+                      type="text"
+                      id="authorProfileGoogleScholarId"
+                      class="form-control" />
+                  </div>
+                  <div class="form-group author-form-grid-wide">
+                    <label>LinkedIn URL</label>
+                    <input
+                      type="url"
+                      id="authorProfileLinkedIn"
+                      class="form-control" />
+                  </div>
+                </div>
+              </div>
+
+              <div class="author-form-section">
+                <div class="author-form-section-header">
+                  <h3>Biography</h3>
+                  <p>A concise profile for internal and publication use.</p>
+                </div>
+                <div class="form-group">
+                  <label>Professional Biography</label>
+                  <textarea
+                    id="authorProfileBiography"
+                    class="form-control"
+                    rows="5"
+                    placeholder="Summarize your background, area of scholarship, and publication focus."></textarea>
+                </div>
+              </div>
+
+              <div class="author-form-actions">
+                <button type="submit" class="btn btn-primary">
+                  <i class="fas fa-save"></i> Save Profile
+                </button>
+              </div>
+            </form>
+          </section>
+
+          <aside class="author-panel author-guide-panel">
+            <div class="author-panel-header">
+              <div>
+                <span class="author-panel-eyebrow">Submission Standard</span>
+                <h2 class="author-panel-title">Prepare stronger manuscripts</h2>
+                <p class="author-panel-copy">
+                  A clear submission package helps the editorial office move
+                  faster and reduces avoidable revisions.
+                </p>
+              </div>
+            </div>
+
+            <div class="author-guide-list">
+              <div class="author-guide-item">
+                <span class="author-guide-step">01</span>
+                <div>
+                  <h3>Lead with a precise abstract</h3>
+                  <p>
+                    State the audience, contribution, and value of the work in
+                    direct language.
+                  </p>
+                </div>
+              </div>
+              <div class="author-guide-item">
+                <span class="author-guide-step">02</span>
+                <div>
+                  <h3>Keep metadata complete</h3>
+                  <p>
+                    Accurate subject area, keywords, and discoverability
+                    details improve internal routing.
+                  </p>
+                </div>
+              </div>
+              <div class="author-guide-item">
+                <span class="author-guide-step">03</span>
+                <div>
+                  <h3>Submit a clean manuscript file</h3>
+                  <p>
+                    Finalize headings, references, and front matter before
+                    entering editorial review.
+                  </p>
+                </div>
+              </div>
+            </div>
+
+            <div class="author-guide-note">
+              <span class="author-guide-note-label">Editorial Note</span>
+              <p>
+                Use the manuscript table below to monitor review progress,
+                submission status, and file access after each upload.
+              </p>
+            </div>
+          </aside>
         </div>
-        <div class="data-table-container" style="margin-bottom: 24px">
-          <div class="section-header">
-            <h2 class="section-title">My Author Profile</h2>
-          </div>
-          <form id="authorProfileForm" onsubmit="handleAuthorProfileUpdate(event)">
-            <div style="display: flex; align-items: center; gap: 16px; margin-bottom: 20px; flex-wrap: wrap;">
-              <img
-                id="authorProfileImagePreview"
-                src="assets/OIP.webp"
-                alt="Author profile"
-                style="width: 88px; height: 88px; border-radius: 50%; object-fit: cover; border: 2px solid #e9ecef;" />
-              <div class="form-group" style="margin: 0; min-width: 240px;">
-                <label>Change Profile Picture</label>
-                <input
-                  type="file"
-                  id="authorProfilePicture"
-                  class="form-control"
-                  accept="image/png,image/jpeg,image/jpg,image/gif" />
-              </div>
-            </div>
 
-            <div class="stats-grid" style="margin-bottom: 0;">
-              <div class="form-group">
-                <label>Full Name *</label>
-                <input type="text" id="authorProfileFullName" class="form-control" required />
-              </div>
-              <div class="form-group">
-                <label>Email *</label>
-                <input type="email" id="authorProfileEmail" class="form-control" required />
-              </div>
-              <div class="form-group">
-                <label>Phone</label>
-                <input type="tel" id="authorProfilePhone" class="form-control" />
-              </div>
-              <div class="form-group">
-                <label>Staff/Student ID</label>
-                <input type="text" id="authorProfileStaffId" class="form-control" />
-              </div>
-              <div class="form-group">
-                <label>Faculty</label>
-                <input type="text" id="authorProfileFaculty" class="form-control" />
-              </div>
-              <div class="form-group">
-                <label>Department</label>
-                <input type="text" id="authorProfileDepartment" class="form-control" />
-              </div>
-              <div class="form-group">
-                <label>Highest Qualification</label>
-                <input type="text" id="authorProfileQualification" class="form-control" />
-              </div>
-              <div class="form-group">
-                <label>Research Interests / Expertise</label>
-                <input type="text" id="authorProfileExpertise" class="form-control" />
-              </div>
-              <div class="form-group">
-                <label>ORCID iD</label>
-                <input type="text" id="authorProfileOrcidId" class="form-control" />
-              </div>
-              <div class="form-group">
-                <label>Google Scholar ID</label>
-                <input type="text" id="authorProfileGoogleScholarId" class="form-control" />
-              </div>
-              <div class="form-group">
-                <label>LinkedIn URL</label>
-                <input type="url" id="authorProfileLinkedIn" class="form-control" />
-              </div>
+        <section class="author-panel author-manuscripts-panel">
+          <div class="author-panel-header author-panel-header-spread">
+            <div>
+              <span class="author-panel-eyebrow">Portfolio</span>
+              <h2 class="author-panel-title">Manuscripts and active titles</h2>
+              <p class="author-panel-copy">
+                A single view of what has been submitted, what is under review,
+                and which files the publishing team can access.
+              </p>
             </div>
-
-            <div class="form-group">
-              <label>Biography</label>
-              <textarea id="authorProfileBiography" class="form-control" rows="4"></textarea>
-            </div>
-
-            <button type="submit" class="btn btn-primary">
-              <i class="fas fa-save"></i> Save Profile
-            </button>
-          </form>
-        </div>
-        <div class="data-table-container">
-          <div style="text-align: center; padding: 30px">
-            <i
-              class="fas fa-book"
-              style="
-                font-size: 48px;
-                color: #006747;
-                margin-bottom: 20px;
-                display: block;
-              "></i>
-            <h3 style="color: #343a40">No books yet</h3>
-            <p style="color: #6c757d; margin-bottom: 20px">
-              Submit your first book to get started
-            </p>
             <button class="btn btn-primary" onclick="showAddBookModal()">
-              <i class="fas fa-pen-alt"></i> Submit Manuscript
+              <i class="fas fa-file-upload"></i> Submit Manuscript
             </button>
           </div>
-        </div>
+
+          <div class="author-table-shell">
+            <table class="data-table" id="authorBooksTable">
+              <thead>
+                <tr>
+                  <th>Title</th>
+                  <th>Category</th>
+                  <th>Book Status</th>
+                  <th>Submission</th>
+                  <th>Submitted</th>
+                  <th>Manuscript</th>
+                </tr>
+              </thead>
+              <tbody id="authorBooksTableBody">
+                <tr>
+                  <td colspan="6" class="author-empty-state">
+                    Loading manuscripts...
+                  </td>
+                </tr>
+              </tbody>
+            </table>
+          </div>
+        </section>
       </main>
     </div>
 
     <div class="modal" id="authorDetailsModal">
-      <div class="modal-content">
+      <div class="modal-content author-details-modal-content">
         <div class="modal-header">
           <h3>Author Details</h3>
-          <button class="modal-close" onclick="closeModal('authorDetailsModal')">
+          <button
+            class="modal-close"
+            onclick="closeModal('authorDetailsModal')">
             &times;
           </button>
         </div>
         <div class="modal-body" id="authorDetailsContent">
           Loading author details...
+        </div>
+      </div>
+    </div>
+
+    <div class="modal" id="submitBookModal">
+      <div class="modal-content">
+        <div class="modal-header">
+          <h3>Submit Manuscript</h3>
+          <button class="modal-close" onclick="closeModal('submitBookModal')">
+            &times;
+          </button>
+        </div>
+        <div class="modal-body">
+          <form
+            id="submitBookForm"
+            onsubmit="handleManuscriptSubmission(event)">
+            <div class="stats-grid" style="margin-bottom: 0">
+              <div class="form-group">
+                <label>Book Title *</label>
+                <input
+                  type="text"
+                  id="bookTitle"
+                  class="form-control"
+                  required />
+              </div>
+              <div class="form-group">
+                <label>Subtitle</label>
+                <input type="text" id="bookSubtitle" class="form-control" />
+              </div>
+              <div class="form-group">
+                <label>Category *</label>
+                <input
+                  type="text"
+                  id="bookCategory"
+                  class="form-control"
+                  placeholder="e.g. Textbook, Journal, Research"
+                  required />
+              </div>
+              <div class="form-group">
+                <label>Submission Type *</label>
+                <select id="bookSubmissionType" class="form-control" required>
+                  <option value="publishing">Publishing</option>
+                  <option value="review">Review</option>
+                  <option value="reprint">Reprint</option>
+                  <option value="translation">Translation</option>
+                  <option value="special_edition">Special Edition</option>
+                </select>
+              </div>
+              <div class="form-group">
+                <label>Keywords</label>
+                <input
+                  type="text"
+                  id="bookKeywords"
+                  class="form-control"
+                  placeholder="Comma-separated keywords" />
+              </div>
+              <div class="form-group">
+                <label>Language</label>
+                <input
+                  type="text"
+                  id="bookLanguage"
+                  class="form-control"
+                  value="English" />
+              </div>
+            </div>
+
+            <div class="form-group">
+              <label>Abstract</label>
+              <textarea
+                id="bookAbstract"
+                class="form-control"
+                rows="4"
+                placeholder="Summarize the manuscript, audience, and contribution"></textarea>
+            </div>
+
+            <div class="form-group">
+              <label>Description</label>
+              <textarea
+                id="bookDescription"
+                class="form-control"
+                rows="4"
+                placeholder="Add a fuller description of the manuscript"></textarea>
+            </div>
+
+            <div class="form-group">
+              <label>Notes for the publishing team</label>
+              <textarea
+                id="bookAuthorNotes"
+                class="form-control"
+                rows="3"
+                placeholder="Anything the editors or publishing team should know"></textarea>
+            </div>
+
+            <div class="form-group">
+              <label>Manuscript File *</label>
+              <input
+                type="file"
+                id="bookManuscriptFile"
+                class="form-control"
+                accept=".pdf,.doc,.docx,application/pdf,application/msword,application/vnd.openxmlformats-officedocument.wordprocessingml.document"
+                required />
+            </div>
+
+            <button type="submit" class="btn btn-primary btn-block">
+              <i class="fas fa-cloud-upload-alt"></i> Submit Manuscript
+            </button>
+          </form>
         </div>
       </div>
     </div>

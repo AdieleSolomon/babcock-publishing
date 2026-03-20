@@ -1,0 +1,16 @@
+{
+  "name": "babcock-publishing",
+  "private": true,
+  "scripts": {
+    "predev:frontend": "node tools/dev-ports.mjs check 5173 frontend",
+    "dev": "concurrently -n backend,frontend \"npm:dev:backend\" \"npm:dev:frontend\"",
+    "dev:backend": "npm --prefix backend run dev",
+    "dev:frontend": "http-server frontend -p 5173 -c-1",
+    "stop:dev": "node tools/dev-ports.mjs stop 3001 5173",
+    "dev:reset": "npm run stop:dev && npm run dev"
+  },
+  "devDependencies": {
+    "concurrently": "^9.0.1",
+    "http-server": "^14.1.1"
+  }
+}

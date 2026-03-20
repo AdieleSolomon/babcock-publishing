@@ -1,4 +1,21 @@
-# Backend Deployment Checklist (Railway + Postgres)
+# Backend Setup Notes
+
+## Local development
+
+Use Laragon MySQL in `backend/.env`:
+
+- `DB_CLIENT=mysql`
+- `DB_HOST=localhost`
+- `DB_PORT=3306`
+- `DB_USER=root`
+- `DB_PASSWORD=` (empty)
+- `DB_NAME=babcock_publishing`
+
+## Production deployment
+
+Use Railway Postgres values from `backend/.env.railway`.
+
+## Railway Deployment Checklist
 
 This directory is the Node.js backend API.
 

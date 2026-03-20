@@ -12,6 +12,7 @@ import session from "express-session";
 import bcrypt from "bcryptjs";
 import jwt from "jsonwebtoken";
 import nodemailer from "nodemailer";
+import crypto from "crypto";
 
 dotenv.config();
 
@@ -26,9 +27,11 @@ const LOCAL_CORS_ORIGINS = [
   "http://localhost:5500",
   "http://localhost:3000",
   "http://localhost:3001",
+  "http://localhost:5173",
   "http://127.0.0.1:5500",
   "http://127.0.0.1:3000",
   "http://127.0.0.1:3001",
+  "http://127.0.0.1:5173",
 ];
 
 function parseOrigins(value) {
@@ -178,13 +181,19 @@ if (frontendIndexExists) {
 }
 
 const hasPostgresUrl = Boolean(
-  process.env.DATABASE_URL || process.env.PGHOST,
+  process.env.DATABASE_URL ||
+  process.env.DATABASE_PUBLIC_URL ||
+  process.env.PGHOST ||
+  process.env.PGHOST_PUBLIC,
 );
 const DB_CLIENT = (
   process.env.DB_CLIENT || (hasPostgresUrl ? "postgres" : "mysql")
 ).toLowerCase();
 const isPostgres = DB_CLIENT === "postgres";
 const { Pool: PgPool } = pg;
+const isRunningOnRailway = Object.keys(process.env).some((key) =>
+  key.startsWith("RAILWAY_"),
+);
 
 // Database connection configuration
 const dbConfig = {
@@ -200,20 +209,70 @@ const dbConfig = {
 };
 
 const mysqlPool = isPostgres ? null : mysql.createPool(dbConfig);
-function buildPostgresConfig() {
-  const databaseUrl = process.env.DATABASE_URL;
-  if (!databaseUrl) {
-    throw new Error("DATABASE_URL is required when DB_CLIENT=postgres");
+function looksLikePlaceholder(value) {
+  return /<[^>]+>/.test(value);
+}
+
+function resolvePreferredDatabaseUrl() {
+  const publicUrl = process.env.DATABASE_PUBLIC_URL;
+  const privateUrl = process.env.DATABASE_URL;
+
+  if (publicUrl) {
+    return publicUrl;
   }
 
-  const parsed = new URL(databaseUrl);
+  if (!privateUrl) {
+    return null;
+  }
+
+  try {
+    const parsedPrivateUrl = new URL(privateUrl);
+    const usesRailwayPrivateHost =
+      parsedPrivateUrl.hostname.endsWith(".railway.internal");
+
+    if (usesRailwayPrivateHost && !isRunningOnRailway) {
+      throw new Error(
+        "DATABASE_URL uses a Railway private host that is only reachable inside Railway. Set DATABASE_PUBLIC_URL for local development.",
+      );
+    }
+  } catch (error) {
+    if (error instanceof TypeError) {
+      return privateUrl;
+    }
+    throw error;
+  }
+
+  return privateUrl;
+}
+
+function parseDatabaseUrl(databaseUrl) {
+  if (!databaseUrl) return null;
+  if (looksLikePlaceholder(databaseUrl)) {
+    throw new Error(
+      "DATABASE_URL still contains placeholder values. Update backend/.env with a real URL or switch DB_CLIENT=mysql for local dev.",
+    );
+  }
+  try {
+    return new URL(databaseUrl);
+  } catch (error) {
+    throw new Error(
+      `DATABASE_URL is invalid: ${error?.message || "Unable to parse URL"}`,
+    );
+  }
+}
+
+function buildPostgresConfig() {
+  const databaseUrl = resolvePreferredDatabaseUrl();
+  const parsed = parseDatabaseUrl(databaseUrl);
   const family = process.env.PG_FAMILY
     ? Number(process.env.PG_FAMILY)
     : undefined;
   const sslEnv = process.env.DB_SSL;
   const sslFromEnv =
     typeof sslEnv === "string" ? sslEnv.toLowerCase() === "true" : undefined;
-  const sslMode = parsed.searchParams.get("sslmode");
+  const sslMode = parsed
+    ? parsed.searchParams.get("sslmode")
+    : process.env.PGSSLMODE;
   const sslModeRequires = sslMode
     ? ["require", "verify-full", "verify-ca"].includes(sslMode.toLowerCase())
     : false;
@@ -222,18 +281,42 @@ function buildPostgresConfig() {
       ? sslFromEnv
       : sslModeRequires || process.env.NODE_ENV === "production";
 
+  const host =
+    parsed?.hostname ||
+    process.env.PGHOST_PUBLIC ||
+    process.env.PGHOST ||
+    process.env.DB_HOST ||
+    "localhost";
+  const port = parsed?.port
+    ? Number(parsed.port)
+    : Number(
+        process.env.PGPORT_PUBLIC ||
+          process.env.PGPORT ||
+          process.env.DB_PORT ||
+          5432,
+      );
+  const rawUser =
+    parsed?.username || process.env.PGUSER || process.env.DB_USER || "postgres";
+  const rawPassword =
+    parsed?.password || process.env.PGPASSWORD || process.env.DB_PASSWORD || "";
+  const database =
+    (parsed?.pathname ? parsed.pathname.replace(/^\/+/, "") : "") ||
+    process.env.PGDATABASE ||
+    process.env.DB_NAME ||
+    "postgres";
+
   return {
-    host: parsed.hostname,
-    port: parsed.port ? Number(parsed.port) : 5432,
-    user: decodeURIComponent(parsed.username || ""),
-    password: decodeURIComponent(parsed.password || ""),
-    database: parsed.pathname ? parsed.pathname.replace(/^\/+/, "") : "postgres",
+    host,
+    port,
+    user: decodeURIComponent(rawUser),
+    password: decodeURIComponent(rawPassword),
+    database,
     family,
     ssl: sslEnabled ? { rejectUnauthorized: false } : undefined,
   };
 }
 
-const pgPool = isPostgres ? new PgPool(buildPostgresConfig()) : null;
+let pgPool = null;
 const POSTGRES_SCHEMA_FILE = path.join(
   __dirname,
   "migrations",
@@ -305,6 +388,12 @@ async function dbQuery(sql, params = []) {
     return mysqlPool.promise().query(sql, params);
   }
 
+  if (!pgPool) {
+    throw new Error(
+      "Postgres pool is not initialized. Check your DATABASE_PUBLIC_URL or DATABASE_URL settings.",
+    );
+  }
+
   const transformedSql = convertQuestionParams(normalizeSqlForPostgres(sql));
   const trimmedSql = transformedSql.trim().toLowerCase();
   const isInsert = /^insert\s+into\s+/i.test(trimmedSql);
@@ -370,6 +459,61 @@ function getUploadPath(file) {
   return `/uploads/${file.filename}`;
 }
 
+async function insertRecordWithExistingColumns(tableName, payload) {
+  if (!/^[a-zA-Z0-9_]+$/.test(tableName)) {
+    throw new Error(`Invalid table name: ${tableName}`);
+  }
+
+  const tableColumns = await getTableColumns(tableName);
+  const insertColumns = [];
+  const insertValues = [];
+  const insertPlaceholders = [];
+
+  for (const [key, value] of Object.entries(payload)) {
+    if (value === undefined) continue;
+    if (!tableColumns.has(key)) continue;
+    insertColumns.push(key);
+    insertValues.push(value);
+    insertPlaceholders.push("?");
+  }
+
+  if (insertColumns.length === 0) {
+    throw new Error(`No matching columns found for ${tableName}`);
+  }
+
+  const [result] = await dbQuery(
+    `INSERT INTO ${tableName} (${insertColumns.join(", ")}) VALUES (${insertPlaceholders.join(", ")})`,
+    insertValues,
+  );
+
+  return result;
+}
+
+function wait(ms) {
+  return new Promise((resolve) => setTimeout(resolve, ms));
+}
+
+async function resetPostgresPool() {
+  if (pgPool) {
+    try {
+      await pgPool.end();
+    } catch (error) {
+      console.warn("Error closing Postgres pool:", error.message);
+    }
+  }
+  pgPool = new PgPool(buildPostgresConfig());
+}
+
+function isTransientPostgresStartupError(error) {
+  const message = (error?.message || "").toLowerCase();
+  return (
+    error?.code === "57P03" ||
+    message.includes("the database system is starting up") ||
+    message.includes("connection terminated unexpectedly") ||
+    message.includes("timeout expired")
+  );
+}
+
 async function ensureAuthorProfileColumns() {
   const userColumns = await getTableColumns("users");
   const authorColumns = await getTableColumns("authors");
@@ -380,6 +524,19 @@ async function ensureAuthorProfileColumns() {
   }
   if (!userColumns.has("phone")) {
     userAlterStatements.push("ADD COLUMN phone VARCHAR(20)");
+  }
+  if (!userColumns.has("verification_token")) {
+    userAlterStatements.push("ADD COLUMN verification_token VARCHAR(500)");
+  }
+  if (!userColumns.has("reset_token")) {
+    userAlterStatements.push("ADD COLUMN reset_token VARCHAR(500)");
+  }
+  if (!userColumns.has("reset_token_expiry")) {
+    userAlterStatements.push(
+      isPostgres
+        ? "ADD COLUMN reset_token_expiry TIMESTAMP NULL"
+        : "ADD COLUMN reset_token_expiry DATETIME NULL",
+    );
   }
   if (userAlterStatements.length > 0) {
     await dbQuery(`ALTER TABLE users ${userAlterStatements.join(", ")}`);
@@ -413,6 +570,53 @@ async function ensureAuthorProfileColumns() {
   }
   if (authorAlterStatements.length > 0) {
     await dbQuery(`ALTER TABLE authors ${authorAlterStatements.join(", ")}`);
+  }
+}
+
+async function ensureMySqlComputedColumns() {
+  if (isPostgres) return;
+
+  const inventoryColumns = await getTableColumns("inventory");
+  if (!inventoryColumns.has("available")) {
+    await dbQuery(
+      "ALTER TABLE inventory ADD COLUMN available INT GENERATED ALWAYS AS (quantity - reserved) STORED",
+    );
+  }
+
+  const salesColumns = await getTableColumns("sales");
+  if (!salesColumns.has("total_amount")) {
+    await dbQuery(
+      "ALTER TABLE sales ADD COLUMN total_amount DECIMAL(10,2) GENERATED ALWAYS AS (quantity * unit_price) STORED",
+    );
+  }
+}
+
+async function ensureLegacySubmissionColumns() {
+  if (isPostgres) return;
+
+  const submissionColumns = await getTableColumns("submissions");
+  const alterStatements = [];
+
+  if (!submissionColumns.has("assigned_to")) {
+    alterStatements.push("ADD COLUMN assigned_to INT NULL");
+  }
+  if (!submissionColumns.has("due_date")) {
+    alterStatements.push("ADD COLUMN due_date DATE NULL");
+  }
+  if (!submissionColumns.has("priority")) {
+    alterStatements.push(
+      "ADD COLUMN priority ENUM('low', 'medium', 'high', 'urgent') DEFAULT 'medium'",
+    );
+  }
+  if (!submissionColumns.has("author_notes")) {
+    alterStatements.push("ADD COLUMN author_notes TEXT");
+  }
+  if (!submissionColumns.has("completed_date")) {
+    alterStatements.push("ADD COLUMN completed_date TIMESTAMP NULL");
+  }
+
+  if (alterStatements.length > 0) {
+    await dbQuery(`ALTER TABLE submissions ${alterStatements.join(", ")}`);
   }
 }
 
@@ -509,9 +713,10 @@ async function seedPostgresDefaults() {
 
   const adminEmail = process.env.ADMIN_EMAIL || "admin@babcock.edu.ng";
   const adminPassword = process.env.ADMIN_PASSWORD || "Admin@123";
-  const [existingAdmin] = await dbQuery("SELECT id FROM users WHERE email = ?", [
-    adminEmail,
-  ]);
+  const [existingAdmin] = await dbQuery(
+    "SELECT id FROM users WHERE email = ?",
+    [adminEmail],
+  );
 
   if (existingAdmin.length === 0) {
     const hashedPassword = await bcrypt.hash(adminPassword, 10);
@@ -606,6 +811,40 @@ async function sendEmail({ to, subject, text, html }) {
     console.error("Email send error:", error.message);
     return false;
   }
+}
+
+function normalizeResetAudience(value) {
+  const audience = String(value || "")
+    .trim()
+    .toLowerCase();
+  return ["user", "author", "admin"].includes(audience) ? audience : null;
+}
+
+function roleMatchesResetAudience(role, audience) {
+  if (!audience) return true;
+  if (audience === "author") {
+    return ["author", "admin", "editor"].includes(role);
+  }
+  if (audience === "admin") {
+    return ["admin", "editor", "reviewer"].includes(role);
+  }
+  return role === "user";
+}
+
+function getPublicAppUrl(req) {
+  const configuredUrl =
+    process.env.FRONTEND_URL || process.env.APP_URL || process.env.PUBLIC_URL;
+  if (configuredUrl) {
+    return configuredUrl.replace(/\/+$/, "");
+  }
+  return `${req.protocol}://${req.get("host")}`.replace(/\/+$/, "");
+}
+
+function buildPasswordResetLink(req, token) {
+  const resetUrl = new URL(`${getPublicAppUrl(req)}/`);
+  resetUrl.searchParams.set("mode", "reset-password");
+  resetUrl.searchParams.set("reset_token", token);
+  return resetUrl.toString();
 }
 
 // ============== MIDDLEWARE ==============
@@ -1179,9 +1418,13 @@ const initDatabase = async () => {
         : "INSERT IGNORE INTO settings (setting_key, setting_value, setting_type, category, description) VALUES (?, ?, ?, ?, ?)";
       await dbQuery(upsertSettingSql, setting);
     }
+
+    await ensureMySqlComputedColumns();
+    await ensureLegacySubmissionColumns();
   } catch (error) {
     console.error("✗ Database initialization error:", error.message);
     console.error("Stack:", error.stack);
+    throw error;
   }
 };
 
@@ -1596,6 +1839,158 @@ app.post("/api/auth/logout", authMiddleware, (req, res) => {
     success: true,
     message: "Logged out successfully",
   });
+});
+
+app.post("/api/auth/password-reset/request", async (req, res) => {
+  try {
+    await ensureAuthorProfileColumns();
+
+    const { email, audience } = req.body || {};
+    if (!email) {
+      return res.status(400).json({
+        success: false,
+        message: "Email address is required",
+      });
+    }
+
+    const normalizedEmail = String(email).trim().toLowerCase();
+    const resetAudience = normalizeResetAudience(audience);
+    const genericMessage =
+      "If an account exists for this email, password reset instructions have been prepared.";
+
+    const [users] = await dbQuery(
+      "SELECT id, email, full_name, role FROM users WHERE email = ?",
+      [normalizedEmail],
+    );
+
+    const user = users[0];
+    if (!user || !roleMatchesResetAudience(user.role, resetAudience)) {
+      return res.json({
+        success: true,
+        message: genericMessage,
+      });
+    }
+
+    const resetToken = crypto.randomBytes(32).toString("hex");
+    const resetTokenExpiry = new Date(Date.now() + 60 * 60 * 1000);
+    const resetLink = buildPasswordResetLink(req, resetToken);
+
+    await dbQuery(
+      "UPDATE users SET reset_token = ?, reset_token_expiry = ? WHERE id = ?",
+      [resetToken, resetTokenExpiry, user.id],
+    );
+
+    let emailSent = false;
+    if (isEmailConfigured) {
+      emailSent = await sendEmail({
+        to: user.email,
+        subject: "Babcock Publishing Password Reset",
+        text: `Hello ${user.full_name || "there"},\n\nWe received a request to reset your password. Use the link below to choose a new password:\n\n${resetLink}\n\nThis link expires in 1 hour. If you did not request this reset, you can ignore this email.`,
+        html: `
+          <p>Hello ${user.full_name || "there"},</p>
+          <p>We received a request to reset your password.</p>
+          <p><a href="${resetLink}">Choose a new password</a></p>
+          <p>This link expires in 1 hour. If you did not request this reset, you can ignore this email.</p>
+        `,
+      });
+    }
+
+    const responseBody = {
+      success: true,
+      message: genericMessage,
+      delivery:
+        emailSent || isEmailConfigured ? "email" : "development-preview",
+    };
+
+    if (!emailSent && process.env.NODE_ENV !== "production") {
+      responseBody.reset_token = resetToken;
+      responseBody.reset_link = resetLink;
+    }
+
+    res.json(responseBody);
+  } catch (error) {
+    console.error("Password reset request error:", error);
+    res.status(500).json({
+      success: false,
+      message: "Failed to start password reset",
+    });
+  }
+});
+
+app.post("/api/auth/password-reset/confirm", async (req, res) => {
+  try {
+    await ensureAuthorProfileColumns();
+
+    const { token, password, confirm_password } = req.body || {};
+    if (!token || !password) {
+      return res.status(400).json({
+        success: false,
+        message: "Reset token and new password are required",
+      });
+    }
+
+    if (password.length < 6) {
+      return res.status(400).json({
+        success: false,
+        message: "Password must be at least 6 characters long",
+      });
+    }
+
+    if (
+      confirm_password !== undefined &&
+      String(confirm_password) !== String(password)
+    ) {
+      return res.status(400).json({
+        success: false,
+        message: "Passwords do not match",
+      });
+    }
+
+    const [users] = await dbQuery(
+      "SELECT id, reset_token_expiry FROM users WHERE reset_token = ?",
+      [token],
+    );
+
+    if (users.length === 0) {
+      return res.status(400).json({
+        success: false,
+        message: "Invalid or expired password reset token",
+      });
+    }
+
+    const user = users[0];
+    const resetExpiryTime = user.reset_token_expiry
+      ? new Date(user.reset_token_expiry).getTime()
+      : 0;
+
+    if (!resetExpiryTime || resetExpiryTime < Date.now()) {
+      await dbQuery(
+        "UPDATE users SET reset_token = NULL, reset_token_expiry = NULL WHERE id = ?",
+        [user.id],
+      );
+      return res.status(400).json({
+        success: false,
+        message: "This password reset link has expired",
+      });
+    }
+
+    const hashedPassword = await bcrypt.hash(password, 10);
+    await dbQuery(
+      "UPDATE users SET password = ?, reset_token = NULL, reset_token_expiry = NULL WHERE id = ?",
+      [hashedPassword, user.id],
+    );
+
+    res.json({
+      success: true,
+      message: "Password reset successful. You can now log in with your new password.",
+    });
+  } catch (error) {
+    console.error("Password reset confirmation error:", error);
+    res.status(500).json({
+      success: false,
+      message: "Failed to reset password",
+    });
+  }
 });
 
 // ============== ADMIN HEALTH CHECK ==============
@@ -2313,13 +2708,13 @@ app.get("/api/admin/dashboard/stats", authMiddleware, async (req, res) => {
         "SELECT COUNT(*) as count FROM contracts WHERE status = 'draft' OR status = 'sent'",
       ),
       dbQuery(
-        "SELECT SUM(total_amount) as total FROM sales WHERE payment_status = 'paid' AND sale_date >= DATE_SUB(CURDATE(), INTERVAL 30 DAY)",
+        "SELECT SUM(quantity * unit_price) as total FROM sales WHERE payment_status = 'paid' AND sale_date >= DATE_SUB(CURDATE(), INTERVAL 30 DAY)",
       ),
       dbQuery(
-        "SELECT SUM(total_amount) as revenue FROM sales WHERE payment_status = 'paid' AND MONTH(sale_date) = MONTH(CURDATE())",
+        "SELECT SUM(quantity * unit_price) as revenue FROM sales WHERE payment_status = 'paid' AND MONTH(sale_date) = MONTH(CURDATE())",
       ),
       dbQuery(
-        "SELECT COUNT(*) as count FROM inventory WHERE available <= reorder_level",
+        "SELECT COUNT(*) as count FROM inventory WHERE (quantity - reserved) <= reorder_level",
       ),
     ]);
 
@@ -2336,7 +2731,7 @@ app.get("/api/admin/dashboard/stats", authMiddleware, async (req, res) => {
     const [monthlySales] = await dbQuery(`
       SELECT 
         DATE_FORMAT(sale_date, '%Y-%m') as month,
-        SUM(total_amount) as revenue,
+        SUM(quantity * unit_price) as revenue,
         COUNT(*) as transactions
       FROM sales 
       WHERE sale_date >= DATE_SUB(CURDATE(), INTERVAL 6 MONTH)
@@ -2947,12 +3342,25 @@ app.post(
 app.get("/api/admin/submissions", authMiddleware, async (req, res) => {
   try {
     const { status, type, priority, page = 1, limit = 20 } = req.query;
-    const offset = (page - 1) * limit;
+    const pageNumber = Math.max(Number.parseInt(page, 10) || 1, 1);
+    const limitNumber = Math.min(
+      Math.max(Number.parseInt(limit, 10) || 20, 1),
+      100,
+    );
+    const offset = (pageNumber - 1) * limitNumber;
+    const submissionColumns = await getTableColumns("submissions");
+    const hasSubmissionPriority = submissionColumns.has("priority");
+    const hasSubmissionDueDate = submissionColumns.has("due_date");
 
     let query = `
       SELECT s.*, b.title as book_title, u.full_name as author_name,
-             DATE(s.due_date) as due_date_formatted,
-             DATEDIFF(s.due_date, CURDATE()) as days_remaining
+             ${
+               hasSubmissionDueDate
+                 ? `DATE(s.due_date) as due_date_formatted,
+             DATEDIFF(s.due_date, CURDATE()) as days_remaining`
+                 : `NULL as due_date_formatted,
+             NULL as days_remaining`
+             }
       FROM submissions s
       JOIN books b ON s.book_id = b.id
       LEFT JOIN authors a ON b.author_id = a.id
@@ -2984,15 +3392,24 @@ app.get("/api/admin/submissions", authMiddleware, async (req, res) => {
       countParams.push(type);
     }
 
-    if (priority) {
+    if (priority && hasSubmissionPriority) {
       query += " AND s.priority = ?";
       countQuery += " AND s.priority = ?";
       params.push(priority);
       countParams.push(priority);
     }
 
-    query += " ORDER BY s.priority DESC, s.due_date ASC LIMIT ? OFFSET ?";
-    params.push(parseInt(limit), offset);
+    const orderByClauses = [];
+    if (hasSubmissionPriority) {
+      orderByClauses.push("s.priority DESC");
+    }
+    if (hasSubmissionDueDate) {
+      orderByClauses.push("s.due_date ASC");
+    }
+    orderByClauses.push("s.submission_date DESC");
+
+    query += ` ORDER BY ${orderByClauses.join(", ")} LIMIT ? OFFSET ?`;
+    params.push(limitNumber, offset);
 
     const [submissions] = await dbQuery(query, params);
     const [[{ total }]] = await dbQuery(countQuery, countParams);
@@ -3002,9 +3419,9 @@ app.get("/api/admin/submissions", authMiddleware, async (req, res) => {
       submissions,
       pagination: {
         total,
-        page: parseInt(page),
-        limit: parseInt(limit),
-        pages: Math.ceil(total / limit),
+        page: pageNumber,
+        limit: limitNumber,
+        pages: total > 0 ? Math.ceil(total / limitNumber) : 0,
       },
     });
   } catch (error) {
@@ -3053,14 +3470,27 @@ app.post(
 app.get("/api/admin/contracts", authMiddleware, async (req, res) => {
   try {
     const { status, type, author_id, page = 1, limit = 20 } = req.query;
-    const offset = (page - 1) * limit;
+    const pageNumber = Math.max(Number.parseInt(page, 10) || 1, 1);
+    const limitNumber = Math.min(
+      Math.max(Number.parseInt(limit, 10) || 20, 1),
+      100,
+    );
+    const offset = (pageNumber - 1) * limitNumber;
+    const userColumns = await getTableColumns("users");
+    const hasAuthorPhone = userColumns.has("phone");
 
     let query = `
-      SELECT c.*, b.title as book_title, a.full_name as author_name,
-             a.email as author_email, a.phone as author_phone
+      SELECT c.*, b.title as book_title, u.full_name as author_name,
+             u.email as author_email,
+             ${
+               hasAuthorPhone
+                 ? "u.phone as author_phone"
+                 : "NULL as author_phone"
+             }
       FROM contracts c
-      JOIN books b ON c.book_id = b.id
-      JOIN authors a ON c.author_id = a.id
+      LEFT JOIN books b ON c.book_id = b.id
+      LEFT JOIN authors a ON c.author_id = a.id
+      LEFT JOIN users u ON a.user_id = u.id
       WHERE 1=1
     `;
 
@@ -3082,7 +3512,7 @@ app.get("/api/admin/contracts", authMiddleware, async (req, res) => {
     }
 
     query += " ORDER BY c.created_at DESC LIMIT ? OFFSET ?";
-    params.push(parseInt(limit), offset);
+    params.push(limitNumber, offset);
 
     const [contracts] = await dbQuery(query, params);
 
@@ -3764,6 +4194,148 @@ app.put(
   },
 );
 
+app.post(
+  "/api/author/books",
+  authMiddleware,
+  roleMiddleware(["author"]),
+  upload.single("manuscript_file"),
+  async (req, res) => {
+    try {
+      const {
+        title,
+        subtitle,
+        category,
+        submission_type = "publishing",
+        keywords,
+        language,
+        abstract,
+        description,
+        author_notes,
+      } = req.body;
+
+      if (!title || !category) {
+        return res.status(400).json({
+          success: false,
+          message: "Title and category are required",
+        });
+      }
+
+      if (!req.file) {
+        return res.status(400).json({
+          success: false,
+          message: "Please upload a manuscript file",
+        });
+      }
+
+      const validSubmissionTypes = [
+        "review",
+        "publishing",
+        "reprint",
+        "translation",
+        "special_edition",
+      ];
+
+      if (!validSubmissionTypes.includes(submission_type)) {
+        return res.status(400).json({
+          success: false,
+          message: "Invalid submission type",
+        });
+      }
+
+      const [authorRows] = await dbQuery(
+        "SELECT id FROM authors WHERE user_id = ?",
+        [req.user.id],
+      );
+
+      if (authorRows.length === 0) {
+        return res.status(404).json({
+          success: false,
+          message: "Author profile not found",
+        });
+      }
+
+      const authorId = authorRows[0].id;
+      const manuscriptPath = getUploadPath(req.file);
+      const timestamp = new Date();
+      const dateStamp = timestamp.toISOString().slice(0, 10);
+
+      const bookResult = await insertRecordWithExistingColumns("books", {
+        author_id: authorId,
+        title: toNullable(title),
+        subtitle: toNullable(subtitle),
+        description: toNullable(description),
+        abstract: toNullable(abstract),
+        category: toNullable(category),
+        keywords: toNullable(keywords),
+        manuscript_file: manuscriptPath,
+        language: toNullable(language) || "English",
+        status: "under_review",
+        created_at: timestamp,
+        updated_at: timestamp,
+      });
+
+      const submissionResult = await insertRecordWithExistingColumns(
+        "submissions",
+        {
+          book_id: bookResult.insertId,
+          submission_type,
+          status: "pending",
+          author_notes: toNullable(author_notes),
+          submission_date: timestamp,
+          created_at: timestamp,
+        },
+      );
+
+      try {
+        const bookProgressColumns = await getTableColumns("book_progress");
+        if (bookProgressColumns.size > 0) {
+          await insertRecordWithExistingColumns("book_progress", {
+            book_id: bookResult.insertId,
+            stage: "manuscript_submission",
+            status: "completed",
+            start_date: dateStamp,
+            completed_date: dateStamp,
+            notes: "Manuscript submitted by author",
+            created_at: timestamp,
+            updated_at: timestamp,
+          });
+        }
+      } catch (progressError) {
+        console.warn(
+          "Book progress initialization warning:",
+          progressError.message,
+        );
+      }
+
+      if (isEmailConfigured) {
+        const adminRecipient = process.env.ADMIN_EMAIL || emailConfig.sender;
+        if (adminRecipient) {
+          void sendEmail({
+            to: adminRecipient,
+            subject: `New manuscript submission: ${title}`,
+            text: `A new manuscript has been submitted.\n\nTitle: ${title}\nSubmission type: ${submission_type}\nAuthor ID: ${authorId}\nBook ID: ${bookResult.insertId}\nSubmission ID: ${submissionResult.insertId}\nFile: ${manuscriptPath}`,
+          });
+        }
+      }
+
+      res.json({
+        success: true,
+        message:
+          "Manuscript submitted successfully. The publishing team can now review it.",
+        bookId: bookResult.insertId,
+        submissionId: submissionResult.insertId,
+        manuscript_file: manuscriptPath,
+      });
+    } catch (error) {
+      console.error("Author manuscript submission error:", error);
+      res.status(500).json({
+        success: false,
+        message: "Failed to submit manuscript",
+      });
+    }
+  },
+);
+
 // ============== STATIC FILES ==============
 
 // Serve static files
@@ -3790,6 +4362,13 @@ app.get("/api/author/dashboard", authMiddleware, async (req, res) => {
     }
 
     const authorId = authorRows[0].id;
+    const bookColumns = await getTableColumns("books");
+    const bookOrderColumn = bookColumns.has("updated_at")
+      ? "b.updated_at"
+      : "b.created_at";
+    const completedStagesSql = isPostgres
+      ? "STRING_AGG(DISTINCT bp.stage, ',' ORDER BY bp.stage) as completed_stages"
+      : "GROUP_CONCAT(DISTINCT bp.stage ORDER BY bp.id) as completed_stages";
 
     // Get author's books with progress
     const [books] = await dbQuery(
@@ -3797,21 +4376,48 @@ app.get("/api/author/dashboard", authMiddleware, async (req, res) => {
               COUNT(DISTINCT r.id) as review_count,
               COUNT(DISTINCT bp.id) as progress_count,
               MAX(bp.completed_date) as last_progress_date,
-              GROUP_CONCAT(DISTINCT bp.stage ORDER BY bp.id) as completed_stages
+              ${completedStagesSql}
        FROM books b
        LEFT JOIN book_reviews r ON b.id = r.book_id
        LEFT JOIN book_progress bp ON b.id = bp.book_id
        WHERE b.author_id = ?
        GROUP BY b.id
-       ORDER BY b.updated_at DESC`,
+       ORDER BY ${bookOrderColumn} DESC`,
       [authorId],
     );
+
+    const [submissions] = await dbQuery(
+      `SELECT s.book_id, s.status, s.submission_type, s.submission_date
+       FROM submissions s
+       JOIN books b ON s.book_id = b.id
+       WHERE b.author_id = ?
+       ORDER BY s.submission_date DESC`,
+      [authorId],
+    );
+
+    const latestSubmissionByBookId = new Map();
+    for (const submission of submissions) {
+      if (!latestSubmissionByBookId.has(submission.book_id)) {
+        latestSubmissionByBookId.set(submission.book_id, submission);
+      }
+    }
+
+    const booksWithSubmissionState = books.map((book) => {
+      const latestSubmission = latestSubmissionByBookId.get(book.id);
+      return {
+        ...book,
+        latest_submission_status: latestSubmission?.status || null,
+        latest_submission_type: latestSubmission?.submission_type || null,
+        latest_submission_date: latestSubmission?.submission_date || null,
+      };
+    });
 
     // Get overall statistics
     const [stats] = await dbQuery(
       `SELECT 
         COUNT(*) as total_books,
         SUM(CASE WHEN status = 'published' THEN 1 ELSE 0 END) as published_books,
+        SUM(CASE WHEN status = 'submitted' THEN 1 ELSE 0 END) as submitted_books,
         SUM(CASE WHEN status = 'in_production' THEN 1 ELSE 0 END) as in_production_books,
         SUM(CASE WHEN status = 'under_review' THEN 1 ELSE 0 END) as under_review_books,
         SUM(CASE WHEN status = 'revisions_requested' THEN 1 ELSE 0 END) as revision_books
@@ -3846,7 +4452,7 @@ app.get("/api/author/dashboard", authMiddleware, async (req, res) => {
     res.json({
       success: true,
       data: {
-        books,
+        books: booksWithSubmissionState,
         stats: stats[0],
         recentReviews: reviews,
         royalties: royalties[0],
@@ -4395,21 +5001,46 @@ app.use((err, req, res, next) => {
 // ============== AUTO-INITIALIZATION FUNCTIONS ==============
 
 async function initializeDatabase() {
-  try {
-    await dbQuery("SELECT 1");
-    if (isPostgres) {
-      await ensurePostgresSchema();
-      await reconcilePostgresSchemaColumns();
-      await ensureAuthorProfileColumns();
-      await seedPostgresDefaults();
-    } else {
-      await initDatabase();
+  const maxAttempts = isPostgres ? 6 : 1;
+
+  for (let attempt = 1; attempt <= maxAttempts; attempt += 1) {
+    try {
+      if (isPostgres) {
+        await resetPostgresPool();
+      }
+      await dbQuery("SELECT 1");
+      if (isPostgres) {
+        await ensurePostgresSchema();
+        await reconcilePostgresSchemaColumns();
+        await ensureAuthorProfileColumns();
+        await seedPostgresDefaults();
+      } else {
+        await initDatabase();
+        await ensureAuthorProfileColumns();
+      }
+      return true;
+    } catch (error) {
+      const message = error?.message || String(error);
+      const code = error?.code ? ` (code: ${error.code})` : "";
+      const canRetry =
+        isPostgres &&
+        attempt < maxAttempts &&
+        isTransientPostgresStartupError(error);
+
+      console.error(`Database initialization error: ${message}${code}`);
+
+      if (!canRetry) {
+        return false;
+      }
+
+      console.log(
+        `Retrying Postgres initialization in 5 seconds (${attempt + 1}/${maxAttempts})...`,
+      );
+      await wait(5000);
     }
-    return true;
-  } catch (error) {
-    console.error("Database initialization error:", error.message);
-    return false;
   }
+
+  return false;
 }
 
 // ============== START SERVER ==============
@@ -4452,6 +5083,15 @@ FILE UPLOADS:
   });
 
   server.on("error", (err) => {
+    if (err?.code === "EADDRINUSE") {
+      console.error(
+        `Port ${PORT} is already in use. Another backend process is likely still running.`,
+      );
+      console.error(
+        "Run `npm run stop:dev` in `backend` or from the repo root before starting again.",
+      );
+      process.exit(1);
+    }
     console.error("Server error:", err);
     process.exit(1);
   });
