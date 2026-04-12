@@ -2,7 +2,13 @@
 <html lang="en">
   <head>
     <meta charset="UTF-8" />
-    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover, maximum-scale=5.0, user-scalable=yes" />
+    <meta name="apple-mobile-web-app-capable" content="yes" />
+    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
+    <meta name="apple-mobile-web-app-title" content="BU Press" />
+    <meta name="mobile-web-app-capable" content="yes" />
+    <meta name="theme-color" content="#0f694d" />
+    <meta name="msapplication-TileColor" content="#0f694d" />
     <title>
       Babcock University Press | Publishing, Printing, and Editorial Services
     </title>
@@ -11,7 +17,6 @@
       content="Babcock University Press provides publishing, printing, editorial, consultancy, and training services for the Babcock University community." />
     <meta name="robots" content="index, follow" />
     <link rel="canonical" href="https://babcock-publishing.vercel.app/" />
-    <link rel="icon" type="image/svg+xml" href="public/favicon.svg" />
     <link rel="icon" type="image/png" href="assets/legacy/main_logo.png" />
     <link rel="apple-touch-icon" href="assets/legacy/main_logo.png" />
     <meta name="theme-color" content="#0f694d" />
@@ -83,6 +88,12 @@
                 rel="noopener noreferrer"
                 >Library</a
               >
+              <div
+                id="portalAccessNotice"
+                style="font-size: 18px; color: #e28383; font-weight: 500"
+                aria-live="polite">
+                login / register to view admin and author portals
+              </div>
             </div>
             <div class="press-utility-meta">
               <span>Mon-Thu 9am-5pm, Fri 9am-1pm</span>
@@ -109,187 +120,48 @@
               </div>
             </a>
 
-            <nav class="press-global-nav" aria-label="University navigation">
-              <ul class="press-menu-list">
-                <li class="press-menu-item">
-                  <a
-                    class="press-menu-trigger"
-                    href="https://legacy.babcock.edu.ng/about"
-                    target="_blank"
-                    rel="noopener noreferrer">
-                    About <i class="fas fa-chevron-down"></i>
-                  </a>
-                  <div class="press-dropdown-panel">
-                    <a
-                      href="https://legacy.babcock.edu.ng/about"
-                      target="_blank"
-                      rel="noopener noreferrer"
-                      >About Us</a
-                    >
-                    <a
-                      href="https://legacy.babcock.edu.ng/about/our-journey"
-                      target="_blank"
-                      rel="noopener noreferrer"
-                      >Our Journey</a
-                    >
-                    <a
-                      href="https://legacy.babcock.edu.ng/about/administration"
-                      target="_blank"
-                      rel="noopener noreferrer"
-                      >Administration</a
-                    >
-                    <a
-                      href="https://legacy.babcock.edu.ng/about/organogram"
-                      target="_blank"
-                      rel="noopener noreferrer"
-                      >Organogram</a
-                    >
-                  </div>
-                </li>
-                <li class="press-menu-item">
-                  <a
-                    class="press-menu-trigger"
-                    href="https://legacy.babcock.edu.ng/undergraduate"
-                    target="_blank"
-                    rel="noopener noreferrer">
-                    Academics <i class="fas fa-chevron-down"></i>
-                  </a>
-                  <div class="press-dropdown-panel">
-                    <a
-                      href="https://legacy.babcock.edu.ng/assets/docs/programs.pdf"
-                      target="_blank"
-                      rel="noopener noreferrer"
-                      >Study at Babcock</a
-                    >
-                    <a
-                      href="https://legacy.babcock.edu.ng/undergraduate"
-                      target="_blank"
-                      rel="noopener noreferrer"
-                      >Undergraduate</a
-                    >
-                    <a
-                      href="https://legacy.babcock.edu.ng/postgraduate"
-                      target="_blank"
-                      rel="noopener noreferrer"
-                      >Postgraduate</a
-                    >
-                    <a
-                      href="https://legacy.babcock.edu.ng/undergraduate/programs"
-                      target="_blank"
-                      rel="noopener noreferrer"
-                      >All Programs</a
-                    >
-                  </div>
-                </li>
-                <li class="press-menu-item">
-                  <a
-                    class="press-menu-trigger"
-                    href="https://legacy.babcock.edu.ng/admission"
-                    target="_blank"
-                    rel="noopener noreferrer">
-                    Admissions <i class="fas fa-chevron-down"></i>
-                  </a>
-                  <div class="press-dropdown-panel">
-                    <a
-                      href="https://legacy.babcock.edu.ng/admission/how-to"
-                      target="_blank"
-                      rel="noopener noreferrer"
-                      >How to Apply</a
-                    >
-                    <a
-                      href="https://application2.babcock.edu.ng"
-                      target="_blank"
-                      rel="noopener noreferrer"
-                      >Apply Now</a
-                    >
-                    <a
-                      href="https://legacy.babcock.edu.ng/admission/requirements"
-                      target="_blank"
-                      rel="noopener noreferrer"
-                      >Requirements</a
-                    >
-                    <a
-                      href="https://legacy.babcock.edu.ng/admission/finance"
-                      target="_blank"
-                      rel="noopener noreferrer"
-                      >Tuition and Fees</a
-                    >
-                  </div>
-                </li>
-                <li class="press-menu-item">
-                  <a
-                    class="press-menu-trigger"
-                    href="https://legacy.babcock.edu.ng/bu_press"
-                    target="_blank"
-                    rel="noopener noreferrer">
-                    Resources <i class="fas fa-chevron-down"></i>
-                  </a>
-                  <div class="press-dropdown-panel">
-                    <a
-                      href="https://legacy.babcock.edu.ng/bu_press"
-                      target="_blank"
-                      rel="noopener noreferrer"
-                      >BU Press</a
-                    >
-                    <a
-                      href="https://legacy.babcock.edu.ng/library"
-                      target="_blank"
-                      rel="noopener noreferrer"
-                      >Library</a
-                    >
-                    <a
-                      href="https://journal.babcock.edu.ng"
-                      target="_blank"
-                      rel="noopener noreferrer"
-                      >Journal</a
-                    >
-                    <a
-                      href="https://legacy.babcock.edu.ng/news"
-                      target="_blank"
-                      rel="noopener noreferrer"
-                      >News and Events</a
-                    >
-                  </div>
-                </li>
-                <li class="press-menu-item">
-                  <a
-                    class="press-menu-trigger"
-                    href="https://legacy.babcock.edu.ng/Virtual_tour/Babcock.html"
-                    target="_blank"
-                    rel="noopener noreferrer">
-                    Quick Links <i class="fas fa-chevron-down"></i>
-                  </a>
-                  <div class="press-dropdown-panel">
-                    <a
-                      href="https://legacy.babcock.edu.ng/Virtual_tour/Babcock.html"
-                      target="_blank"
-                      rel="noopener noreferrer"
-                      >Virtual Tour</a
-                    >
-                    <a
-                      href="https://legacy.babcock.edu.ng/church"
-                      target="_blank"
-                      rel="noopener noreferrer"
-                      >Pioneer Church</a
-                    >
-                    <a
-                      href="https://legacy.babcock.edu.ng/alumni"
-                      target="_blank"
-                      rel="noopener noreferrer"
-                      >Alumni</a
-                    >
-                    <a
-                      href="https://legacy.babcock.edu.ng/buth"
-                      target="_blank"
-                      rel="noopener noreferrer"
-                      >Teaching Hospital</a
-                    >
-                  </div>
-                </li>
-              </ul>
-            </nav>
-
             <div class="press-primary-actions">
+              <nav class="press-global-nav" aria-label="University navigation">
+                <ul class="press-menu-list">
+                  <li class="press-menu-item">
+                    <a class="press-menu-trigger" href="#">
+                      BU Links <i class="fas fa-chevron-down"></i>
+                    </a>
+                    <div class="press-dropdown-panel">
+                      <a
+                        href="https://legacy.babcock.edu.ng/about"
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        >About BU</a
+                      >
+                      <a
+                        href="https://legacy.babcock.edu.ng/undergraduate"
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        >Academics</a
+                      >
+                      <a
+                        href="https://legacy.babcock.edu.ng/admission"
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        >Admissions</a
+                      >
+                      <a
+                        href="https://legacy.babcock.edu.ng/bu_press"
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        >Resources</a
+                      >
+                      <a
+                        href="https://legacy.babcock.edu.ng/Virtual_tour/Babcock.html"
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        >Quick Links</a
+                      >
+                    </div>
+                  </li>
+                </ul>
+              </nav>
               <a
                 class="press-ghost-action"
                 href="https://legacy.babcock.edu.ng/bu_press"
@@ -321,9 +193,15 @@
           <div class="container press-subnav-row">
             <div class="press-subnav-links">
               <a href="index.html" class="is-active" data-page-link>Home</a>
-              <a href="staff.html" data-page-link>Staff</a>
-              <a href="services.html" data-page-link>Services</a>
+              <a href="about.html" data-page-link>About</a>
               <a href="publications.html" data-page-link>Publications</a>
+              <a href="authors.html" data-page-link>Authors</a>
+              <a href="services.html" data-page-link>Services</a>
+              <a href="for-authors.html" data-page-link>For Authors</a>
+              <a href="rights-permissions.html" data-page-link
+                >Rights &amp; Permissions</a
+              >
+              <a href="staff.html" data-page-link>Staff</a>
               <a href="gallery.html" data-page-link>Gallery</a>
             </div>
           </div>
@@ -336,9 +214,15 @@
           <h3>BU Press Pages</h3>
           <ul class="press-mobile-links">
             <li><a href="index.html">Home</a></li>
-            <li><a href="staff.html">Staff</a></li>
-            <li><a href="services.html">Services</a></li>
+            <li><a href="about.html" data-page-link>About</a></li>
             <li><a href="publications.html">Publications</a></li>
+            <li><a href="authors.html">Authors</a></li>
+            <li><a href="services.html">Services</a></li>
+            <li><a href="for-authors.html">For Authors</a></li>
+            <li>
+              <a href="rights-permissions.html">Rights &amp; Permissions</a>
+            </li>
+            <li><a href="staff.html">Staff</a></li>
             <li><a href="gallery.html">Gallery</a></li>
             <li><a href="#publications">Live Catalog</a></li>
             <li><a href="#contact">Contact</a></li>
@@ -400,6 +284,28 @@
       </aside>
 
       <section class="press-hero" id="home">
+        <!-- Hero Image Carousel Background -->
+        <div class="press-hero-carousel">
+          <img
+            src="https://images.unsplash.com/photo-1507842217343-583f20270319?w=1400&h=900&crop=faces&auto=compress,format"
+            alt="Academic library and books"
+            class="press-hero-carousel-image"
+            loading="eager" />
+          <img 
+            src="https://images.unsplash.com/photo-1517842645767-c0ade7a27bba?w=1400&h=900&crop=faces&auto=compress,format"
+            alt="Students studying and collaborating"
+            class="press-hero-carousel-image"
+            loading="lazy" />
+          <img 
+            src="https://images.unsplash.com/photo-1507842217343-583f20270319?w=1400&h=900&crop=edges&auto=compress,format"
+            alt="Open book and writing"
+            class="press-hero-carousel-image"
+            loading="lazy" />
+          <img 
+            src="https://images.unsplash.com/photo-1524995997946-a1c2e315a42f?w=1400&h=900&crop=edges&auto=compress,format"
+            loading="lazy" />
+        </div>
+
         <div class="container press-hero-grid">
           <div class="press-hero-copy">
             <span class="press-kicker">
@@ -411,10 +317,11 @@
               a cleaner professional structure.
             </h1>
             <p>
-              This redesign uses the legacy BU Press source as the foundation:
-              university quick links, a BU Press sub-navigation, the official
-              about story, staff visibility, service categories, and a stronger
-              way to connect visitors into the live portal in this project.
+              Babcock University Press provides comprehensive support for
+              scholarship, research dissemination, and institutional
+              communication. From manuscript review to final delivery, we
+              deliver integrated publishing solutions built on decades of
+              academic excellence.
             </p>
             <div class="press-hero-actions">
               <button
@@ -425,7 +332,7 @@
               <button
                 class="press-button press-button-secondary"
                 onclick="showTrainingRegistration()">
-                <i class="fas fa-graduation-cap"></i> Training Registration
+                <i class="fas fa-graduation-cap"></i> Training Program
               </button>
               <a class="press-button press-button-light" href="services.html">
                 <i class="fas fa-gears"></i> Explore Services
@@ -438,21 +345,15 @@
               </div>
               <div class="press-stat-card">
                 <strong id="activeAuthors">85+</strong>
-                <span>Authors and contributors in the publishing network</span>
+                <span>Authors in our publishing network</span>
               </div>
               <div class="press-stat-card">
                 <strong id="studentsTrained">1200+</strong>
-                <span
-                  >Learners reached through training and publishing
-                  support</span
-                >
+                <span>Learners trained through our programs</span>
               </div>
               <div class="press-stat-card">
                 <strong id="yearsExperience">17+</strong>
-                <span
-                  >Years since the 2009 BU Press era referenced in the
-                  source</span
-                >
+                <span>Years of proven academic publishing</span>
               </div>
             </div>
           </div>
@@ -461,13 +362,14 @@
             <article class="press-card press-media-panel">
               <img
                 src="assets/legacy/bu_press/banner.jpg"
-                alt="Babcock University Press banner" />
+                alt="Babcock University Press banner"
+                loading="lazy" />
               <div class="press-media-body">
                 <h3>Integrated press system</h3>
                 <p>
-                  The legacy home page describes BU Press as a university-backed
-                  publishing arm with responsibility for book development, print
-                  production, and research dissemination.
+                  BU Press operates as a university-backed publishing arm with
+                  responsibility for book development, print production, and
+                  research dissemination.
                 </p>
                 <ul class="press-media-list">
                   <li>
@@ -499,8 +401,8 @@
               <span class="press-eyebrow">Press Desk</span>
               <h3>A stronger public front door for BU Press</h3>
               <p>
-                The site now guides visitors from discovery to action with
-                clearer pathways for submissions, training, services, and live
+                The site guides visitors from discovery to action with clearer
+                pathways for submissions, training, services, and live
                 publication browsing.
               </p>
               <div class="press-dossier-grid">
@@ -540,6 +442,86 @@
                 <a href="tel:+2348039758648"
                   ><i class="fas fa-phone"></i> Call BU Press</a
                 >
+            </article>
+          </div>
+        </div>
+      </section>
+
+      <!-- Image Gallery Section -->
+      <section class="press-section press-gallery-section">
+        <div class="container">
+          <div class="press-section-heading">
+            <span class="press-eyebrow"><i class="fas fa-images"></i> Visual Gallery</span>
+            <h2>Academic Publishing in Action</h2>
+            <p>
+              Discover the diverse scope of our publishing work through imagery that showcases our commitment to academic excellence, professional design, and institutional support.
+            </p>
+          </div>
+
+          <div class="press-gallery-grid">
+            <article class="press-gallery-card">
+              <img
+                src="https://images.unsplash.com/photo-1507842217343-583f20270319?w=500&q=80&auto=format&fit=crop"
+                alt="Academic library with books"
+                loading="lazy" />
+              <div class="press-gallery-caption">
+                <h3>Academic Library</h3>
+                <p>Comprehensive collection of published works and academic resources</p>
+              </div>
+            </article>
+
+            <article class="press-gallery-card">
+              <img
+                src="https://images.unsplash.com/photo-1523580494863-6f3031224c94?w=500&q=80&auto=format&fit=crop"
+                alt="Students collaborating on research"
+                loading="lazy" />
+              <div class="press-gallery-caption">
+                <h3>Collaborative Research</h3>
+                <p>Supporting student and faculty partnerships in publication</p>
+              </div>
+            </article>
+
+            <article class="press-gallery-card">
+              <img
+                src="https://images.unsplash.com/photo-1524995997946-a1c2e315a42f?w=500&q=80&auto=format&fit=crop"
+                alt="Open book and writing materials"
+                loading="lazy" />
+              <div class="press-gallery-caption">
+                <h3>Editorial Excellence</h3>
+                <p>Professional editing and manuscript preparation services</p>
+              </div>
+            </article>
+
+            <article class="press-gallery-card">
+              <img
+                src="https://images.unsplash.com/photo-1488188840594-e421a5dff421?w=500&q=80&auto=format&fit=crop"
+                alt="Training and educational workshops"
+                loading="lazy" />
+              <div class="press-gallery-caption">
+                <h3>Training Programs</h3>
+                <p>Professional development and publishing workshops</p>
+              </div>
+            </article>
+
+            <article class="press-gallery-card">
+              <img
+                src="https://images.unsplash.com/photo-1532012197267-da84d127e765?w=500&q=80&auto=format&fit=crop"
+                alt="Book design and typography"
+                loading="lazy" />
+              <div class="press-gallery-caption">
+                <h3>Design Services</h3>
+                <p>Layout, typography, and visual design for publications</p>
+              </div>
+            </article>
+
+            <article class="press-gallery-card">
+              <img
+                src="https://images.unsplash.com/photo-1454165804606-c3d57bc86b40?w=500&q=80&auto=format&fit=crop"
+                alt="Digital publishing and technology"
+                loading="lazy" />
+              <div class="press-gallery-caption">
+                <h3>Digital Publishing</h3>
+                <p>Modern distribution and digital format solutions</p>
               </div>
             </article>
           </div>
@@ -574,7 +556,7 @@
                 and periodical visibility, and broader print execution across
                 the university environment.
               </p>
-              <div class="press-note-strip" style="margin-top: 20px">
+              <div class="press-note-strip press-note-strip-margin">
                 <i class="fas fa-circle-info"></i>
                 <span
                   >The legacy source calls BU Press an integrated press system.
@@ -700,7 +682,7 @@
               rebuild turns those ingredients into a professional information
               flow that is easier to navigate on desktop and mobile.
             </p>
-            <ul class="press-list" style="margin-top: 20px">
+            <ul class="press-list press-list-margin">
               <li>
                 <i class="fas fa-check-circle"></i
                 ><span
@@ -910,7 +892,14 @@
               the team, services, publication context, or visual gallery without
               losing the core portal actions.
             </p>
-            <div class="press-link-grid" style="margin-top: 24px">
+            <div class="press-link-grid press-link-grid-margin">
+              <a class="press-card press-link-card" href="authors.html">
+                <i class="fas fa-feather-pointed"></i>
+                <h3>Authors</h3>
+                <p>
+                  Live author visibility connected to the published catalog.
+                </p>
+              </a>
               <a class="press-card press-link-card" href="staff.html">
                 <i class="fas fa-users"></i>
                 <h3>Staff</h3>
@@ -931,6 +920,24 @@
                 <h3>Publications</h3>
                 <p>
                   Publication formats and catalog direction for BU Press output.
+                </p>
+              </a>
+              <a class="press-card press-link-card" href="for-authors.html">
+                <i class="fas fa-pen-nib"></i>
+                <h3>For Authors</h3>
+                <p>
+                  Submission guidance and manuscript expectations before portal
+                  entry.
+                </p>
+              </a>
+              <a
+                class="press-card press-link-card"
+                href="rights-permissions.html">
+                <i class="fas fa-scale-balanced"></i>
+                <h3>Rights &amp; Permissions</h3>
+                <p>
+                  Reuse, translation, and permissions guidance for published
+                  work.
                 </p>
               </a>
               <a class="press-card press-link-card" href="gallery.html">
@@ -1004,9 +1011,14 @@
             <div>
               <h4>BU Press</h4>
               <ul>
+                <li><a href="authors.html">Authors</a></li>
                 <li><a href="staff.html">Staff</a></li>
                 <li><a href="services.html">Services</a></li>
                 <li><a href="publications.html">Publications</a></li>
+                <li><a href="for-authors.html">For Authors</a></li>
+                <li>
+                  <a href="rights-permissions.html">Rights &amp; Permissions</a>
+                </li>
                 <li><a href="gallery.html">Gallery</a></li>
               </ul>
             </div>
@@ -1697,11 +1709,9 @@
 
       <!-- Loading Modal -->
       <div class="modal" id="loadingModal">
-        <div class="modal-content" style="max-width: 300px; text-align: center">
+        <div class="modal-content loading-modal-content">
           <div class="modal-body">
-            <div
-              class="spinner"
-              style="width: 40px; height: 40px; margin: 20px auto"></div>
+            <div class="spinner loading-spinner"></div>
             <p id="loadingText">Loading...</p>
           </div>
         </div>
@@ -2037,9 +2047,7 @@
                     </thead>
                     <tbody id="usersTableBody">
                       <tr>
-                        <td
-                          colspan="8"
-                          style="text-align: center; padding: 20px">
+                        <td colspan="8" class="table-empty-cell">
                           Loading registered users...
                         </td>
                       </tr>
@@ -2071,9 +2079,7 @@
                     </thead>
                     <tbody id="booksTableBody">
                       <tr>
-                        <td
-                          colspan="6"
-                          style="text-align: center; padding: 20px">
+                        <td colspan="6" class="table-loading-cell">
                           Loading books...
                         </td>
                       </tr>
@@ -2105,9 +2111,7 @@
                     </thead>
                     <tbody id="submissionsTableBody">
                       <tr>
-                        <td
-                          colspan="6"
-                          style="text-align: center; padding: 20px">
+                        <td colspan="6" class="table-loading-cell">
                           Loading submissions...
                         </td>
                       </tr>
@@ -2141,9 +2145,7 @@
                     </thead>
                     <tbody id="contractsTableBody">
                       <tr>
-                        <td
-                          colspan="6"
-                          style="text-align: center; padding: 20px">
+                        <td colspan="6" class="table-loading-cell">
                           Loading contracts...
                         </td>
                       </tr>
@@ -2177,9 +2179,7 @@
                     </thead>
                     <tbody id="trainingTableBody">
                       <tr>
-                        <td
-                          colspan="6"
-                          style="text-align: center; padding: 20px">
+                        <td colspan="6" class="table-loading-cell">
                           Loading training registrations...
                         </td>
                       </tr>
@@ -2196,7 +2196,11 @@
     <!-- ============= AUTHOR DASHBOARD ============= -->
     <div id="authorDashboard" class="dashboard-container author-dashboard">
       <header class="dashboard-header author-header">
-        <div class="author-brand">
+        <button
+          type="button"
+          class="author-brand author-brand-link"
+          onclick="showHomepage()"
+          aria-label="Go back to the homepage">
           <div class="author-brand-mark">
             <img src="assets/OIP.webp" alt="Babcock Publishing logo" />
           </div>
@@ -2204,7 +2208,7 @@
             <p class="author-brand-kicker">Babcock Publishing</p>
             <h2 class="author-brand-title">Author Workspace</h2>
           </div>
-        </div>
+        </button>
         <div class="author-header-actions">
           <div class="author-user-chip">
             <span class="author-user-label">Signed in as</span>
@@ -2220,27 +2224,75 @@
         <section class="author-hero">
           <div class="author-hero-copy">
             <span class="author-eyebrow">Editorial Workflow</span>
-            <h1>Manage submissions with the same care you write them.</h1>
+            <h1>Present your work with a stronger editorial package.</h1>
             <p>
-              Keep your academic profile current, track every manuscript in
-              review, and send new work to the publishing team from one focused
+              Keep your scholarly profile current, assemble complete manuscript
+              submissions, and monitor editorial movement from one professional
               author workspace.
             </p>
+            <div class="author-hero-actions">
+              <button class="btn btn-primary" onclick="showAddBookModal()">
+                <i class="fas fa-file-upload"></i> Submit Manuscript
+              </button>
+              <button
+                class="btn btn-outline"
+                onclick="
+                  document
+                    .getElementById('authorProfileForm')
+                    .scrollIntoView({ behavior: 'smooth', block: 'start' })
+                ">
+                <i class="fas fa-id-card"></i> Update Profile
+              </button>
+            </div>
+            <div class="author-hero-metrics">
+              <article class="author-hero-metric">
+                <span class="author-hero-metric-label">Submission Target</span>
+                <strong>Initial editorial screening in 5-7 working days</strong>
+              </article>
+              <article class="author-hero-metric">
+                <span class="author-hero-metric-label">Metadata Standard</span>
+                <strong>Abstract, keywords, category, and review file</strong>
+              </article>
+            </div>
           </div>
-          <div class="author-hero-actions">
-            <button class="btn btn-primary" onclick="showAddBookModal()">
-              <i class="fas fa-file-upload"></i> Submit Manuscript
-            </button>
-            <button
-              class="btn btn-outline"
-              onclick="
-                document
-                  .getElementById('authorProfileForm')
-                  .scrollIntoView({ behavior: 'smooth', block: 'start' })
-              ">
-              <i class="fas fa-id-card"></i> Update Profile
-            </button>
-          </div>
+          <aside class="author-hero-rail">
+            <div class="author-readiness-card">
+              <span class="author-rail-label">Submission Readiness</span>
+              <div class="author-readiness-header">
+                <strong id="authorReadinessScore">0%</strong>
+                <p id="authorReadinessSummary">
+                  Complete your profile and draft details for faster editorial
+                  routing.
+                </p>
+              </div>
+              <div class="author-progress-track">
+                <span id="authorReadinessBar"></span>
+              </div>
+              <ul class="author-readiness-list" id="authorReadinessList">
+                <li class="is-pending">
+                  <i class="fas fa-circle"></i>
+                  <span>Profile essentials on file</span>
+                </li>
+                <li class="is-pending">
+                  <i class="fas fa-circle"></i>
+                  <span>Discoverability signals added</span>
+                </li>
+                <li class="is-pending">
+                  <i class="fas fa-circle"></i>
+                  <span>Abstract and subject routing prepared</span>
+                </li>
+                <li class="is-pending">
+                  <i class="fas fa-circle"></i>
+                  <span>Review file attached</span>
+                </li>
+              </ul>
+              <p class="author-readiness-note">
+                Editors can move more quickly when the profile, abstract,
+                keywords, and manuscript file arrive together on the first
+                submission.
+              </p>
+            </div>
+          </aside>
         </section>
 
         <section class="author-stats-grid">
@@ -2280,10 +2332,99 @@
             </div>
             <div class="author-stat-content">
               <span class="author-stat-label">Royalties</span>
-              <h3 id="authorTotalRoyalties">₦0</h3>
+              <h3 id="authorTotalRoyalties">NGN 0</h3>
               <p>Your running earnings summary across approved statements.</p>
             </div>
           </article>
+        </section>
+
+        <section class="author-intelligence-grid">
+          <article class="author-panel author-workflow-panel">
+            <div class="author-panel-header">
+              <div>
+                <span class="author-panel-eyebrow">Submission Desk</span>
+                <h2 class="author-panel-title">
+                  Build a cleaner manuscript package
+                </h2>
+                <p class="author-panel-copy">
+                  Organize your metadata and file package before upload so the
+                  publishing team can screen, route, and assign your work
+                  faster.
+                </p>
+              </div>
+            </div>
+
+            <div class="author-workflow-grid">
+              <article class="author-workflow-item">
+                <span class="author-workflow-step">01</span>
+                <div>
+                  <h3>Clarify the editorial case</h3>
+                  <p>
+                    Use the abstract to explain audience, scope, contribution,
+                    and the reason the manuscript belongs in the press pipeline.
+                  </p>
+                </div>
+              </article>
+              <article class="author-workflow-item">
+                <span class="author-workflow-step">02</span>
+                <div>
+                  <h3>Strengthen discoverability metadata</h3>
+                  <p>
+                    Accurate category, keywords, expertise, and identifiers make
+                    routing and catalog preparation more reliable.
+                  </p>
+                </div>
+              </article>
+              <article class="author-workflow-item">
+                <span class="author-workflow-step">03</span>
+                <div>
+                  <h3>Submit the review-ready file</h3>
+                  <p>
+                    Upload the version editors should evaluate first, with
+                    structure, citations, and front matter already in place.
+                  </p>
+                </div>
+              </article>
+            </div>
+
+            <div class="author-policy-strip">
+              <div>
+                <span>Accepted Formats</span>
+                <strong>PDF, DOC, and DOCX up to 10MB</strong>
+              </div>
+              <div>
+                <span>Recommended Metadata</span>
+                <strong>Clear abstract plus at least two keywords</strong>
+              </div>
+              <div>
+                <span>Workflow Visibility</span>
+                <strong
+                  >Track submission, review, and production activity
+                  below</strong
+                >
+              </div>
+            </div>
+          </article>
+
+          <aside class="author-panel author-reviews-panel">
+            <div class="author-panel-header">
+              <div>
+                <span class="author-panel-eyebrow">Activity</span>
+                <h2 class="author-panel-title">Recent editorial activity</h2>
+                <p class="author-panel-copy">
+                  Review decisions, screening notes, and other editorial signals
+                  will surface here as your manuscripts move forward.
+                </p>
+              </div>
+            </div>
+
+            <div class="author-review-feed" id="authorRecentReviews">
+              <div class="author-review-empty">
+                Editorial updates will appear here after screening or peer
+                review begins.
+              </div>
+            </div>
+          </aside>
         </section>
 
         <div class="author-content-grid">
@@ -2299,6 +2440,35 @@
                   discoverability, and publication metadata.
                 </p>
               </div>
+            </div>
+
+            <div class="author-profile-status-strip">
+              <article class="author-profile-status-card">
+                <span class="author-profile-status-label">
+                  Profile Completeness
+                </span>
+                <strong id="authorProfileCompletionValue">0%</strong>
+                <div
+                  class="author-progress-track author-progress-track-compact">
+                  <span id="authorProfileCompletionBar"></span>
+                </div>
+                <p>
+                  Keep institutional and biography details current so contracts,
+                  review routing, and catalog records stay aligned.
+                </p>
+              </article>
+              <article class="author-profile-status-card">
+                <span class="author-profile-status-label">
+                  Discoverability
+                </span>
+                <strong id="authorDiscoverabilityStatus">
+                  Needs attention
+                </strong>
+                <p id="authorDiscoverabilityCopy">
+                  Add expertise and scholarly identifiers to improve editorial
+                  context and metadata quality.
+                </p>
+              </article>
             </div>
 
             <form
@@ -2329,6 +2499,9 @@
                     id="authorProfilePicture"
                     class="form-control"
                     accept="image/png,image/jpeg,image/jpg,image/gif" />
+                  <p class="author-upload-help">
+                    Recommended: square professional portrait up to 10MB.
+                  </p>
                 </div>
               </div>
 
@@ -2457,6 +2630,10 @@
               </div>
 
               <div class="author-form-actions">
+                <p class="author-form-footnote">
+                  Saved profile details support contracts, review assignments,
+                  and publication metadata across the press workflow.
+                </p>
                 <button type="submit" class="btn btn-primary">
                   <i class="fas fa-save"></i> Save Profile
                 </button>
@@ -2468,10 +2645,10 @@
             <div class="author-panel-header">
               <div>
                 <span class="author-panel-eyebrow">Submission Standard</span>
-                <h2 class="author-panel-title">Prepare stronger manuscripts</h2>
+                <h2 class="author-panel-title">Before you upload</h2>
                 <p class="author-panel-copy">
-                  A clear submission package helps the editorial office move
-                  faster and reduces avoidable revisions.
+                  Keep the first submission complete enough for screening,
+                  routing, and downstream production planning.
                 </p>
               </div>
             </div>
@@ -2480,30 +2657,30 @@
               <div class="author-guide-item">
                 <span class="author-guide-step">01</span>
                 <div>
-                  <h3>Lead with a precise abstract</h3>
+                  <h3>Lead with an editorial summary</h3>
                   <p>
-                    State the audience, contribution, and value of the work in
-                    direct language.
+                    Explain the audience, contribution, and scope in language
+                    the publishing team can route quickly.
                   </p>
                 </div>
               </div>
               <div class="author-guide-item">
                 <span class="author-guide-step">02</span>
                 <div>
-                  <h3>Keep metadata complete</h3>
+                  <h3>Keep scholarly metadata complete</h3>
                   <p>
-                    Accurate subject area, keywords, and discoverability details
-                    improve internal routing.
+                    Keywords, expertise, identifiers, and faculty details help
+                    internal review and catalog preparation.
                   </p>
                 </div>
               </div>
               <div class="author-guide-item">
                 <span class="author-guide-step">03</span>
                 <div>
-                  <h3>Submit a clean manuscript file</h3>
+                  <h3>Upload the review-ready file</h3>
                   <p>
-                    Finalize headings, references, and front matter before
-                    entering editorial review.
+                    Provide the file the team should assess first, with
+                    headings, references, and front matter already organized.
                   </p>
                 </div>
               </div>
@@ -2512,8 +2689,9 @@
             <div class="author-guide-note">
               <span class="author-guide-note-label">Editorial Note</span>
               <p>
-                Use the manuscript table below to monitor review progress,
-                submission status, and file access after each upload.
+                Use the guided submission modal to check readiness live before
+                you upload. The manuscript table below reflects review,
+                workflow, and file access after each submission.
               </p>
             </div>
           </aside>
@@ -2525,13 +2703,33 @@
               <span class="author-panel-eyebrow">Portfolio</span>
               <h2 class="author-panel-title">Manuscripts and active titles</h2>
               <p class="author-panel-copy">
-                A single view of what has been submitted, what is under review,
-                and which files the publishing team can access.
+                Review workflow, latest submission state, editorial activity,
+                and file access from one portfolio table.
               </p>
             </div>
-            <button class="btn btn-primary" onclick="showAddBookModal()">
-              <i class="fas fa-file-upload"></i> Submit Manuscript
-            </button>
+            <div class="author-manuscripts-actions">
+              <button class="btn btn-primary" onclick="showAddBookModal()">
+                <i class="fas fa-file-upload"></i> Submit Manuscript
+              </button>
+            </div>
+          </div>
+
+          <div class="author-table-summary">
+            <div>
+              <strong id="authorPortfolioCount">0 manuscripts</strong>
+              <p>
+                Track status, workflow progression, and the latest editorial
+                movement for every title linked to your account.
+              </p>
+            </div>
+            <div class="author-table-legend">
+              <span>
+                <i class="fas fa-wave-square"></i> Workflow progress
+              </span>
+              <span>
+                <i class="fas fa-file-arrow-up"></i> Latest submission state
+              </span>
+            </div>
           </div>
 
           <div class="author-table-shell">
@@ -2540,9 +2738,9 @@
                 <tr>
                   <th>Title</th>
                   <th>Category</th>
-                  <th>Book Status</th>
-                  <th>Submission</th>
-                  <th>Submitted</th>
+                  <th>Workflow</th>
+                  <th>Latest Submission</th>
+                  <th>Activity</th>
                   <th>Manuscript</th>
                 </tr>
               </thead>
@@ -2575,120 +2773,559 @@
       </div>
     </div>
 
-    <div class="modal" id="submitBookModal">
-      <div class="modal-content">
+    <div class="modal" id="adminBookModal">
+      <div class="modal-content workflow-modal-content">
         <div class="modal-header">
-          <h3>Submit Manuscript</h3>
-          <button class="modal-close" onclick="closeModal('submitBookModal')">
+          <h3>Create Book Record</h3>
+          <button class="modal-close" onclick="closeModal('adminBookModal')">
+            &times;
+          </button>
+        </div>
+        <div class="modal-body">
+          <form id="adminBookForm" onsubmit="handleAdminBookCreate(event)">
+            <div class="workflow-form-fields">
+              <div class="form-group">
+                <label for="adminBookAuthor">Author *</label>
+                <select id="adminBookAuthor" class="form-control" required>
+                  <option value="">Select Author</option>
+                </select>
+              </div>
+              <div class="form-group">
+                <label for="adminBookTitle">Title *</label>
+                <input
+                  type="text"
+                  id="adminBookTitle"
+                  class="form-control"
+                  required />
+              </div>
+              <div class="form-group">
+                <label for="adminBookSubtitle">Subtitle</label>
+                <input
+                  type="text"
+                  id="adminBookSubtitle"
+                  class="form-control" />
+              </div>
+              <div class="form-group">
+                <label for="adminBookCategory">Category *</label>
+                <input
+                  type="text"
+                  id="adminBookCategory"
+                  class="form-control"
+                  required />
+              </div>
+              <div class="form-group">
+                <label for="adminBookStatus">Initial Status</label>
+                <select id="adminBookStatus" class="form-control">
+                  <option value="draft">Draft</option>
+                  <option value="submitted">Submitted</option>
+                  <option value="under_review">Under Review</option>
+                  <option value="revisions_requested">
+                    Revisions Requested
+                  </option>
+                  <option value="accepted">Accepted</option>
+                  <option value="in_production">In Production</option>
+                  <option value="published">Published</option>
+                  <option value="rejected">Rejected</option>
+                  <option value="archived">Archived</option>
+                </select>
+              </div>
+              <div class="form-group">
+                <label for="adminBookPrice">Price</label>
+                <input
+                  type="number"
+                  id="adminBookPrice"
+                  class="form-control"
+                  min="0"
+                  step="0.01" />
+              </div>
+              <div class="form-group">
+                <label for="adminBookPublicationDate">Publication Date</label>
+                <input
+                  type="date"
+                  id="adminBookPublicationDate"
+                  class="form-control" />
+              </div>
+              <div class="form-group">
+                <label for="adminBookLanguage">Language</label>
+                <input
+                  type="text"
+                  id="adminBookLanguage"
+                  class="form-control"
+                  value="English" />
+              </div>
+              <div class="form-group workflow-form-full">
+                <label for="adminBookKeywords">Keywords</label>
+                <input
+                  type="text"
+                  id="adminBookKeywords"
+                  class="form-control"
+                  placeholder="Comma-separated keywords" />
+              </div>
+              <div class="form-group workflow-form-full">
+                <label for="adminBookAbstract">Abstract</label>
+                <textarea
+                  id="adminBookAbstract"
+                  class="form-control"
+                  rows="4"
+                  placeholder="Editorial summary or abstract"></textarea>
+              </div>
+              <div class="form-group workflow-form-full">
+                <label for="adminBookDescription">Description</label>
+                <textarea
+                  id="adminBookDescription"
+                  class="form-control"
+                  rows="5"
+                  placeholder="Add a fuller description of the title"></textarea>
+              </div>
+            </div>
+            <div class="workflow-form-actions">
+              <button type="submit" class="btn btn-primary">Create Book</button>
+              <button
+                type="button"
+                class="btn btn-outline"
+                onclick="closeModal('adminBookModal')">
+                Cancel
+              </button>
+            </div>
+          </form>
+        </div>
+      </div>
+    </div>
+
+    <div class="modal" id="bookDetailsModal">
+      <div class="modal-content workflow-modal-content">
+        <div class="modal-header">
+          <h3>Book Workflow</h3>
+          <button class="modal-close" onclick="closeModal('bookDetailsModal')">
+            &times;
+          </button>
+        </div>
+        <div class="modal-body" id="bookDetailsContent">
+          Loading book workflow...
+        </div>
+      </div>
+    </div>
+
+    <div class="modal" id="submissionDetailsModal">
+      <div class="modal-content workflow-modal-content">
+        <div class="modal-header">
+          <h3>Submission Workflow</h3>
+          <button
+            class="modal-close"
+            onclick="closeModal('submissionDetailsModal')">
+            &times;
+          </button>
+        </div>
+        <div class="modal-body" id="submissionDetailsContent">
+          Loading submission workflow...
+        </div>
+      </div>
+    </div>
+
+    <div class="modal" id="contractEditorModal">
+      <div class="modal-content workflow-modal-content">
+        <div class="modal-header">
+          <h3 id="contractEditorModalTitle">Create Contract</h3>
+          <button
+            class="modal-close"
+            onclick="closeModal('contractEditorModal')">
             &times;
           </button>
         </div>
         <div class="modal-body">
           <form
-            id="submitBookForm"
-            onsubmit="handleManuscriptSubmission(event)">
-            <div class="stats-grid" style="margin-bottom: 0">
+            id="contractEditorForm"
+            class="workflow-editor-form"
+            onsubmit="handleContractEditorSubmit(event)">
+            <input type="hidden" id="contractEditorId" />
+            <input type="hidden" id="contractEditorAuthorId" />
+
+            <div class="workflow-static-summary" id="contractEditorSummary">
+              <strong>Select a book</strong>
+              <span>The linked author will fill automatically.</span>
+            </div>
+
+            <div class="workflow-form-fields">
               <div class="form-group">
-                <label>Book Title *</label>
-                <input
-                  aria-label="Manuscript Title"
-                  type="text"
-                  id="bookTitle"
+                <label for="contractEditorBook">Book *</label>
+                <select
+                  id="contractEditorBook"
                   class="form-control"
-                  required />
-              </div>
-              <div class="form-group">
-                <label>Subtitle</label>
-                <input
-                  aria-label="Manuscript Subtitle"
-                  type="text"
-                  id="bookSubtitle"
-                  class="form-control" />
-              </div>
-              <div class="form-group">
-                <label>Category *</label>
-                <input
-                  aria-label="Manuscript Category"
-                  type="text"
-                  id="bookCategory"
-                  class="form-control"
-                  placeholder="e.g. Textbook, Journal, Research"
-                  required />
-              </div>
-              <div class="form-group">
-                <label for="bookSubmissionType">Submission Type *</label>
-                <select id="bookSubmissionType" class="form-control" required>
-                  <option value="publishing">Publishing</option>
-                  <option value="review">Review</option>
-                  <option value="reprint">Reprint</option>
-                  <option value="translation">Translation</option>
-                  <option value="special_edition">Special Edition</option>
+                  onchange="syncContractAuthorFromBookSelection()"
+                  required>
+                  <option value="">Select Book</option>
                 </select>
               </div>
               <div class="form-group">
-                <label>Keywords</label>
+                <label for="contractEditorAuthorName">Author</label>
                 <input
-                  aria-label="Manuscript Keywords"
                   type="text"
-                  id="bookKeywords"
+                  id="contractEditorAuthorName"
                   class="form-control"
-                  placeholder="Comma-separated keywords" />
+                  readonly />
               </div>
               <div class="form-group">
-                <label>Language</label>
+                <label for="contractEditorType">Contract Type</label>
+                <select id="contractEditorType" class="form-control">
+                  <option value="standard">Standard</option>
+                  <option value="royalty">Royalty</option>
+                  <option value="advance">Advance</option>
+                  <option value="work_for_hire">Work For Hire</option>
+                </select>
+              </div>
+              <div class="form-group">
+                <label for="contractEditorStatus">Status</label>
+                <select id="contractEditorStatus" class="form-control">
+                  <option value="draft">Draft</option>
+                  <option value="sent">Sent</option>
+                  <option value="signed">Signed</option>
+                  <option value="executed">Executed</option>
+                  <option value="expired">Expired</option>
+                  <option value="terminated">Terminated</option>
+                </select>
+              </div>
+              <div class="form-group">
+                <label for="contractEditorRoyalty">Royalty Percentage</label>
                 <input
-                  aria-label="Manuscript Language"
-                  type="text"
-                  id="bookLanguage"
+                  type="number"
+                  id="contractEditorRoyalty"
                   class="form-control"
-                  value="English" />
+                  min="0"
+                  step="0.01" />
+              </div>
+              <div class="form-group">
+                <label for="contractEditorAdvance">Advance Amount</label>
+                <input
+                  type="number"
+                  id="contractEditorAdvance"
+                  class="form-control"
+                  min="0"
+                  step="0.01" />
+              </div>
+              <div class="form-group">
+                <label for="contractEditorStartDate">Start Date</label>
+                <input
+                  type="date"
+                  id="contractEditorStartDate"
+                  class="form-control" />
+              </div>
+              <div class="form-group">
+                <label for="contractEditorEndDate">End Date</label>
+                <input
+                  type="date"
+                  id="contractEditorEndDate"
+                  class="form-control" />
+              </div>
+              <div class="form-group workflow-form-full">
+                <label for="contractEditorTerritory">Territory</label>
+                <input
+                  type="text"
+                  id="contractEditorTerritory"
+                  class="form-control"
+                  placeholder="Worldwide, Nigeria, West Africa..." />
+              </div>
+              <div class="form-group workflow-form-full">
+                <label for="contractEditorRightsGranted">Rights Granted</label>
+                <textarea
+                  id="contractEditorRightsGranted"
+                  class="form-control"
+                  rows="4"
+                  placeholder="Describe the publishing rights granted"></textarea>
+              </div>
+              <div class="form-group workflow-form-full">
+                <label for="contractEditorPaymentSchedule">
+                  Payment Schedule
+                </label>
+                <textarea
+                  id="contractEditorPaymentSchedule"
+                  class="form-control"
+                  rows="3"
+                  placeholder="Describe royalty timing, advance schedule, and payment terms"></textarea>
               </div>
             </div>
 
-            <div class="form-group">
-              <label>Abstract</label>
-              <textarea
-                aria-label="Manuscript Abstract"
-                id="bookAbstract"
-                class="form-control"
-                rows="4"
-                placeholder="Summarize the manuscript, audience, and contribution"></textarea>
+            <div class="workflow-form-actions">
+              <button type="submit" class="btn btn-primary">
+                <span id="contractEditorSubmitLabel">Create Contract</span>
+              </button>
+              <button
+                type="button"
+                class="btn btn-outline"
+                onclick="closeModal('contractEditorModal')">
+                Cancel
+              </button>
             </div>
+          </form>
+        </div>
+      </div>
+    </div>
 
-            <div class="form-group">
-              <label>Description</label>
-              <textarea
-                aria-label="Manuscript Description"
-                id="bookDescription"
-                class="form-control"
-                rows="4"
-                placeholder="Add a fuller description of the manuscript"></textarea>
+    <div class="modal" id="submitBookModal">
+      <div class="modal-content manuscript-modal-content">
+        <div class="modal-header manuscript-modal-header">
+          <div>
+            <span class="manuscript-modal-eyebrow">Editorial Intake</span>
+            <h3>Submit Manuscript</h3>
+            <p>
+              Send a complete manuscript package with the metadata the
+              publishing team needs for screening and routing.
+            </p>
+          </div>
+          <button class="modal-close" onclick="closeModal('submitBookModal')">
+            &times;
+          </button>
+        </div>
+        <div class="modal-body manuscript-modal-body">
+          <form
+            id="submitBookForm"
+            class="manuscript-submission-form"
+            onsubmit="handleManuscriptSubmission(event)">
+            <div class="manuscript-submission-layout">
+              <div class="manuscript-form-main">
+                <section class="manuscript-form-section">
+                  <div class="manuscript-form-section-header">
+                    <h4>Identity and routing</h4>
+                    <p>
+                      Define the manuscript clearly so it reaches the right
+                      editorial path from the start.
+                    </p>
+                  </div>
+                  <div class="manuscript-form-grid">
+                    <div class="form-group">
+                      <label>Book Title *</label>
+                      <input
+                        aria-label="Manuscript Title"
+                        type="text"
+                        id="bookTitle"
+                        class="form-control"
+                        required />
+                    </div>
+                    <div class="form-group">
+                      <label>Subtitle</label>
+                      <input
+                        aria-label="Manuscript Subtitle"
+                        type="text"
+                        id="bookSubtitle"
+                        class="form-control" />
+                    </div>
+                    <div class="form-group">
+                      <label>Category *</label>
+                      <input
+                        aria-label="Manuscript Category"
+                        type="text"
+                        id="bookCategory"
+                        class="form-control"
+                        placeholder="e.g. Textbook, Journal, Research"
+                        required />
+                    </div>
+                    <div class="form-group">
+                      <label for="bookSubmissionType">Submission Type *</label>
+                      <select
+                        id="bookSubmissionType"
+                        class="form-control"
+                        required>
+                        <option value="publishing">Publishing</option>
+                        <option value="review">Review</option>
+                        <option value="reprint">Reprint</option>
+                        <option value="translation">Translation</option>
+                        <option value="special_edition">Special Edition</option>
+                      </select>
+                    </div>
+                    <div class="form-group">
+                      <label>Keywords</label>
+                      <input
+                        aria-label="Manuscript Keywords"
+                        type="text"
+                        id="bookKeywords"
+                        class="form-control"
+                        placeholder="Comma-separated keywords" />
+                    </div>
+                    <div class="form-group">
+                      <label>Language</label>
+                      <input
+                        aria-label="Manuscript Language"
+                        type="text"
+                        id="bookLanguage"
+                        class="form-control"
+                        value="English" />
+                    </div>
+                  </div>
+                </section>
+
+                <section class="manuscript-form-section">
+                  <div class="manuscript-form-section-header">
+                    <h4>Editorial summary</h4>
+                    <p>
+                      Help the press assess fit, audience, and value before the
+                      manuscript enters deeper review.
+                    </p>
+                  </div>
+
+                  <div class="form-group">
+                    <label>Abstract *</label>
+                    <textarea
+                      aria-label="Manuscript Abstract"
+                      id="bookAbstract"
+                      class="form-control"
+                      rows="5"
+                      required
+                      placeholder="Summarize the manuscript, audience, and contribution"></textarea>
+                    <div class="manuscript-field-meta">
+                      <span>
+                        Explain the audience, scope, and contribution in a
+                        concise editorial summary.
+                      </span>
+                      <strong id="bookAbstractCount">0 words</strong>
+                    </div>
+                  </div>
+
+                  <div class="form-group">
+                    <label>Description</label>
+                    <textarea
+                      aria-label="Manuscript Description"
+                      id="bookDescription"
+                      class="form-control"
+                      rows="4"
+                      placeholder="Add a fuller description of the manuscript"></textarea>
+                    <div class="manuscript-field-meta">
+                      <span>
+                        Use this for chapter shape, series context, or a fuller
+                        synopsis.
+                      </span>
+                      <strong id="bookDescriptionCount">0 words</strong>
+                    </div>
+                  </div>
+
+                  <div class="form-group">
+                    <label>Notes for the publishing team</label>
+                    <textarea
+                      aria-label="Notes for Publishing Team"
+                      id="bookAuthorNotes"
+                      class="form-control"
+                      rows="3"
+                      placeholder="Anything the editors or publishing team should know"></textarea>
+                  </div>
+                </section>
+
+                <section class="manuscript-form-section">
+                  <div class="manuscript-form-section-header">
+                    <h4>File package</h4>
+                    <p>
+                      Upload the version the editorial team should review first.
+                    </p>
+                  </div>
+
+                  <div class="form-group">
+                    <label>Manuscript File *</label>
+                    <input
+                      aria-label="Upload Manuscript File"
+                      type="file"
+                      id="bookManuscriptFile"
+                      class="form-control"
+                      accept=".pdf,.doc,.docx,application/pdf,application/msword,application/vnd.openxmlformats-officedocument.wordprocessingml.document"
+                      required />
+                    <div class="manuscript-field-meta">
+                      <span
+                        >Accepted formats: PDF, DOC, and DOCX up to 10MB.</span
+                      >
+                      <strong id="bookFileMeta">No file selected</strong>
+                    </div>
+                  </div>
+                </section>
+
+                <div class="manuscript-form-actions">
+                  <p class="manuscript-form-note">
+                    Submitting creates a manuscript record and sends the file to
+                    the publishing office for initial screening.
+                  </p>
+                  <button type="submit" class="btn btn-primary btn-block">
+                    <i class="fas fa-cloud-upload-alt"></i> Submit Manuscript
+                  </button>
+                </div>
+              </div>
+
+              <aside class="manuscript-form-sidebar">
+                <div class="submission-preview-card">
+                  <span class="author-panel-eyebrow">Submission Summary</span>
+                  <h4 id="submissionPreviewTitle">Untitled manuscript</h4>
+                  <p id="submissionPreviewCopy">
+                    Add the title, category, abstract, and file package to
+                    complete this submission.
+                  </p>
+                  <dl class="submission-preview-list">
+                    <div>
+                      <dt>Type</dt>
+                      <dd id="submissionPreviewType">Publishing</dd>
+                    </div>
+                    <div>
+                      <dt>Category</dt>
+                      <dd id="submissionPreviewCategory">Not set</dd>
+                    </div>
+                    <div>
+                      <dt>Keywords</dt>
+                      <dd id="submissionPreviewKeywords">None yet</dd>
+                    </div>
+                    <div>
+                      <dt>Language</dt>
+                      <dd id="submissionPreviewLanguage">English</dd>
+                    </div>
+                  </dl>
+                  <div class="submission-progress-block">
+                    <div
+                      class="author-progress-track author-progress-track-compact">
+                      <span id="submissionProgressBar"></span>
+                    </div>
+                    <strong id="submissionProgressText">
+                      0 of 5 editorial checks complete
+                    </strong>
+                  </div>
+                </div>
+
+                <div class="submission-checklist-card">
+                  <h4>Editorial checklist</h4>
+                  <ul class="submission-checklist" id="submissionChecklist">
+                    <li class="is-pending">
+                      <i class="fas fa-circle"></i>
+                      <span>Clear title and category</span>
+                    </li>
+                    <li class="is-pending">
+                      <i class="fas fa-circle"></i>
+                      <span>Abstract or editorial summary prepared</span>
+                    </li>
+                    <li class="is-pending">
+                      <i class="fas fa-circle"></i>
+                      <span>Keywords included for routing</span>
+                    </li>
+                    <li class="is-pending">
+                      <i class="fas fa-circle"></i>
+                      <span>Profile essentials already on file</span>
+                    </li>
+                    <li class="is-pending">
+                      <i class="fas fa-circle"></i>
+                      <span>Review file attached</span>
+                    </li>
+                  </ul>
+                </div>
+
+                <div class="submission-requirements-card">
+                  <h4>Routing requirements</h4>
+                  <ul>
+                    <li>
+                      Use descriptive keywords separated by commas so editors
+                      can classify the manuscript quickly.
+                    </li>
+                    <li>
+                      Keep the abstract focused on audience, scope, and the
+                      manuscript's main contribution.
+                    </li>
+                    <li>
+                      Upload the file that best represents the version intended
+                      for editorial review.
+                    </li>
+                  </ul>
+                </div>
+              </aside>
             </div>
-
-            <div class="form-group">
-              <label>Notes for the publishing team</label>
-              <textarea
-                aria-label="Notes for Publishing Team"
-                id="bookAuthorNotes"
-                class="form-control"
-                rows="3"
-                placeholder="Anything the editors or publishing team should know"></textarea>
-            </div>
-
-            <div class="form-group">
-              <label>Manuscript File *</label>
-              <input
-                aria-label="Upload Manuscript File"
-                type="file"
-                id="bookManuscriptFile"
-                class="form-control"
-                accept=".pdf,.doc,.docx,application/pdf,application/msword,application/vnd.openxmlformats-officedocument.wordprocessingml.document"
-                required />
-            </div>
-
-            <button type="submit" class="btn btn-primary btn-block">
-              <i class="fas fa-cloud-upload-alt"></i> Submit Manuscript
-            </button>
           </form>
         </div>
       </div>

@@ -9,7 +9,6 @@
       content="Babcock University Press provides publishing, printing, editorial, consultancy, and training services for the Babcock University community." />
     <meta name="robots" content="index, follow" />
     <link rel="canonical" href="https://babcock-publishing.vercel.app/" />
-    <link rel="icon" type="image/svg+xml" href="favicon.svg" />
     <link rel="icon" type="image/png" href="assets/legacy/main_logo.png" />
     <link rel="apple-touch-icon" href="assets/legacy/main_logo.png" />
     <meta name="theme-color" content="#0f694d" />
@@ -90,7 +89,8 @@
                     About <i class="fas fa-chevron-down"></i>
                   </a>
                   <div class="press-dropdown-panel">
-                    <a href="https://legacy.babcock.edu.ng/about" target="_blank" rel="noopener noreferrer">About Us</a>
+                    <a href="https://legacy.babcock.edu.ng/about" target="_blank" rel="noopener noreferrer">About Babcock University</a>
+                    <a href="../about.html">About Babcock University Press</a>
                     <a href="https://legacy.babcock.edu.ng/about/our-journey" target="_blank" rel="noopener noreferrer">Our Journey</a>
                     <a href="https://legacy.babcock.edu.ng/about/administration" target="_blank" rel="noopener noreferrer">Administration</a>
                     <a href="https://legacy.babcock.edu.ng/about/organogram" target="_blank" rel="noopener noreferrer">Organogram</a>
@@ -171,9 +171,14 @@
           <div class="container press-subnav-row">
             <div class="press-subnav-links">
               <a href="index.html" class="is-active" data-page-link>Home</a>
-              <a href="staff.html" data-page-link>Staff</a>
-              <a href="services.html" data-page-link>Services</a>
               <a href="publications.html" data-page-link>Publications</a>
+              <a href="authors.html" data-page-link>Authors</a>
+              <a href="services.html" data-page-link>Services</a>
+              <a href="for-authors.html" data-page-link>For Authors</a>
+              <a href="rights-permissions.html" data-page-link
+                >Rights &amp; Permissions</a
+              >
+              <a href="staff.html" data-page-link>Staff</a>
               <a href="gallery.html" data-page-link>Gallery</a>
             </div>
           </div>
@@ -186,9 +191,12 @@
           <h3>BU Press Pages</h3>
           <ul class="press-mobile-links">
             <li><a href="index.html">Home</a></li>
-            <li><a href="staff.html">Staff</a></li>
-            <li><a href="services.html">Services</a></li>
             <li><a href="publications.html">Publications</a></li>
+            <li><a href="authors.html">Authors</a></li>
+            <li><a href="services.html">Services</a></li>
+            <li><a href="for-authors.html">For Authors</a></li>
+            <li><a href="rights-permissions.html">Rights &amp; Permissions</a></li>
+            <li><a href="staff.html">Staff</a></li>
             <li><a href="gallery.html">Gallery</a></li>
             <li><a href="#publications">Live Catalog</a></li>
             <li><a href="#contact">Contact</a></li>
@@ -562,6 +570,11 @@
               gallery without losing the core portal actions.
             </p>
             <div class="press-link-grid" style="margin-top: 24px">
+              <a class="press-card press-link-card" href="authors.html">
+                <i class="fas fa-feather-pointed"></i>
+                <h3>Authors</h3>
+                <p>Live author visibility connected to the published catalog.</p>
+              </a>
               <a class="press-card press-link-card" href="staff.html">
                 <i class="fas fa-users"></i>
                 <h3>Staff</h3>
@@ -576,6 +589,16 @@
                 <i class="fas fa-book-open"></i>
                 <h3>Publications</h3>
                 <p>Publication formats and catalog direction for BU Press output.</p>
+              </a>
+              <a class="press-card press-link-card" href="for-authors.html">
+                <i class="fas fa-pen-nib"></i>
+                <h3>For Authors</h3>
+                <p>Submission guidance and manuscript expectations before portal entry.</p>
+              </a>
+              <a class="press-card press-link-card" href="rights-permissions.html">
+                <i class="fas fa-scale-balanced"></i>
+                <h3>Rights &amp; Permissions</h3>
+                <p>Reuse, translation, and permissions guidance for published work.</p>
               </a>
               <a class="press-card press-link-card" href="gallery.html">
                 <i class="fas fa-image"></i>
@@ -637,9 +660,12 @@
             <div>
               <h4>BU Press</h4>
               <ul>
+                <li><a href="authors.html">Authors</a></li>
                 <li><a href="staff.html">Staff</a></li>
                 <li><a href="services.html">Services</a></li>
                 <li><a href="publications.html">Publications</a></li>
+                <li><a href="for-authors.html">For Authors</a></li>
+                <li><a href="rights-permissions.html">Rights &amp; Permissions</a></li>
                 <li><a href="gallery.html">Gallery</a></li>
               </ul>
             </div>
@@ -1711,7 +1737,11 @@
     <!-- ============= AUTHOR DASHBOARD ============= -->
     <div id="authorDashboard" class="dashboard-container author-dashboard">
       <header class="dashboard-header author-header">
-        <div class="author-brand">
+        <button
+          type="button"
+          class="author-brand author-brand-link"
+          onclick="showHomepage()"
+          aria-label="Go back to the homepage">
           <div class="author-brand-mark">
             <img src="OIP.webp" alt="Babcock Publishing logo" />
           </div>
@@ -1719,7 +1749,7 @@
             <p class="author-brand-kicker">Babcock Publishing</p>
             <h2 class="author-brand-title">Author Workspace</h2>
           </div>
-        </div>
+        </button>
         <div class="author-header-actions">
           <div class="author-user-chip">
             <span class="author-user-label">Signed in as</span>
@@ -2069,6 +2099,295 @@
         </div>
         <div class="modal-body" id="authorDetailsContent">
           Loading author details...
+        </div>
+      </div>
+    </div>
+
+    <div class="modal" id="adminBookModal">
+      <div class="modal-content workflow-modal-content">
+        <div class="modal-header">
+          <h3>Create Book Record</h3>
+          <button class="modal-close" onclick="closeModal('adminBookModal')">
+            &times;
+          </button>
+        </div>
+        <div class="modal-body">
+          <form id="adminBookForm" onsubmit="handleAdminBookCreate(event)">
+            <div class="workflow-form-fields">
+              <div class="form-group">
+                <label for="adminBookAuthor">Author *</label>
+                <select id="adminBookAuthor" class="form-control" required>
+                  <option value="">Select Author</option>
+                </select>
+              </div>
+              <div class="form-group">
+                <label for="adminBookTitle">Title *</label>
+                <input
+                  type="text"
+                  id="adminBookTitle"
+                  class="form-control"
+                  required />
+              </div>
+              <div class="form-group">
+                <label for="adminBookSubtitle">Subtitle</label>
+                <input
+                  type="text"
+                  id="adminBookSubtitle"
+                  class="form-control" />
+              </div>
+              <div class="form-group">
+                <label for="adminBookCategory">Category *</label>
+                <input
+                  type="text"
+                  id="adminBookCategory"
+                  class="form-control"
+                  required />
+              </div>
+              <div class="form-group">
+                <label for="adminBookStatus">Initial Status</label>
+                <select id="adminBookStatus" class="form-control">
+                  <option value="draft">Draft</option>
+                  <option value="submitted">Submitted</option>
+                  <option value="under_review">Under Review</option>
+                  <option value="revisions_requested">
+                    Revisions Requested
+                  </option>
+                  <option value="accepted">Accepted</option>
+                  <option value="in_production">In Production</option>
+                  <option value="published">Published</option>
+                  <option value="rejected">Rejected</option>
+                  <option value="archived">Archived</option>
+                </select>
+              </div>
+              <div class="form-group">
+                <label for="adminBookPrice">Price</label>
+                <input
+                  type="number"
+                  id="adminBookPrice"
+                  class="form-control"
+                  min="0"
+                  step="0.01" />
+              </div>
+              <div class="form-group">
+                <label for="adminBookPublicationDate">Publication Date</label>
+                <input
+                  type="date"
+                  id="adminBookPublicationDate"
+                  class="form-control" />
+              </div>
+              <div class="form-group">
+                <label for="adminBookLanguage">Language</label>
+                <input
+                  type="text"
+                  id="adminBookLanguage"
+                  class="form-control"
+                  value="English" />
+              </div>
+              <div class="form-group workflow-form-full">
+                <label for="adminBookKeywords">Keywords</label>
+                <input
+                  type="text"
+                  id="adminBookKeywords"
+                  class="form-control"
+                  placeholder="Comma-separated keywords" />
+              </div>
+              <div class="form-group workflow-form-full">
+                <label for="adminBookAbstract">Abstract</label>
+                <textarea
+                  id="adminBookAbstract"
+                  class="form-control"
+                  rows="4"
+                  placeholder="Editorial summary or abstract"></textarea>
+              </div>
+              <div class="form-group workflow-form-full">
+                <label for="adminBookDescription">Description</label>
+                <textarea
+                  id="adminBookDescription"
+                  class="form-control"
+                  rows="5"
+                  placeholder="Add a fuller description of the title"></textarea>
+              </div>
+            </div>
+            <div class="workflow-form-actions">
+              <button type="submit" class="btn btn-primary">
+                Create Book
+              </button>
+              <button
+                type="button"
+                class="btn btn-outline"
+                onclick="closeModal('adminBookModal')">
+                Cancel
+              </button>
+            </div>
+          </form>
+        </div>
+      </div>
+    </div>
+
+    <div class="modal" id="bookDetailsModal">
+      <div class="modal-content workflow-modal-content">
+        <div class="modal-header">
+          <h3>Book Workflow</h3>
+          <button class="modal-close" onclick="closeModal('bookDetailsModal')">
+            &times;
+          </button>
+        </div>
+        <div class="modal-body" id="bookDetailsContent">
+          Loading book workflow...
+        </div>
+      </div>
+    </div>
+
+    <div class="modal" id="submissionDetailsModal">
+      <div class="modal-content workflow-modal-content">
+        <div class="modal-header">
+          <h3>Submission Workflow</h3>
+          <button
+            class="modal-close"
+            onclick="closeModal('submissionDetailsModal')">
+            &times;
+          </button>
+        </div>
+        <div class="modal-body" id="submissionDetailsContent">
+          Loading submission workflow...
+        </div>
+      </div>
+    </div>
+
+    <div class="modal" id="contractEditorModal">
+      <div class="modal-content workflow-modal-content">
+        <div class="modal-header">
+          <h3 id="contractEditorModalTitle">Create Contract</h3>
+          <button
+            class="modal-close"
+            onclick="closeModal('contractEditorModal')">
+            &times;
+          </button>
+        </div>
+        <div class="modal-body">
+          <form
+            id="contractEditorForm"
+            class="workflow-editor-form"
+            onsubmit="handleContractEditorSubmit(event)">
+            <input type="hidden" id="contractEditorId" />
+            <input type="hidden" id="contractEditorAuthorId" />
+
+            <div class="workflow-static-summary" id="contractEditorSummary">
+              <strong>Select a book</strong>
+              <span>The linked author will fill automatically.</span>
+            </div>
+
+            <div class="workflow-form-fields">
+              <div class="form-group">
+                <label for="contractEditorBook">Book *</label>
+                <select
+                  id="contractEditorBook"
+                  class="form-control"
+                  onchange="syncContractAuthorFromBookSelection()"
+                  required>
+                  <option value="">Select Book</option>
+                </select>
+              </div>
+              <div class="form-group">
+                <label for="contractEditorAuthorName">Author</label>
+                <input
+                  type="text"
+                  id="contractEditorAuthorName"
+                  class="form-control"
+                  readonly />
+              </div>
+              <div class="form-group">
+                <label for="contractEditorType">Contract Type</label>
+                <select id="contractEditorType" class="form-control">
+                  <option value="standard">Standard</option>
+                  <option value="royalty">Royalty</option>
+                  <option value="advance">Advance</option>
+                  <option value="work_for_hire">Work For Hire</option>
+                </select>
+              </div>
+              <div class="form-group">
+                <label for="contractEditorStatus">Status</label>
+                <select id="contractEditorStatus" class="form-control">
+                  <option value="draft">Draft</option>
+                  <option value="sent">Sent</option>
+                  <option value="signed">Signed</option>
+                  <option value="executed">Executed</option>
+                  <option value="expired">Expired</option>
+                  <option value="terminated">Terminated</option>
+                </select>
+              </div>
+              <div class="form-group">
+                <label for="contractEditorRoyalty">Royalty Percentage</label>
+                <input
+                  type="number"
+                  id="contractEditorRoyalty"
+                  class="form-control"
+                  min="0"
+                  step="0.01" />
+              </div>
+              <div class="form-group">
+                <label for="contractEditorAdvance">Advance Amount</label>
+                <input
+                  type="number"
+                  id="contractEditorAdvance"
+                  class="form-control"
+                  min="0"
+                  step="0.01" />
+              </div>
+              <div class="form-group">
+                <label for="contractEditorStartDate">Start Date</label>
+                <input
+                  type="date"
+                  id="contractEditorStartDate"
+                  class="form-control" />
+              </div>
+              <div class="form-group">
+                <label for="contractEditorEndDate">End Date</label>
+                <input
+                  type="date"
+                  id="contractEditorEndDate"
+                  class="form-control" />
+              </div>
+              <div class="form-group workflow-form-full">
+                <label for="contractEditorTerritory">Territory</label>
+                <input
+                  type="text"
+                  id="contractEditorTerritory"
+                  class="form-control"
+                  placeholder="Worldwide, Nigeria, West Africa..." />
+              </div>
+              <div class="form-group workflow-form-full">
+                <label for="contractEditorRightsGranted">Rights Granted</label>
+                <textarea
+                  id="contractEditorRightsGranted"
+                  class="form-control"
+                  rows="4"
+                  placeholder="Describe the publishing rights granted"></textarea>
+              </div>
+              <div class="form-group workflow-form-full">
+                <label for="contractEditorPaymentSchedule">
+                  Payment Schedule
+                </label>
+                <textarea
+                  id="contractEditorPaymentSchedule"
+                  class="form-control"
+                  rows="3"
+                  placeholder="Describe royalty timing, advance schedule, and payment terms"></textarea>
+              </div>
+            </div>
+
+            <div class="workflow-form-actions">
+              <button type="submit" class="btn btn-primary">
+                <span id="contractEditorSubmitLabel">Create Contract</span>
+              </button>
+              <button
+                type="button"
+                class="btn btn-outline"
+                onclick="closeModal('contractEditorModal')">
+                Cancel
+              </button>
+            </div>
+          </form>
         </div>
       </div>
     </div>

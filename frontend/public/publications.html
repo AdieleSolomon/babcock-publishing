@@ -7,8 +7,8 @@
     <meta
       name="description"
       content="Explore publication formats and catalog directions supported by Babcock University Press." />
-    <link rel="icon" type="image/svg+xml" href="favicon.svg" />
     <link rel="icon" type="image/png" href="assets/legacy/main_logo.png" />
+    <link rel="apple-touch-icon" href="assets/legacy/main_logo.png" />
     <link
       rel="stylesheet"
       href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" />
@@ -55,7 +55,8 @@
                   About <i class="fas fa-chevron-down"></i>
                 </a>
                 <div class="press-dropdown-panel">
-                  <a href="https://legacy.babcock.edu.ng/about" target="_blank" rel="noopener noreferrer">About Us</a>
+                  <a href="https://legacy.babcock.edu.ng/about" target="_blank" rel="noopener noreferrer">About Babcock University</a>
+                  <a href="../about.html">About Babcock University Press</a>
                   <a href="https://legacy.babcock.edu.ng/about/our-journey" target="_blank" rel="noopener noreferrer">Our Journey</a>
                   <a href="https://legacy.babcock.edu.ng/about/administration" target="_blank" rel="noopener noreferrer">Administration</a>
                   <a href="https://legacy.babcock.edu.ng/about/organogram" target="_blank" rel="noopener noreferrer">Organogram</a>
@@ -129,9 +130,12 @@
         <div class="container press-subnav-row">
           <div class="press-subnav-links">
             <a href="index.html" data-page-link>Home</a>
-            <a href="staff.html" data-page-link>Staff</a>
-            <a href="services.html" data-page-link>Services</a>
             <a href="publications.html" data-page-link>Publications</a>
+            <a href="authors.html" data-page-link>Authors</a>
+            <a href="services.html" data-page-link>Services</a>
+            <a href="for-authors.html" data-page-link>For Authors</a>
+            <a href="rights-permissions.html" data-page-link>Rights &amp; Permissions</a>
+            <a href="staff.html" data-page-link>Staff</a>
             <a href="gallery.html" data-page-link>Gallery</a>
           </div>
         </div>
@@ -144,9 +148,12 @@
         <h3>BU Press Pages</h3>
         <ul class="press-mobile-links">
           <li><a href="index.html" data-page-link>Home</a></li>
-          <li><a href="staff.html" data-page-link>Staff</a></li>
-          <li><a href="services.html" data-page-link>Services</a></li>
           <li><a href="publications.html" data-page-link>Publications</a></li>
+          <li><a href="authors.html" data-page-link>Authors</a></li>
+          <li><a href="services.html" data-page-link>Services</a></li>
+          <li><a href="for-authors.html" data-page-link>For Authors</a></li>
+          <li><a href="rights-permissions.html" data-page-link>Rights &amp; Permissions</a></li>
+          <li><a href="staff.html" data-page-link>Staff</a></li>
           <li><a href="gallery.html" data-page-link>Gallery</a></li>
         </ul>
       </div>
@@ -268,34 +275,76 @@
       </section>
 
       <section class="press-section press-section-soft">
-        <div class="container press-split-grid">
-          <article class="press-card">
-            <span class="press-eyebrow">Catalog Access</span>
-            <h2>Use the portal for live publication listings</h2>
+        <div class="container">
+          <div class="press-section-heading">
+            <span class="press-eyebrow">Published Catalog</span>
+            <h2>Books already published by BU Press</h2>
             <p>
-              The main portal page in this project already connects to live
-              publication data from the backend. This publications page provides
-              the structure and context; the home-page catalog view carries the
-              dynamic list.
+              This page now pulls live records from the publishing backend so
+              visitors can browse published books directly here.
             </p>
-            <div class="press-inline-links">
-              <a href="index.html#publications"><i class="fas fa-arrow-right"></i> Open live publication grid</a>
-              <a href="services.html"><i class="fas fa-gears"></i> See supporting services</a>
-            </div>
-          </article>
+          </div>
 
-          <article class="press-card press-profile-card">
-            <div class="press-card-title">
-              <i class="fas fa-layer-group"></i>
-              <h3>Publication workflow</h3>
-            </div>
-            <ul class="press-list">
-              <li><i class="fas fa-check-circle"></i><span>Manuscript and content shaping through editorial support.</span></li>
-              <li><i class="fas fa-check-circle"></i><span>Design and pre-press preparation for production quality.</span></li>
-              <li><i class="fas fa-check-circle"></i><span>Binding, finishing, and distribution-ready output.</span></li>
-              <li><i class="fas fa-check-circle"></i><span>Support for both academic publishing and institutional communications.</span></li>
-            </ul>
-          </article>
+          <div class="press-publication-summary-grid">
+            <article class="press-card press-publication-stat">
+              <span>Published Books</span>
+              <strong id="publishedBooksCount">0</strong>
+              <p>Live titles currently marked as published in the catalog.</p>
+            </article>
+
+            <article class="press-card press-publication-stat">
+              <span>Latest Year</span>
+              <strong id="publishedBooksLatestYear">--</strong>
+              <p>The most recent publication year returned by the backend.</p>
+            </article>
+
+            <article class="press-card press-publication-stat">
+              <span>Categories</span>
+              <strong id="publishedBooksCategoryCount">0</strong>
+              <p>Distinct subject groupings represented in the current list.</p>
+            </article>
+          </div>
+
+          <div
+            id="publishedBooksStatus"
+            class="press-publications-status"
+            data-state="loading"
+            role="status">
+            Loading published books...
+          </div>
+
+          <div
+            id="publishedBooksGrid"
+            class="publications-grid press-live-publications-grid"
+            aria-live="polite"></div>
+
+          <div class="press-split-grid press-publication-support-grid">
+            <article class="press-card">
+              <span class="press-eyebrow">Catalog Context</span>
+              <h2>Updated from the same publishing data used by the portal</h2>
+              <p>
+                As new titles move into the published state, this page can show
+                them without sending visitors back to the homepage first.
+              </p>
+              <div class="press-inline-links">
+                <a href="index.html#publications"><i class="fas fa-arrow-right"></i> Open portal publication section</a>
+                <a href="services.html"><i class="fas fa-gears"></i> See supporting services</a>
+              </div>
+            </article>
+
+            <article class="press-card press-profile-card">
+              <div class="press-card-title">
+                <i class="fas fa-layer-group"></i>
+                <h3>Publication workflow</h3>
+              </div>
+              <ul class="press-list">
+                <li><i class="fas fa-check-circle"></i><span>Manuscript and content shaping through editorial support.</span></li>
+                <li><i class="fas fa-check-circle"></i><span>Design and pre-press preparation for production quality.</span></li>
+                <li><i class="fas fa-check-circle"></i><span>Binding, finishing, and distribution-ready output.</span></li>
+                <li><i class="fas fa-check-circle"></i><span>Support for both academic publishing and institutional communications.</span></li>
+              </ul>
+            </article>
+          </div>
         </div>
       </section>
     </main>
@@ -318,9 +367,12 @@
             <h4>BU Press</h4>
             <ul>
               <li><a href="index.html">Home</a></li>
-              <li><a href="staff.html">Staff</a></li>
-              <li><a href="services.html">Services</a></li>
               <li><a href="publications.html">Publications</a></li>
+              <li><a href="authors.html">Authors</a></li>
+              <li><a href="services.html">Services</a></li>
+              <li><a href="for-authors.html">For Authors</a></li>
+              <li><a href="rights-permissions.html">Rights &amp; Permissions</a></li>
+              <li><a href="staff.html">Staff</a></li>
               <li><a href="gallery.html">Gallery</a></li>
             </ul>
           </div>
@@ -349,6 +401,8 @@
       </div>
     </footer>
 
+    <script src="config.js"></script>
     <script src="enterprise.js"></script>
+    <script src="publications.js"></script>
   </body>
 </html>

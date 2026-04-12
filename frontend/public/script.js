@@ -11,7 +11,8 @@ const runtimeApiBase =
   (window.APP_CONFIG && window.APP_CONFIG.API_BASE_URL) ||
   localStorage.getItem("API_BASE_URL_OVERRIDE");
 
-const API_BASE_URL = (runtimeApiBase ||
+const API_BASE_URL = (
+  runtimeApiBase ||
   (window.location.hostname === "localhost" ||
   window.location.hostname === "127.0.0.1"
     ? "http://localhost:3001/api"
@@ -26,6 +27,24 @@ const ADMIN_ROLES = ["admin", "editor", "reviewer"];
 const DEFAULT_ADMIN_SECTION = "dashboard";
 let pendingPasswordResetAudience = "author";
 let pendingPasswordResetEmail = "";
+const AUTHOR_WORKFLOW_STAGES = [
+  { key: "manuscript_submission", label: "Submission" },
+  { key: "initial_review", label: "Initial Review" },
+  { key: "peer_review", label: "Peer Review" },
+  { key: "revisions", label: "Revisions" },
+  { key: "copyediting", label: "Copyediting" },
+  { key: "proofreading", label: "Proofreading" },
+  { key: "design", label: "Design" },
+  { key: "printing", label: "Printing" },
+  { key: "distribution", label: "Distribution" },
+  { key: "marketing", label: "Marketing" },
+];
+let authorProfileState = null;
+let authorDashboardState = null;
+let adminAuthorsCache = [];
+let adminBooksCache = [];
+let adminSubmissionsCache = [];
+let adminContractsCache = [];
 
 // Initialize the application
 document.addEventListener("DOMContentLoaded", function () {
@@ -33,11 +52,141 @@ document.addEventListener("DOMContentLoaded", function () {
   loadHomepageData();
   setupEventListeners();
   setupDashboardNavigation();
+  setupAuthorWorkspaceListeners();
   initAdminLayout();
   loadAboutInfo();
   initAnimations();
   handlePasswordResetLinkState();
+  initMobileOptimizations();
 });
+
+// ============================================
+// Mobile Optimizations Module
+// ============================================
+function initMobileOptimizations() {
+  // Detect if device is mobile
+  const isMobile =
+    /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(
+      navigator.userAgent,
+    );
+  const isTouchDevice = () => {
+    return (
+      typeof window !== "undefined" &&
+      ("ontouchstart" in window || navigator.maxTouchPoints > 0)
+    );
+  };
+
+  // Add mobile body class
+  if (isMobile || isTouchDevice()) {
+    document.body.classList.add("is-mobile-device");
+  }
+
+  // Optimize viewport for notch-safe areas
+  if (window.innerWidth < 768 && window.innerHeight < window.innerWidth) {
+    // Landscape mode on mobile
+    document.body.classList.add("mobile-landscape");
+  }
+
+  // Prevent double-tap zoom delay on buttons
+  document.addEventListener("touchstart", function () {}, false);
+
+  // Improve touch targets
+  const touchTargets = document.querySelectorAll("a, button, .press-button");
+  touchTargets.forEach((target) => {
+    const rect = target.getBoundingClientRect();
+    if (rect.height < 44 || rect.width < 44) {
+      target.style.padding =
+        Math.max(12, 44 - rect.height) / 2 +
+        "px " +
+        Math.max(12, 44 - rect.width) / 2 +
+        "px";
+    }
+  });
+
+  // Optimize images for mobile
+  optimizeMobileImages();
+
+  // Handle viewport changes
+  let resizeTimer;
+  window.addEventListener(
+    "resize",
+    () => {
+      clearTimeout(resizeTimer);
+      resizeTimer = setTimeout(() => {
+        handleViewportChange();
+      }, 250);
+    },
+    { passive: true },
+  );
+
+  // Reduce animations on low-power devices
+  if (window.matchMedia("(prefers-reduced-motion: reduce)").matches) {
+    document.body.classList.add("reduce-motion");
+    document.documentElement.style.setProperty(
+      "--press-transition",
+      "0.1s ease",
+    );
+  }
+
+  // Prevent scroll bounce on iOS
+  document.addEventListener(
+    "touchmove",
+    function (e) {
+      if (document.body.classList.contains("modal-open")) {
+        e.preventDefault();
+      }
+    },
+    { passive: false },
+  );
+}
+
+function optimizeMobileImages() {
+  // Use picture elements for responsive images
+  const images = document.querySelectorAll("[data-mobile-src]");
+  images.forEach((img) => {
+    if (window.innerWidth < 768) {
+      const mobileSrc = img.getAttribute("data-mobile-src");
+      if (mobileSrc) img.src = mobileSrc;
+    }
+  });
+
+  // Lazy load images
+  if ("IntersectionObserver" in window) {
+    const imageObserver = new IntersectionObserver(
+      (entries, observer) => {
+        entries.forEach((entry) => {
+          if (entry.isIntersecting) {
+            const img = entry.target;
+            img.src = img.getAttribute("data-lazy-src") || img.src;
+            img.classList.add("loaded");
+            observer.unobserve(img);
+          }
+        });
+      },
+      { rootMargin: "50px" },
+    );
+
+    document
+      .querySelectorAll("img[data-lazy-src]")
+      .forEach((img) => imageObserver.observe(img));
+  }
+}
+
+function handleViewportChange() {
+  const isMobileView = window.innerWidth < 768;
+
+  // Update mobile class
+  if (isMobileView) {
+    document.body.classList.add("mobile-view");
+  } else {
+    document.body.classList.remove("mobile-view");
+  }
+
+  // Close mobile menu if resizing to desktop
+  if (!isMobileView) {
+    closeMobileMenu();
+  }
+}
 
 // ============================================
 // 2. AUTHENTICATION MODULE (FIXED)
@@ -101,6 +250,9 @@ async function validateToken(token) {
 function updateAuthUI() {
   const authButtons = document.getElementById("authButtons");
   const mobileAuthButtons = document.getElementById("mobileAuthButtons");
+  const portalAccessNotice = document.getElementById("portalAccessNotice");
+
+  updatePortalAccessNotice(portalAccessNotice);
 
   if (!currentUser) {
     // Not logged in
@@ -133,12 +285,11 @@ function updateAuthUI() {
       "User";
 
     if (authButtons) {
-      const dashboardButton =
-        ADMIN_ROLES.includes(currentUser.role)
-          ? '<button class="btn btn-primary" onclick="showAdminDashboard()"><i class="fas fa-columns"></i> Dashboard</button>'
-          : currentUser.role === "author"
-            ? '<button class="btn btn-primary" onclick="showAuthorDashboard()"><i class="fas fa-columns"></i> Dashboard</button>'
-            : "";
+      const dashboardButton = ADMIN_ROLES.includes(currentUser.role)
+        ? '<button class="btn btn-primary" onclick="showAdminDashboard()"><i class="fas fa-columns"></i> Dashboard</button>'
+        : currentUser.role === "author"
+          ? '<button class="btn btn-primary" onclick="showAuthorDashboard()"><i class="fas fa-columns"></i> Dashboard</button>'
+          : "";
 
       authButtons.innerHTML = `
                 <div class="auth-actions">
@@ -151,12 +302,11 @@ function updateAuthUI() {
     }
 
     if (mobileAuthButtons) {
-      const dashboardButton =
-        ADMIN_ROLES.includes(currentUser.role)
-          ? '<button class="btn btn-primary" onclick="showAdminDashboard()"><i class="fas fa-columns"></i> Dashboard</button>'
-          : currentUser.role === "author"
-            ? '<button class="btn btn-primary" onclick="showAuthorDashboard()"><i class="fas fa-columns"></i> Dashboard</button>'
-            : "";
+      const dashboardButton = ADMIN_ROLES.includes(currentUser.role)
+        ? '<button class="btn btn-primary" onclick="showAdminDashboard()"><i class="fas fa-columns"></i> Dashboard</button>'
+        : currentUser.role === "author"
+          ? '<button class="btn btn-primary" onclick="showAuthorDashboard()"><i class="fas fa-columns"></i> Dashboard</button>'
+          : "";
 
       mobileAuthButtons.innerHTML = `
                 ${dashboardButton}
@@ -192,17 +342,35 @@ function updateAuthUI() {
   }
 }
 
+function updatePortalAccessNotice(portalAccessNotice) {
+  if (!portalAccessNotice) return;
+
+  let noticeText = "login / register to view admin and author portals";
+
+  if (currentUser) {
+    if (ADMIN_ROLES.includes(currentUser.role)) {
+      noticeText = "Signed in. Use Dashboard to open the admin portal.";
+    } else if (currentUser.role === "author") {
+      noticeText = "Signed in. Use Dashboard to open the author portal.";
+    } else {
+      noticeText = "";
+    }
+  }
+
+  portalAccessNotice.hidden = !noticeText;
+  portalAccessNotice.textContent = noticeText;
+}
+
 function updateMobileMenu() {
   const mobileAuthButtons = document.getElementById("mobileAuthButtons");
   if (!mobileAuthButtons) return;
 
   if (currentUser) {
-    const dashboardButton =
-      ADMIN_ROLES.includes(currentUser.role)
-        ? '<button class="btn btn-primary" onclick="showAdminDashboard()"><i class="fas fa-columns"></i> Dashboard</button>'
-        : currentUser.role === "author"
-          ? '<button class="btn btn-primary" onclick="showAuthorDashboard()"><i class="fas fa-columns"></i> Dashboard</button>'
-          : "";
+    const dashboardButton = ADMIN_ROLES.includes(currentUser.role)
+      ? '<button class="btn btn-primary" onclick="showAdminDashboard()"><i class="fas fa-columns"></i> Dashboard</button>'
+      : currentUser.role === "author"
+        ? '<button class="btn btn-primary" onclick="showAuthorDashboard()"><i class="fas fa-columns"></i> Dashboard</button>'
+        : "";
 
     mobileAuthButtons.innerHTML = `
             ${dashboardButton}
@@ -409,7 +577,11 @@ function clearPasswordResetUrl() {
   const url = new URL(window.location.href);
   url.searchParams.delete("mode");
   url.searchParams.delete("reset_token");
-  window.history.replaceState({}, document.title, `${url.pathname}${url.search}${url.hash}`);
+  window.history.replaceState(
+    {},
+    document.title,
+    `${url.pathname}${url.search}${url.hash}`,
+  );
 }
 
 function handlePasswordResetLinkState() {
@@ -530,18 +702,24 @@ async function handlePasswordResetRequest(e) {
     pendingPasswordResetAudience = audience || "author";
     pendingPasswordResetEmail = email;
 
-    const response = await fetch(`${API_BASE_URL}/auth/password-reset/request`, {
-      method: "POST",
-      headers: {
-        "Content-Type": "application/json",
-        Accept: "application/json",
+    const response = await fetch(
+      `${API_BASE_URL}/auth/password-reset/request`,
+      {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          Accept: "application/json",
+        },
+        body: JSON.stringify({ email, audience: pendingPasswordResetAudience }),
       },
-      body: JSON.stringify({ email, audience: pendingPasswordResetAudience }),
-    });
+    );
 
     const data = await response.json();
     if (!response.ok || !data.success) {
-      showNotification(data.message || "Failed to start password reset", "error");
+      showNotification(
+        data.message || "Failed to start password reset",
+        "error",
+      );
       return;
     }
 
@@ -584,7 +762,10 @@ async function handlePasswordResetConfirm(e) {
       .value.trim();
 
     if (!token) {
-      showNotification("Reset token is missing. Request a new reset link.", "error");
+      showNotification(
+        "Reset token is missing. Request a new reset link.",
+        "error",
+      );
       return;
     }
 
@@ -598,18 +779,21 @@ async function handlePasswordResetConfirm(e) {
       return;
     }
 
-    const response = await fetch(`${API_BASE_URL}/auth/password-reset/confirm`, {
-      method: "POST",
-      headers: {
-        "Content-Type": "application/json",
-        Accept: "application/json",
+    const response = await fetch(
+      `${API_BASE_URL}/auth/password-reset/confirm`,
+      {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          Accept: "application/json",
+        },
+        body: JSON.stringify({
+          token,
+          password,
+          confirm_password: confirmPassword,
+        }),
       },
-      body: JSON.stringify({
-        token,
-        password,
-        confirm_password: confirmPassword,
-      }),
-    });
+    );
 
     const data = await response.json();
     if (!response.ok || !data.success) {
@@ -723,7 +907,8 @@ async function handleAuthorRegistration(e) {
     formData.append("biography", document.getElementById("regBiography").value);
     formData.append("password", document.getElementById("regPassword").value);
 
-    const profilePicture = document.getElementById("regProfilePicture").files[0];
+    const profilePicture =
+      document.getElementById("regProfilePicture").files[0];
     if (profilePicture) {
       formData.append("profile_image", profilePicture);
     }
@@ -1127,7 +1312,6 @@ async function loadAboutInfo() {
   }
 }
 
-
 function initAdminLayout() {
   const sidebar = document.getElementById("sidebar");
   const mainContent = document.getElementById("mainContent");
@@ -1176,7 +1360,9 @@ function setupDashboardNavigation() {
         return;
       }
 
-      if (navItem.dataset.section === localStorage.getItem("activeAdminSection")) {
+      if (
+        navItem.dataset.section === localStorage.getItem("activeAdminSection")
+      ) {
         showDashboardSection(navItem.dataset.section);
         return;
       }
@@ -1185,24 +1371,12 @@ function setupDashboardNavigation() {
       showDashboardSection(section);
     });
   }
-
-  const authorProfilePictureInput = document.getElementById(
-    "authorProfilePicture",
-  );
-  const authorProfileImagePreview = document.getElementById(
-    "authorProfileImagePreview",
-  );
-  if (authorProfilePictureInput && authorProfileImagePreview) {
-    authorProfilePictureInput.addEventListener("change", function () {
-      const file = this.files && this.files[0];
-      if (!file) return;
-      authorProfileImagePreview.src = URL.createObjectURL(file);
-    });
-  }
 }
 
 function setDashboardSectionVisibility(activeSectionId) {
-  const sections = document.querySelectorAll("#adminDashboard .content-section");
+  const sections = document.querySelectorAll(
+    "#adminDashboard .content-section",
+  );
   sections.forEach((section) => {
     const isActive = section.id === activeSectionId;
     section.classList.toggle("active", isActive);
@@ -1361,6 +1535,7 @@ async function loadAuthors() {
     if (!tbody) return;
 
     if (!response.ok || !data.success) {
+      adminAuthorsCache = [];
       updateAuthorsSectionSummary([]);
       tbody.innerHTML = `
         <tr>
@@ -1373,6 +1548,7 @@ async function loadAuthors() {
     }
 
     const authors = Array.isArray(data.authors) ? data.authors : [];
+    adminAuthorsCache = authors;
     updateAuthorsSectionSummary(authors);
 
     if (authors.length === 0) {
@@ -1444,6 +1620,7 @@ async function loadAuthors() {
       .join("");
   } catch (error) {
     console.error("Error loading authors:", error);
+    adminAuthorsCache = [];
     updateAuthorsSectionSummary([]);
     if (tbody) {
       tbody.innerHTML = `
@@ -1573,15 +1750,18 @@ async function updateRegisteredUserStatus(userId, status) {
       return;
     }
 
-    const response = await fetch(`${API_BASE_URL}/admin/users/${userId}/status`, {
-      method: "PUT",
-      headers: {
-        Authorization: `Bearer ${token}`,
-        "Content-Type": "application/json",
-        Accept: "application/json",
+    const response = await fetch(
+      `${API_BASE_URL}/admin/users/${userId}/status`,
+      {
+        method: "PUT",
+        headers: {
+          Authorization: `Bearer ${token}`,
+          "Content-Type": "application/json",
+          Accept: "application/json",
+        },
+        body: JSON.stringify({ status }),
       },
-      body: JSON.stringify({ status }),
-    });
+    );
 
     let data = {};
     try {
@@ -1600,7 +1780,10 @@ async function updateRegisteredUserStatus(userId, status) {
       return;
     }
 
-    showNotification(data.message || "User status updated successfully", "success");
+    showNotification(
+      data.message || "User status updated successfully",
+      "success",
+    );
     await loadRegisteredUsers();
     await loadAdminDashboard();
   } catch (error) {
@@ -1630,6 +1813,7 @@ async function loadBooks() {
     if (!tbody) return;
 
     if (!response.ok || !data.success) {
+      adminBooksCache = [];
       tbody.innerHTML = `
         <tr>
           <td colspan="6" style="text-align: center; padding: 20px">
@@ -1641,6 +1825,7 @@ async function loadBooks() {
     }
 
     if (!data.books || data.books.length === 0) {
+      adminBooksCache = [];
       tbody.innerHTML = `
         <tr>
           <td colspan="6" style="text-align: center; padding: 20px">
@@ -1651,6 +1836,7 @@ async function loadBooks() {
       return;
     }
 
+    adminBooksCache = data.books;
     tbody.innerHTML = data.books
       .map((book) => {
         const price =
@@ -1665,7 +1851,10 @@ async function loadBooks() {
             <td><span class="status-badge status-${book.status || "draft"}">${book.status || "draft"}</span></td>
             <td>${price}</td>
             <td>
-              <button class="btn btn-info btn-sm" onclick="viewBook(${book.id})">View</button>
+              <div class="table-action-group">
+                <button class="table-action-btn info" onclick="viewBook(${book.id})">View</button>
+                <button class="table-action-btn success" onclick="openContractEditorForBook(${book.id})">Contract</button>
+              </div>
             </td>
           </tr>
         `;
@@ -1673,6 +1862,7 @@ async function loadBooks() {
       .join("");
   } catch (error) {
     console.error("Error loading books:", error);
+    adminBooksCache = [];
     const tbody = document.getElementById("booksTableBody");
     if (tbody) {
       tbody.innerHTML = `
@@ -1694,23 +1884,32 @@ async function updateAuthorStatus(authorId, status) {
       return;
     }
 
-    const response = await fetch(`${API_BASE_URL}/admin/authors/${authorId}/status`, {
-      method: "PUT",
-      headers: {
-        "Content-Type": "application/json",
-        Authorization: `Bearer ${token}`,
-        Accept: "application/json",
+    const response = await fetch(
+      `${API_BASE_URL}/admin/authors/${authorId}/status`,
+      {
+        method: "PUT",
+        headers: {
+          "Content-Type": "application/json",
+          Authorization: `Bearer ${token}`,
+          Accept: "application/json",
+        },
+        body: JSON.stringify({ status }),
       },
-      body: JSON.stringify({ status }),
-    });
+    );
 
     const data = await response.json();
     if (!response.ok || !data.success) {
-      showNotification(data.message || "Failed to update author status", "error");
+      showNotification(
+        data.message || "Failed to update author status",
+        "error",
+      );
       return;
     }
 
-    showNotification(data.message || `Author ${status} successfully`, "success");
+    showNotification(
+      data.message || `Author ${status} successfully`,
+      "success",
+    );
     await loadAuthors();
     await loadAdminDashboard();
   } catch (error) {
@@ -1764,6 +1963,7 @@ async function loadSubmissions() {
     }
 
     if (!response.ok || !data.success) {
+      adminSubmissionsCache = [];
       renderAdminTableMessage(
         tbody,
         6,
@@ -1773,10 +1973,12 @@ async function loadSubmissions() {
     }
 
     if (!data.submissions || data.submissions.length === 0) {
+      adminSubmissionsCache = [];
       renderAdminTableMessage(tbody, 6, "No submissions found");
       return;
     }
 
+    adminSubmissionsCache = data.submissions;
     tbody.innerHTML = data.submissions
       .map((submission) => {
         const submittedDate = submission.submission_date
@@ -1790,7 +1992,10 @@ async function loadSubmissions() {
             <td>${submission.priority || "medium"}</td>
             <td>${submittedDate}</td>
             <td>
-              <button class="btn btn-info btn-sm" onclick="showNotification('Submission details coming soon', 'info')">View</button>
+              <div class="table-action-group">
+                <button class="table-action-btn info" onclick="viewSubmission(${submission.id})">View</button>
+                <button class="table-action-btn success" onclick="viewBook(${submission.book_id})">Book</button>
+              </div>
             </td>
           </tr>
         `;
@@ -1798,6 +2003,7 @@ async function loadSubmissions() {
       .join("");
   } catch (error) {
     console.error("Error loading submissions:", error);
+    adminSubmissionsCache = [];
     renderAdminTableMessage(tbody, 6, "Error loading submissions");
   }
 }
@@ -1834,6 +2040,7 @@ async function loadContracts() {
     }
 
     if (!response.ok || !data.success) {
+      adminContractsCache = [];
       renderAdminTableMessage(
         tbody,
         6,
@@ -1843,12 +2050,15 @@ async function loadContracts() {
     }
 
     if (!data.contracts || data.contracts.length === 0) {
+      adminContractsCache = [];
       renderAdminTableMessage(tbody, 6, "No contracts found");
       return;
     }
 
+    adminContractsCache = data.contracts;
     tbody.innerHTML = data.contracts
-      .map((contract) => `
+      .map(
+        (contract) => `
         <tr>
           <td>${contract.contract_number || "N/A"}</td>
           <td>${contract.book_title || "N/A"}</td>
@@ -1856,14 +2066,1120 @@ async function loadContracts() {
           <td>${contract.contract_type || "N/A"}</td>
           <td><span class="status-badge status-${contract.status || "draft"}">${contract.status || "draft"}</span></td>
           <td>
-            <button class="btn btn-info btn-sm" onclick="showNotification('Contract details coming soon', 'info')">View</button>
+            <div class="table-action-group">
+              <button class="table-action-btn info" onclick="openContractEditor(${contract.id})">View</button>
+            </div>
           </td>
         </tr>
-      `)
+      `,
+      )
       .join("");
   } catch (error) {
     console.error("Error loading contracts:", error);
+    adminContractsCache = [];
     renderAdminTableMessage(tbody, 6, "Error loading contracts");
+  }
+}
+
+async function fetchAdminCollection(path, rootKey) {
+  const token = localStorage.getItem("authToken");
+  if (!token) {
+    throw new Error("Please login again");
+  }
+
+  const response = await fetch(`${API_BASE_URL}${path}`, {
+    headers: {
+      Authorization: `Bearer ${token}`,
+      Accept: "application/json",
+    },
+  });
+
+  let data = {};
+  try {
+    data = await response.json();
+  } catch (error) {
+    throw new Error("Invalid server response");
+  }
+
+  if (response.status === 401 || response.status === 403) {
+    handleAdminSectionAuthFailure(data.message || "Please login again");
+    throw new Error(data.message || "Please login again");
+  }
+
+  if (!response.ok || !data.success) {
+    throw new Error(data.message || "Request failed");
+  }
+
+  return rootKey ? data[rootKey] : data;
+}
+
+async function ensureAdminAuthorsCache(force = false) {
+  if (!force && adminAuthorsCache.length > 0) {
+    return adminAuthorsCache;
+  }
+
+  const authors = await fetchAdminCollection("/admin/authors", "authors");
+  adminAuthorsCache = Array.isArray(authors) ? authors : [];
+  return adminAuthorsCache;
+}
+
+async function ensureAdminBooksCache(force = false) {
+  if (!force && adminBooksCache.length > 0) {
+    return adminBooksCache;
+  }
+
+  const books = await fetchAdminCollection("/admin/books?limit=100", "books");
+  adminBooksCache = Array.isArray(books) ? books : [];
+  return adminBooksCache;
+}
+
+function getCachedAuthor(authorId) {
+  const numericId = Number(authorId);
+  return (
+    adminAuthorsCache.find((author) => Number(author.id) === numericId) || null
+  );
+}
+
+function getCachedBook(bookId) {
+  const numericId = Number(bookId);
+  return adminBooksCache.find((book) => Number(book.id) === numericId) || null;
+}
+
+function formatDateForInput(value) {
+  if (!value) return "";
+  const parsedDate = new Date(value);
+  if (Number.isNaN(parsedDate.getTime())) return "";
+  return parsedDate.toISOString().slice(0, 10);
+}
+
+function renderStatusBadge(status, fallback = "N/A") {
+  const safeStatus = escapeHtml(status || "pending");
+  return `<span class="status-badge status-${safeStatus}">${escapeHtml(
+    formatDashboardLabel(status || fallback, fallback),
+  )}</span>`;
+}
+
+function renderWorkflowList(items, emptyMessage, renderItem) {
+  const list = Array.isArray(items) ? items : [];
+  if (list.length === 0) {
+    return `<li class="workflow-empty">${escapeHtml(emptyMessage)}</li>`;
+  }
+
+  return list.map(renderItem).join("");
+}
+
+function renderWorkflowField(label, value) {
+  return `
+    <div class="workflow-field">
+      <span>${escapeHtml(label)}</span>
+      <strong>${escapeHtml(value || "N/A")}</strong>
+    </div>
+  `;
+}
+
+function getReviewerOptionsMarkup(selectedReviewerId = "") {
+  const normalizedSelected = String(selectedReviewerId || "");
+  const options = adminAuthorsCache
+    .filter((author) => (author.user_status || "") === "active")
+    .map((author) => {
+      const authorId = String(author.id);
+      const selectedAttribute =
+        authorId === normalizedSelected ? " selected" : "";
+      const descriptor = [author.full_name || "Unnamed author", author.faculty]
+        .filter(Boolean)
+        .join(" - ");
+      return `<option value="${escapeHtml(authorId)}"${selectedAttribute}>${escapeHtml(descriptor || `Author ${authorId}`)}</option>`;
+    })
+    .join("");
+
+  return `
+    <option value="">Unassigned</option>
+    ${options}
+  `;
+}
+
+async function openAdminBookModal(prefill = {}) {
+  try {
+    if (!currentUser || !ADMIN_ROLES.includes(currentUser.role)) {
+      showNotification("Admin access required", "error");
+      return;
+    }
+
+    showLoading("Loading book form...");
+    await ensureAdminAuthorsCache();
+
+    const form = document.getElementById("adminBookForm");
+    const authorSelect = document.getElementById("adminBookAuthor");
+    if (!form || !authorSelect) {
+      throw new Error("Admin book form is not available");
+    }
+
+    form.reset();
+    authorSelect.innerHTML = `
+      <option value="">Select Author</option>
+      ${adminAuthorsCache
+        .map((author) => {
+          const descriptor = [
+            author.full_name || "Unnamed author",
+            author.faculty,
+          ]
+            .filter(Boolean)
+            .join(" - ");
+          return `<option value="${escapeHtml(author.id)}">${escapeHtml(descriptor || `Author ${author.id}`)}</option>`;
+        })
+        .join("")}
+    `;
+
+    document.getElementById("adminBookTitle").value = prefill.title || "";
+    document.getElementById("adminBookSubtitle").value = prefill.subtitle || "";
+    document.getElementById("adminBookCategory").value = prefill.category || "";
+    document.getElementById("adminBookAuthor").value = prefill.author_id || "";
+    document.getElementById("adminBookStatus").value =
+      prefill.status || "draft";
+    document.getElementById("adminBookPrice").value = prefill.price || "";
+    document.getElementById("adminBookPublicationDate").value =
+      formatDateForInput(prefill.publication_date);
+    document.getElementById("adminBookLanguage").value =
+      prefill.language || "English";
+    document.getElementById("adminBookKeywords").value = prefill.keywords || "";
+    document.getElementById("adminBookAbstract").value = prefill.abstract || "";
+    document.getElementById("adminBookDescription").value =
+      prefill.description || "";
+
+    showModal("adminBookModal");
+  } catch (error) {
+    console.error("Open admin book modal error:", error);
+    showNotification(error.message || "Failed to open book form", "error");
+  } finally {
+    hideLoading();
+  }
+}
+
+async function handleAdminBookCreate(event) {
+  event.preventDefault();
+
+  try {
+    const token = localStorage.getItem("authToken");
+    if (!token) {
+      showNotification("Please login again", "error");
+      return;
+    }
+
+    const payload = {
+      author_id: document.getElementById("adminBookAuthor")?.value,
+      title: document.getElementById("adminBookTitle")?.value.trim(),
+      subtitle: document.getElementById("adminBookSubtitle")?.value.trim(),
+      category: document.getElementById("adminBookCategory")?.value.trim(),
+      status: document.getElementById("adminBookStatus")?.value || "draft",
+      price: document.getElementById("adminBookPrice")?.value.trim(),
+      publication_date:
+        document.getElementById("adminBookPublicationDate")?.value || "",
+      language:
+        document.getElementById("adminBookLanguage")?.value.trim() || "English",
+      keywords: document.getElementById("adminBookKeywords")?.value.trim(),
+      abstract: document.getElementById("adminBookAbstract")?.value.trim(),
+      description: document
+        .getElementById("adminBookDescription")
+        ?.value.trim(),
+    };
+
+    showLoading("Creating book record...");
+
+    const response = await fetch(`${API_BASE_URL}/admin/books`, {
+      method: "POST",
+      headers: {
+        Authorization: `Bearer ${token}`,
+        "Content-Type": "application/json",
+        Accept: "application/json",
+      },
+      body: JSON.stringify(payload),
+    });
+
+    const data = await response.json();
+    if (!response.ok || !data.success) {
+      showNotification(data.message || "Failed to create book", "error");
+      return;
+    }
+
+    closeModal("adminBookModal");
+    showNotification(data.message || "Book created successfully", "success");
+    await Promise.all([loadBooks(), loadContracts(), loadAdminDashboard()]);
+
+    if (data.book_id) {
+      await viewBook(data.book_id);
+    }
+  } catch (error) {
+    console.error("Admin book create error:", error);
+    showNotification("Failed to create book", "error");
+  } finally {
+    hideLoading();
+  }
+}
+
+async function viewBook(bookId) {
+  try {
+    const token = localStorage.getItem("authToken");
+    if (!token) {
+      showNotification("Please login to continue", "error");
+      return;
+    }
+
+    showLoading("Loading book workflow...");
+
+    const response = await fetch(`${API_BASE_URL}/admin/books/${bookId}`, {
+      headers: {
+        Authorization: `Bearer ${token}`,
+        Accept: "application/json",
+      },
+    });
+
+    const data = await response.json();
+    if (!response.ok || !data.success || !data.book) {
+      showNotification(data.message || "Failed to load book details", "error");
+      return;
+    }
+
+    const book = data.book;
+    const coverImage = book.cover_image
+      ? resolveAssetUrl(book.cover_image)
+      : "assets/OIP.webp";
+    const content = document.getElementById("bookDetailsContent");
+    if (!content) return;
+
+    const submissionList = renderWorkflowList(
+      book.submissions,
+      "No submissions linked to this book yet.",
+      (submission) => `
+        <li>
+          <div>
+            <strong>${escapeHtml(
+              formatDashboardLabel(
+                submission.submission_type || "publishing",
+                "Publishing",
+              ),
+            )}</strong>
+            <span>${escapeHtml(
+              formatDashboardDate(
+                submission.submission_date,
+                "No submission date",
+              ),
+            )}</span>
+          </div>
+          <div class="workflow-list-actions">
+            ${renderStatusBadge(submission.status || "pending", "Pending")}
+            <button type="button" class="table-action-btn info" onclick="viewSubmission(${submission.id})">Open</button>
+          </div>
+        </li>
+      `,
+    );
+    const contractList = renderWorkflowList(
+      book.contracts,
+      "No contracts recorded for this book yet.",
+      (contract) => `
+        <li>
+          <div>
+            <strong>${escapeHtml(contract.contract_number || "Draft contract")}</strong>
+            <span>${escapeHtml(
+              formatDashboardLabel(
+                contract.contract_type || "standard",
+                "Standard",
+              ),
+            )}</span>
+          </div>
+          <div class="workflow-list-actions">
+            ${renderStatusBadge(contract.status || "draft", "Draft")}
+            <button type="button" class="table-action-btn info" onclick="openContractEditor(${contract.id})">Open</button>
+          </div>
+        </li>
+      `,
+    );
+    const progressList = renderWorkflowList(
+      book.progress,
+      "No workflow milestones have been recorded yet.",
+      (progressItem) => `
+        <li>
+          <div>
+            <strong>${escapeHtml(
+              formatDashboardLabel(
+                progressItem.stage || "manuscript_submission",
+                "Workflow",
+              ),
+            )}</strong>
+            <span>${escapeHtml(
+              formatDashboardDate(
+                progressItem.completed_date || progressItem.start_date,
+                "No date",
+              ),
+            )}</span>
+          </div>
+          <div class="workflow-list-actions">
+            ${renderStatusBadge(progressItem.status || "not_started", "Not Started")}
+          </div>
+        </li>
+      `,
+    );
+    const reviewList = renderWorkflowList(
+      book.reviews,
+      "No reviews have been logged for this book.",
+      (review) => `
+        <li>
+          <div>
+            <strong>${escapeHtml(review.reviewer_name || "Reviewer pending")}</strong>
+            <span>${escapeHtml(
+              review.recommendation
+                ? formatDashboardLabel(review.recommendation, "Recommendation")
+                : "No recommendation yet",
+            )}</span>
+          </div>
+          <div class="workflow-list-actions">
+            ${renderStatusBadge(review.status || "pending", "Pending")}
+          </div>
+        </li>
+      `,
+    );
+
+    content.innerHTML = `
+      <div class="workflow-profile">
+        <img src="${escapeHtml(coverImage)}" alt="Book cover" class="workflow-cover" />
+        <div class="workflow-profile-copy">
+          <span class="workflow-kicker">Book Workflow</span>
+          <h4>${escapeHtml(book.title || "Untitled book")}</h4>
+          <p>${escapeHtml(book.author_name || "Unknown author")}</p>
+          <div class="workflow-status-row">
+            ${renderStatusBadge(book.status || "draft", "Draft")}
+            <span class="workflow-meta">${escapeHtml(book.category || "No category")}</span>
+          </div>
+          <div class="workflow-link-row">
+            ${
+              book.manuscript_file
+                ? `<a class="table-action-btn info" href="${escapeHtml(resolveAssetUrl(book.manuscript_file))}" target="_blank" rel="noopener noreferrer">Open Manuscript</a>`
+                : `<span class="workflow-meta">No manuscript file uploaded</span>`
+            }
+          </div>
+        </div>
+      </div>
+
+      <div class="workflow-summary-grid">
+        <article class="workflow-summary-card">
+          <span>Submissions</span>
+          <strong>${escapeHtml((book.submissions || []).length)}</strong>
+        </article>
+        <article class="workflow-summary-card">
+          <span>Contracts</span>
+          <strong>${escapeHtml((book.contracts || []).length)}</strong>
+        </article>
+        <article class="workflow-summary-card">
+          <span>Reviews</span>
+          <strong>${escapeHtml((book.reviews || []).length)}</strong>
+        </article>
+        <article class="workflow-summary-card">
+          <span>Sales</span>
+          <strong>${escapeHtml((book.sales || []).length)}</strong>
+        </article>
+      </div>
+
+      <div class="workflow-field-grid">
+        ${renderWorkflowField("Author Email", book.author_email || "N/A")}
+        ${renderWorkflowField("Faculty", book.author_faculty || "N/A")}
+        ${renderWorkflowField("Department", book.author_department || "N/A")}
+        ${renderWorkflowField("Language", book.language || "English")}
+        ${renderWorkflowField("Format", formatDashboardLabel(book.format || "paperback", "Paperback"))}
+        ${renderWorkflowField("Price", book.price !== null && book.price !== undefined ? formatCurrencyCode(book.price) : "N/A")}
+        ${renderWorkflowField("Published On", formatDashboardDate(book.publication_date, "Not published yet"))}
+        ${renderWorkflowField("Created", formatDashboardDate(book.created_at, "N/A"))}
+      </div>
+
+      <div class="workflow-panel">
+        <span class="workflow-panel-label">Description</span>
+        <p>${escapeHtml(book.description || book.abstract || "No description provided.")}</p>
+      </div>
+
+      <div class="workflow-form-grid">
+        <form class="workflow-panel" id="bookWorkflowForm" onsubmit="handleBookWorkflowUpdate(event)">
+          <input type="hidden" id="bookWorkflowId" value="${escapeHtml(book.id)}" />
+          <span class="workflow-panel-label">Update Publishing Status</span>
+          <div class="workflow-form-fields">
+            <div class="form-group">
+              <label for="bookWorkflowStatus">Book Status</label>
+              <select id="bookWorkflowStatus" class="form-control" required>
+                ${[
+                  "draft",
+                  "submitted",
+                  "under_review",
+                  "revisions_requested",
+                  "accepted",
+                  "in_production",
+                  "published",
+                  "rejected",
+                  "archived",
+                ]
+                  .map(
+                    (statusValue) => `
+                      <option value="${statusValue}"${
+                        statusValue === (book.status || "draft")
+                          ? " selected"
+                          : ""
+                      }>
+                        ${escapeHtml(formatDashboardLabel(statusValue))}
+                      </option>
+                    `,
+                  )
+                  .join("")}
+              </select>
+            </div>
+            <div class="form-group">
+              <label for="bookWorkflowPublicationDate">Publication Date</label>
+              <input type="date" id="bookWorkflowPublicationDate" class="form-control" value="${escapeHtml(formatDateForInput(book.publication_date))}" />
+            </div>
+            <div class="form-group">
+              <label for="bookWorkflowPrice">Price</label>
+              <input type="number" id="bookWorkflowPrice" class="form-control" min="0" step="0.01" value="${escapeHtml(book.price ?? "")}" />
+            </div>
+            <div class="form-group workflow-form-full">
+              <label for="bookWorkflowNotes">Editor Notes</label>
+              <textarea id="bookWorkflowNotes" class="form-control" rows="4" placeholder="Add editorial notes or publishing instructions">${escapeHtml(book.editor_notes || "")}</textarea>
+            </div>
+          </div>
+          <div class="workflow-form-actions">
+            <button type="submit" class="btn btn-primary">Save Book Workflow</button>
+            <button type="button" class="btn btn-outline" onclick="openContractEditorForBook(${book.id})">Create Contract</button>
+          </div>
+        </form>
+
+        <form class="workflow-panel" id="bookCoverForm" onsubmit="handleBookCoverUpload(event)">
+          <input type="hidden" id="bookCoverBookId" value="${escapeHtml(book.id)}" />
+          <span class="workflow-panel-label">Cover Artwork</span>
+          <div class="workflow-upload-meta">
+            <p>Upload or replace the book cover used in the public catalog and book details.</p>
+          </div>
+          <div class="form-group">
+            <label for="bookCoverFile">Cover Image</label>
+            <input type="file" id="bookCoverFile" class="form-control" accept="image/*" />
+          </div>
+          <div class="workflow-form-actions">
+            <button type="submit" class="btn btn-primary">Upload Cover</button>
+          </div>
+        </form>
+      </div>
+
+      <div class="workflow-activity-grid">
+        <section class="workflow-activity-panel">
+          <h5>Submissions</h5>
+          <ul>${submissionList}</ul>
+        </section>
+        <section class="workflow-activity-panel">
+          <h5>Contracts</h5>
+          <ul>${contractList}</ul>
+        </section>
+        <section class="workflow-activity-panel">
+          <h5>Progress</h5>
+          <ul>${progressList}</ul>
+        </section>
+        <section class="workflow-activity-panel">
+          <h5>Reviews</h5>
+          <ul>${reviewList}</ul>
+        </section>
+      </div>
+    `;
+
+    showModal("bookDetailsModal");
+  } catch (error) {
+    console.error("View book error:", error);
+    showNotification("Failed to load book details", "error");
+  } finally {
+    hideLoading();
+  }
+}
+
+async function handleBookWorkflowUpdate(event) {
+  event.preventDefault();
+
+  try {
+    const token = localStorage.getItem("authToken");
+    const bookId = document.getElementById("bookWorkflowId")?.value;
+    if (!token || !bookId) {
+      showNotification("Please login again", "error");
+      return;
+    }
+
+    showLoading("Updating book workflow...");
+
+    const response = await fetch(
+      `${API_BASE_URL}/admin/books/${bookId}/status`,
+      {
+        method: "PUT",
+        headers: {
+          Authorization: `Bearer ${token}`,
+          "Content-Type": "application/json",
+          Accept: "application/json",
+        },
+        body: JSON.stringify({
+          status: document.getElementById("bookWorkflowStatus")?.value,
+          notes: document.getElementById("bookWorkflowNotes")?.value,
+          publication_date:
+            document.getElementById("bookWorkflowPublicationDate")?.value || "",
+          price: document.getElementById("bookWorkflowPrice")?.value || "",
+        }),
+      },
+    );
+
+    const data = await response.json();
+    if (!response.ok || !data.success) {
+      showNotification(data.message || "Failed to update book", "error");
+      return;
+    }
+
+    showNotification(data.message || "Book updated successfully", "success");
+    await Promise.all([
+      loadBooks(),
+      loadSubmissions(),
+      loadContracts(),
+      loadAdminDashboard(),
+    ]);
+    await viewBook(bookId);
+  } catch (error) {
+    console.error("Book workflow update error:", error);
+    showNotification("Failed to update book workflow", "error");
+  } finally {
+    hideLoading();
+  }
+}
+
+async function handleBookCoverUpload(event) {
+  event.preventDefault();
+
+  try {
+    const token = localStorage.getItem("authToken");
+    const bookId = document.getElementById("bookCoverBookId")?.value;
+    const coverFile = document.getElementById("bookCoverFile")?.files?.[0];
+
+    if (!token || !bookId) {
+      showNotification("Please login again", "error");
+      return;
+    }
+
+    if (!coverFile) {
+      showNotification("Please choose a cover image to upload", "error");
+      return;
+    }
+
+    showLoading("Uploading cover...");
+
+    const formData = new FormData();
+    formData.append("cover", coverFile);
+
+    const response = await fetch(
+      `${API_BASE_URL}/admin/books/${bookId}/cover`,
+      {
+        method: "POST",
+        headers: {
+          Authorization: `Bearer ${token}`,
+          Accept: "application/json",
+        },
+        body: formData,
+      },
+    );
+
+    const data = await response.json();
+    if (!response.ok || !data.success) {
+      showNotification(data.message || "Failed to upload cover", "error");
+      return;
+    }
+
+    showNotification(data.message || "Cover uploaded successfully", "success");
+    await Promise.all([loadBooks(), loadAdminDashboard()]);
+    await viewBook(bookId);
+  } catch (error) {
+    console.error("Book cover upload error:", error);
+    showNotification("Failed to upload book cover", "error");
+  } finally {
+    hideLoading();
+  }
+}
+
+async function viewSubmission(submissionId) {
+  try {
+    const token = localStorage.getItem("authToken");
+    if (!token) {
+      showNotification("Please login to continue", "error");
+      return;
+    }
+
+    showLoading("Loading submission details...");
+    await ensureAdminAuthorsCache();
+
+    const response = await fetch(
+      `${API_BASE_URL}/admin/submissions/${submissionId}`,
+      {
+        headers: {
+          Authorization: `Bearer ${token}`,
+          Accept: "application/json",
+        },
+      },
+    );
+
+    const data = await response.json();
+    if (!response.ok || !data.success || !data.submission) {
+      showNotification(
+        data.message || "Failed to load submission details",
+        "error",
+      );
+      return;
+    }
+
+    const submission = data.submission;
+    const assignedReviewer = getCachedAuthor(submission.assigned_to);
+    const reviewsMarkup = renderWorkflowList(
+      submission.reviews,
+      "No review records logged for this submission.",
+      (review) => `
+        <li>
+          <div>
+            <strong>${escapeHtml(review.reviewer_name || "Reviewer pending")}</strong>
+            <span>${escapeHtml(
+              review.recommendation
+                ? formatDashboardLabel(review.recommendation, "Recommendation")
+                : "No recommendation yet",
+            )}</span>
+          </div>
+          <div class="workflow-list-actions">
+            ${renderStatusBadge(review.status || "pending", "Pending")}
+          </div>
+        </li>
+      `,
+    );
+
+    const content = document.getElementById("submissionDetailsContent");
+    if (!content) return;
+
+    content.innerHTML = `
+      <div class="workflow-profile workflow-profile-compact">
+        <div class="workflow-profile-copy">
+          <span class="workflow-kicker">Submission Workflow</span>
+          <h4>${escapeHtml(submission.book_title || "Untitled submission")}</h4>
+          <p>${escapeHtml(submission.author_name || "Unknown author")}</p>
+          <div class="workflow-status-row">
+            ${renderStatusBadge(submission.status || "pending", "Pending")}
+            <span class="workflow-meta">${escapeHtml(
+              formatDashboardLabel(
+                submission.submission_type || "publishing",
+                "Publishing",
+              ),
+            )}</span>
+          </div>
+        </div>
+      </div>
+
+      <div class="workflow-summary-grid">
+        <article class="workflow-summary-card">
+          <span>Priority</span>
+          <strong>${escapeHtml(
+            formatDashboardLabel(submission.priority || "medium", "Medium"),
+          )}</strong>
+        </article>
+        <article class="workflow-summary-card">
+          <span>Assigned Reviewer</span>
+          <strong>${escapeHtml(assignedReviewer?.full_name || "Unassigned")}</strong>
+        </article>
+        <article class="workflow-summary-card">
+          <span>Submitted</span>
+          <strong>${escapeHtml(
+            formatDashboardDate(submission.submission_date, "N/A"),
+          )}</strong>
+        </article>
+        <article class="workflow-summary-card">
+          <span>Due Date</span>
+          <strong>${escapeHtml(
+            formatDashboardDate(
+              submission.due_date || submission.due_date_formatted,
+              "Not set",
+            ),
+          )}</strong>
+        </article>
+      </div>
+
+      <div class="workflow-field-grid">
+        ${renderWorkflowField("Book Status", formatDashboardLabel(submission.book_status || "under_review", "Under Review"))}
+        ${renderWorkflowField("Category", submission.book_category || "N/A")}
+        ${renderWorkflowField("Author Email", submission.author_email || "N/A")}
+        ${renderWorkflowField("Reviewer", assignedReviewer?.full_name || "Unassigned")}
+      </div>
+
+      <div class="workflow-form-grid">
+        <form class="workflow-panel" id="submissionWorkflowForm" onsubmit="handleSubmissionWorkflowUpdate(event)">
+          <input type="hidden" id="submissionWorkflowId" value="${escapeHtml(submission.id)}" />
+          <input type="hidden" id="submissionWorkflowBookId" value="${escapeHtml(submission.book_id)}" />
+          <span class="workflow-panel-label">Assignment and Decision</span>
+          <div class="workflow-form-fields">
+            <div class="form-group">
+              <label for="submissionWorkflowStatus">Submission Status</label>
+              <select id="submissionWorkflowStatus" class="form-control" required>
+                ${[
+                  "pending",
+                  "assigned",
+                  "in_review",
+                  "review_completed",
+                  "accepted",
+                  "rejected",
+                  "withdrawn",
+                ]
+                  .map(
+                    (statusValue) => `
+                      <option value="${statusValue}"${
+                        statusValue === (submission.status || "pending")
+                          ? " selected"
+                          : ""
+                      }>
+                        ${escapeHtml(formatDashboardLabel(statusValue))}
+                      </option>
+                    `,
+                  )
+                  .join("")}
+              </select>
+            </div>
+            <div class="form-group">
+              <label for="submissionWorkflowReviewer">Reviewer</label>
+              <select id="submissionWorkflowReviewer" class="form-control">
+                ${getReviewerOptionsMarkup(submission.assigned_to)}
+              </select>
+            </div>
+            <div class="form-group">
+              <label for="submissionWorkflowPriority">Priority</label>
+              <select id="submissionWorkflowPriority" class="form-control">
+                ${["low", "medium", "high", "urgent"]
+                  .map(
+                    (priorityValue) => `
+                      <option value="${priorityValue}"${
+                        priorityValue === (submission.priority || "medium")
+                          ? " selected"
+                          : ""
+                      }>
+                        ${escapeHtml(formatDashboardLabel(priorityValue))}
+                      </option>
+                    `,
+                  )
+                  .join("")}
+              </select>
+            </div>
+            <div class="form-group">
+              <label for="submissionWorkflowDueDate">Due Date</label>
+              <input type="date" id="submissionWorkflowDueDate" class="form-control" value="${escapeHtml(
+                formatDateForInput(
+                  submission.due_date || submission.due_date_formatted,
+                ),
+              )}" />
+            </div>
+            <div class="form-group workflow-form-full">
+              <label for="submissionWorkflowNotes">Admin Notes</label>
+              <textarea id="submissionWorkflowNotes" class="form-control" rows="4" placeholder="Add assignment notes, editorial decisions, or review guidance">${escapeHtml(
+                submission.admin_notes || "",
+              )}</textarea>
+            </div>
+          </div>
+          <div class="workflow-form-actions">
+            <button type="submit" class="btn btn-primary">Save Submission</button>
+            <button type="button" class="btn btn-outline" onclick="viewBook(${submission.book_id})">Open Book</button>
+          </div>
+        </form>
+
+        <div class="workflow-panel">
+          <span class="workflow-panel-label">Author Notes</span>
+          <p>${escapeHtml(
+            submission.author_notes || "No author notes were provided.",
+          )}</p>
+          <div class="workflow-inline-note">
+            <strong>Latest reviews</strong>
+            <ul class="workflow-inline-list">${reviewsMarkup}</ul>
+          </div>
+        </div>
+      </div>
+    `;
+
+    showModal("submissionDetailsModal");
+  } catch (error) {
+    console.error("View submission error:", error);
+    showNotification("Failed to load submission details", "error");
+  } finally {
+    hideLoading();
+  }
+}
+
+async function handleSubmissionWorkflowUpdate(event) {
+  event.preventDefault();
+
+  try {
+    const token = localStorage.getItem("authToken");
+    const submissionId = document.getElementById("submissionWorkflowId")?.value;
+    if (!token || !submissionId) {
+      showNotification("Please login again", "error");
+      return;
+    }
+
+    showLoading("Updating submission...");
+
+    const response = await fetch(
+      `${API_BASE_URL}/admin/submissions/${submissionId}`,
+      {
+        method: "PUT",
+        headers: {
+          Authorization: `Bearer ${token}`,
+          "Content-Type": "application/json",
+          Accept: "application/json",
+        },
+        body: JSON.stringify({
+          status: document.getElementById("submissionWorkflowStatus")?.value,
+          reviewer_id:
+            document.getElementById("submissionWorkflowReviewer")?.value || "",
+          priority:
+            document.getElementById("submissionWorkflowPriority")?.value ||
+            "medium",
+          due_date:
+            document.getElementById("submissionWorkflowDueDate")?.value || "",
+          admin_notes:
+            document.getElementById("submissionWorkflowNotes")?.value || "",
+        }),
+      },
+    );
+
+    const data = await response.json();
+    if (!response.ok || !data.success) {
+      showNotification(data.message || "Failed to update submission", "error");
+      return;
+    }
+
+    showNotification(
+      data.message || "Submission updated successfully",
+      "success",
+    );
+    await Promise.all([loadSubmissions(), loadBooks(), loadAdminDashboard()]);
+    await viewSubmission(submissionId);
+  } catch (error) {
+    console.error("Submission workflow update error:", error);
+    showNotification("Failed to update submission", "error");
+  } finally {
+    hideLoading();
+  }
+}
+
+function populateContractBookOptions(selectedBookId = "") {
+  const bookSelect = document.getElementById("contractEditorBook");
+  if (!bookSelect) return;
+
+  const normalizedSelected = String(selectedBookId || "");
+  bookSelect.innerHTML = `
+    <option value="">Select Book</option>
+    ${adminBooksCache
+      .filter((book) => Number(book.author_id))
+      .map((book) => {
+        const selectedAttribute =
+          String(book.id) === normalizedSelected ? " selected" : "";
+        const label = [book.title || "Untitled book", book.author_name]
+          .filter(Boolean)
+          .join(" - ");
+        return `<option value="${escapeHtml(book.id)}"${selectedAttribute}>${escapeHtml(label)}</option>`;
+      })
+      .join("")}
+  `;
+}
+
+function syncContractAuthorFromBookSelection() {
+  const bookId = document.getElementById("contractEditorBook")?.value;
+  const hiddenAuthorId = document.getElementById("contractEditorAuthorId");
+  const authorDisplay = document.getElementById("contractEditorAuthorName");
+  const summary = document.getElementById("contractEditorSummary");
+  const selectedBook = getCachedBook(bookId);
+
+  if (hiddenAuthorId) {
+    hiddenAuthorId.value = selectedBook?.author_id || "";
+  }
+
+  if (authorDisplay) {
+    authorDisplay.value = selectedBook?.author_name || "";
+  }
+
+  if (summary) {
+    summary.innerHTML = selectedBook
+      ? `
+        <strong>${escapeHtml(selectedBook.title || "Untitled book")}</strong>
+        <span>${escapeHtml(selectedBook.author_name || "Unknown author")}</span>
+      `
+      : "<strong>Select a book</strong><span>The linked author will fill automatically.</span>";
+  }
+}
+
+async function openContractEditor(contractId = null, prefill = {}) {
+  try {
+    if (!currentUser || !ADMIN_ROLES.includes(currentUser.role)) {
+      showNotification("Admin access required", "error");
+      return;
+    }
+
+    showLoading(
+      contractId ? "Loading contract..." : "Loading contract form...",
+    );
+    await Promise.all([ensureAdminAuthorsCache(), ensureAdminBooksCache()]);
+
+    const form = document.getElementById("contractEditorForm");
+    if (!form) {
+      throw new Error("Contract editor is not available");
+    }
+
+    form.reset();
+    document.getElementById("contractEditorId").value = "";
+    document.getElementById("contractEditorStatus").value = "draft";
+    document.getElementById("contractEditorType").value = "standard";
+    populateContractBookOptions(prefill.bookId || "");
+    syncContractAuthorFromBookSelection();
+
+    const title = document.getElementById("contractEditorModalTitle");
+    const submitLabel = document.getElementById("contractEditorSubmitLabel");
+    if (title) {
+      title.textContent = contractId ? "Contract Details" : "Create Contract";
+    }
+    if (submitLabel) {
+      submitLabel.textContent = contractId
+        ? "Save Contract"
+        : "Create Contract";
+    }
+
+    if (contractId) {
+      const token = localStorage.getItem("authToken");
+      const response = await fetch(
+        `${API_BASE_URL}/admin/contracts/${contractId}`,
+        {
+          headers: {
+            Authorization: `Bearer ${token}`,
+            Accept: "application/json",
+          },
+        },
+      );
+      const data = await response.json();
+      if (!response.ok || !data.success || !data.contract) {
+        showNotification(data.message || "Failed to load contract", "error");
+        return;
+      }
+
+      const contract = data.contract;
+      document.getElementById("contractEditorId").value = contract.id;
+      populateContractBookOptions(contract.book_id || "");
+      document.getElementById("contractEditorBook").value =
+        contract.book_id || "";
+      document.getElementById("contractEditorType").value =
+        contract.contract_type || "standard";
+      document.getElementById("contractEditorStatus").value =
+        contract.status || "draft";
+      document.getElementById("contractEditorRoyalty").value =
+        contract.royalty_percentage ?? "";
+      document.getElementById("contractEditorAdvance").value =
+        contract.advance_amount ?? "";
+      document.getElementById("contractEditorStartDate").value =
+        formatDateForInput(contract.start_date);
+      document.getElementById("contractEditorEndDate").value =
+        formatDateForInput(contract.end_date);
+      document.getElementById("contractEditorTerritory").value =
+        contract.territory || "";
+      document.getElementById("contractEditorRightsGranted").value =
+        contract.rights_granted || "";
+      document.getElementById("contractEditorPaymentSchedule").value =
+        contract.payment_schedule || "";
+    } else if (prefill.bookId) {
+      document.getElementById("contractEditorBook").value = prefill.bookId;
+    }
+
+    syncContractAuthorFromBookSelection();
+    showModal("contractEditorModal");
+  } catch (error) {
+    console.error("Open contract editor error:", error);
+    showNotification(
+      error.message || "Failed to open contract editor",
+      "error",
+    );
+  } finally {
+    hideLoading();
+  }
+}
+
+function openContractEditorForBook(bookId) {
+  openContractEditor(null, { bookId });
+}
+
+async function handleContractEditorSubmit(event) {
+  event.preventDefault();
+
+  try {
+    const token = localStorage.getItem("authToken");
+    if (!token) {
+      showNotification("Please login again", "error");
+      return;
+    }
+
+    const contractId = document.getElementById("contractEditorId")?.value;
+    const bookId = document.getElementById("contractEditorBook")?.value;
+    const authorId = document.getElementById("contractEditorAuthorId")?.value;
+
+    if (!bookId || !authorId) {
+      showNotification("Please choose a book linked to an author", "error");
+      return;
+    }
+
+    const payload = {
+      book_id: bookId,
+      author_id: authorId,
+      contract_type: document.getElementById("contractEditorType")?.value,
+      status: document.getElementById("contractEditorStatus")?.value,
+      royalty_percentage:
+        document.getElementById("contractEditorRoyalty")?.value || "",
+      advance_amount:
+        document.getElementById("contractEditorAdvance")?.value || "",
+      start_date:
+        document.getElementById("contractEditorStartDate")?.value || "",
+      end_date: document.getElementById("contractEditorEndDate")?.value || "",
+      territory:
+        document.getElementById("contractEditorTerritory")?.value || "",
+      rights_granted:
+        document.getElementById("contractEditorRightsGranted")?.value || "",
+      payment_schedule:
+        document.getElementById("contractEditorPaymentSchedule")?.value || "",
+    };
+
+    showLoading(contractId ? "Saving contract..." : "Creating contract...");
+
+    const endpoint = contractId
+      ? `${API_BASE_URL}/admin/contracts/${contractId}`
+      : `${API_BASE_URL}/admin/contracts`;
+    const method = contractId ? "PUT" : "POST";
+
+    const response = await fetch(endpoint, {
+      method,
+      headers: {
+        Authorization: `Bearer ${token}`,
+        "Content-Type": "application/json",
+        Accept: "application/json",
+      },
+      body: JSON.stringify(payload),
+    });
+
+    const data = await response.json();
+    if (!response.ok || !data.success) {
+      showNotification(data.message || "Failed to save contract", "error");
+      return;
+    }
+
+    closeModal("contractEditorModal");
+    showNotification(data.message || "Contract saved successfully", "success");
+    await Promise.all([loadContracts(), loadBooks(), loadAdminDashboard()]);
+
+    if (
+      bookId &&
+      document.getElementById("bookDetailsModal")?.classList.contains("active")
+    ) {
+      await viewBook(bookId);
+    }
+  } catch (error) {
+    console.error("Contract editor submit error:", error);
+    showNotification("Failed to save contract", "error");
+  } finally {
+    hideLoading();
   }
 }
 
@@ -1908,7 +3224,9 @@ async function loadTrainingRegistrations() {
       .map((row) => {
         const dateValue =
           row.preferred_date || row.created_at
-            ? new Date(row.preferred_date || row.created_at).toLocaleDateString()
+            ? new Date(
+                row.preferred_date || row.created_at,
+              ).toLocaleDateString()
             : "N/A";
         return `
           <tr>
@@ -1945,21 +3263,30 @@ function showAddAuthorModal() {
 }
 
 function showAddBookModal() {
-  if (
-    !currentUser ||
-    !["author", "admin", "editor"].includes(currentUser.role)
-  ) {
-    showNotification("Please login as an author to submit a manuscript", "error");
+  if (currentUser && ADMIN_ROLES.includes(currentUser.role)) {
+    openAdminBookModal();
+    return;
+  }
+
+  if (!currentUser || currentUser.role !== "author") {
+    showNotification(
+      "Please login as an author to submit a manuscript",
+      "error",
+    );
     showAuthorLogin();
     return;
   }
 
   showModal("submitBookModal");
+  document.querySelector("#submitBookModal .modal-body")?.scrollTo({
+    top: 0,
+    behavior: "smooth",
+  });
+  syncAuthorWorkspace();
 }
 
 function showAddContractModal() {
-  // Implement add contract modal
-  showNotification("Add contract functionality coming soon", "info");
+  openContractEditor();
 }
 
 // ============================================
@@ -2065,6 +3392,9 @@ function hideLoading() {
 }
 
 function initAnimations() {
+  // Initialize carousel
+  initHeroCarousel();
+
   // Initialize animations on scroll
   function animateOnScroll() {
     const elements = document.querySelectorAll(".animate-fade-in-up");
@@ -2076,6 +3406,20 @@ function initAnimations() {
         element.style.animationPlayState = "running";
       }
     });
+
+    // Parallax effect for hero section
+    const heroSection = document.querySelector(".press-hero");
+    if (heroSection) {
+      const heroTop = heroSection.getBoundingClientRect().top;
+      const windowHeight = window.innerHeight;
+      const scrollProgress =
+        (windowHeight - heroTop) / (windowHeight + heroSection.offsetHeight);
+
+      if (scrollProgress >= -0.3 && scrollProgress <= 1) {
+        const parallaxValue = scrollProgress * 30;
+        heroSection.style.backgroundPosition = `center ${parallaxValue}px`;
+      }
+    }
   }
 
   // Initial animation state
@@ -2085,7 +3429,7 @@ function initAnimations() {
 
   // Trigger animations
   animateOnScroll();
-  window.addEventListener("scroll", animateOnScroll);
+  window.addEventListener("scroll", animateOnScroll, { passive: true });
 
   // Trigger animations after page load
   setTimeout(() => {
@@ -2093,6 +3437,33 @@ function initAnimations() {
       element.style.animationPlayState = "running";
     });
   }, 300);
+}
+
+// Hero Carousel Initialization
+function initHeroCarousel() {
+  const carousel = document.querySelector(".press-hero-carousel");
+  if (!carousel) return;
+
+  const images = carousel.querySelectorAll(".press-hero-carousel-image");
+  if (images.length === 0) return;
+
+  let currentIndex = 0;
+
+  // Only preload first image, others load as needed
+  images.forEach((img, index) => {
+    if (index === 0) {
+      img.style.loading = "eager";
+    }
+  });
+
+  // Optional: Add keyboard navigation
+  document.addEventListener("keydown", (e) => {
+    if (e.key === "ArrowRight") {
+      currentIndex = (currentIndex + 1) % images.length;
+    } else if (e.key === "ArrowLeft") {
+      currentIndex = (currentIndex - 1 + images.length) % images.length;
+    }
+  });
 }
 
 // ============================================
@@ -2123,7 +3494,504 @@ function formatDashboardLabel(value, fallback = "N/A") {
     .replace(/\b\w/g, (character) => character.toUpperCase());
 }
 
-async function loadAuthorDashboard() {
+function formatCurrencyCode(value) {
+  return new Intl.NumberFormat("en-NG", {
+    style: "currency",
+    currency: "NGN",
+    currencyDisplay: "code",
+    maximumFractionDigits: 0,
+  })
+    .format(Number(value) || 0)
+    .replace(/\u00a0/g, " ");
+}
+
+function formatDashboardDate(value, fallback = "No activity yet") {
+  if (!value) return fallback;
+
+  const parsedDate = new Date(value);
+  if (Number.isNaN(parsedDate.getTime())) {
+    return fallback;
+  }
+
+  return parsedDate.toLocaleDateString(undefined, {
+    year: "numeric",
+    month: "short",
+    day: "numeric",
+  });
+}
+
+function getWordCount(value) {
+  return String(value || "")
+    .trim()
+    .split(/\s+/)
+    .filter(Boolean).length;
+}
+
+function getKeywordList(value) {
+  return String(value || "")
+    .split(",")
+    .map((item) => item.trim())
+    .filter(Boolean);
+}
+
+function getFileExtension(filename) {
+  if (!filename || !filename.includes(".")) return "";
+  return filename.slice(filename.lastIndexOf(".")).toLowerCase();
+}
+
+function updateProgressBar(elementId, percent) {
+  const element = document.getElementById(elementId);
+  if (!element) return;
+  const safePercent = Math.max(0, Math.min(100, Math.round(percent)));
+  element.style.width = `${safePercent}%`;
+}
+
+function renderChecklistMarkup(items) {
+  return items
+    .map(
+      (item) => `
+        <li class="${item.complete ? "is-complete" : "is-pending"}">
+          <i class="fas ${item.complete ? "fa-check-circle" : "fa-circle"}"></i>
+          <span>${escapeHtml(item.label)}</span>
+        </li>
+      `,
+    )
+    .join("");
+}
+
+function getAuthorProfileMetrics(author) {
+  const normalizedAuthor = author || {};
+  const completionFields = [
+    normalizedAuthor.full_name,
+    normalizedAuthor.email,
+    normalizedAuthor.phone,
+    normalizedAuthor.faculty,
+    normalizedAuthor.department,
+    normalizedAuthor.qualifications,
+    normalizedAuthor.areas_of_expertise,
+    normalizedAuthor.biography,
+    normalizedAuthor.orcid_id || normalizedAuthor.google_scholar_id,
+  ];
+  const filledCount = completionFields.filter(Boolean).length;
+  const completionPercent = Math.round(
+    (filledCount / completionFields.length) * 100,
+  );
+  const essentialsReady = Boolean(
+    normalizedAuthor.full_name &&
+    normalizedAuthor.email &&
+    normalizedAuthor.faculty &&
+    normalizedAuthor.department &&
+    normalizedAuthor.biography,
+  );
+  const discoverabilityCount = [
+    normalizedAuthor.qualifications,
+    normalizedAuthor.areas_of_expertise,
+    normalizedAuthor.orcid_id,
+    normalizedAuthor.google_scholar_id,
+    normalizedAuthor.linkedin_url,
+  ].filter(Boolean).length;
+
+  let discoverabilityStatus = "Needs attention";
+  let discoverabilityCopy =
+    "Add expertise and scholarly identifiers to improve editorial context and metadata quality.";
+
+  if (discoverabilityCount >= 3) {
+    discoverabilityStatus = "Strong";
+    discoverabilityCopy =
+      "Your scholarly identifiers and expertise details are in good shape for routing and discoverability.";
+  } else if (discoverabilityCount >= 1) {
+    discoverabilityStatus = "Developing";
+    discoverabilityCopy =
+      "Add one or two more discoverability signals to strengthen catalog and reviewer context.";
+  }
+
+  return {
+    completionPercent,
+    essentialsReady,
+    discoverabilityReady: discoverabilityCount >= 2,
+    discoverabilityStatus,
+    discoverabilityCopy,
+  };
+}
+
+function getSubmissionDraftState() {
+  const title = document.getElementById("bookTitle")?.value.trim() || "";
+  const category = document.getElementById("bookCategory")?.value.trim() || "";
+  const submissionType =
+    document.getElementById("bookSubmissionType")?.value || "publishing";
+  const keywordsValue = document.getElementById("bookKeywords")?.value || "";
+  const keywordsList = getKeywordList(keywordsValue);
+  const language =
+    document.getElementById("bookLanguage")?.value.trim() || "English";
+  const abstract = document.getElementById("bookAbstract")?.value.trim() || "";
+  const description =
+    document.getElementById("bookDescription")?.value.trim() || "";
+  const fileInput = document.getElementById("bookManuscriptFile");
+  const file = fileInput?.files?.[0] || null;
+  const abstractWordCount = getWordCount(abstract);
+  const descriptionWordCount = getWordCount(description);
+  const metadataReady = title.length >= 5 && category.length >= 3;
+  const abstractReady =
+    submissionType === "reprint" || submissionType === "translation"
+      ? abstractWordCount >= 20 || descriptionWordCount >= 25
+      : abstractWordCount >= 25;
+
+  return {
+    title,
+    category,
+    submissionType,
+    keywordsList,
+    language,
+    abstract,
+    description,
+    file,
+    abstractWordCount,
+    descriptionWordCount,
+    metadataReady,
+    abstractReady,
+    keywordsReady: keywordsList.length >= 2,
+    fileReady: Boolean(file),
+  };
+}
+
+function updateAuthorProfileSummary(profileMetrics) {
+  const completionValue = document.getElementById(
+    "authorProfileCompletionValue",
+  );
+  if (completionValue) {
+    completionValue.textContent = `${profileMetrics.completionPercent}%`;
+  }
+  updateProgressBar(
+    "authorProfileCompletionBar",
+    profileMetrics.completionPercent,
+  );
+
+  const discoverabilityStatus = document.getElementById(
+    "authorDiscoverabilityStatus",
+  );
+  if (discoverabilityStatus) {
+    discoverabilityStatus.textContent = profileMetrics.discoverabilityStatus;
+  }
+
+  const discoverabilityCopy = document.getElementById(
+    "authorDiscoverabilityCopy",
+  );
+  if (discoverabilityCopy) {
+    discoverabilityCopy.textContent = profileMetrics.discoverabilityCopy;
+  }
+}
+
+function updateSubmissionPreview(draftState, profileMetrics) {
+  const submissionPreviewTitle = document.getElementById(
+    "submissionPreviewTitle",
+  );
+  if (submissionPreviewTitle) {
+    submissionPreviewTitle.textContent =
+      draftState.title || "Untitled manuscript";
+  }
+
+  const previewCopy = document.getElementById("submissionPreviewCopy");
+  if (previewCopy) {
+    const missingChecklist = [];
+    if (!draftState.metadataReady) missingChecklist.push("title and category");
+    if (!draftState.abstractReady) missingChecklist.push("abstract");
+    if (!draftState.fileReady) missingChecklist.push("review file");
+
+    previewCopy.textContent =
+      missingChecklist.length === 0
+        ? "Your submission package includes the core details editors need for first-pass screening."
+        : `Add ${missingChecklist.join(", ")} to complete this submission package.`;
+  }
+
+  const previewFields = [
+    [
+      "submissionPreviewType",
+      formatDashboardLabel(draftState.submissionType, "Publishing"),
+    ],
+    ["submissionPreviewCategory", draftState.category || "Not set"],
+    [
+      "submissionPreviewKeywords",
+      draftState.keywordsList.length
+        ? `${draftState.keywordsList.length} keyword${
+            draftState.keywordsList.length === 1 ? "" : "s"
+          }`
+        : "None yet",
+    ],
+    ["submissionPreviewLanguage", draftState.language || "English"],
+  ];
+
+  previewFields.forEach(([elementId, value]) => {
+    const element = document.getElementById(elementId);
+    if (element) {
+      element.textContent = value;
+    }
+  });
+
+  const abstractCount = document.getElementById("bookAbstractCount");
+  if (abstractCount) {
+    abstractCount.textContent = `${draftState.abstractWordCount} words`;
+  }
+
+  const descriptionCount = document.getElementById("bookDescriptionCount");
+  if (descriptionCount) {
+    descriptionCount.textContent = `${draftState.descriptionWordCount} words`;
+  }
+
+  const fileMeta = document.getElementById("bookFileMeta");
+  if (fileMeta) {
+    if (draftState.file) {
+      const sizeInMb = (draftState.file.size / (1024 * 1024)).toFixed(2);
+      fileMeta.textContent = `${draftState.file.name} (${sizeInMb} MB)`;
+    } else {
+      fileMeta.textContent = "No file selected";
+    }
+  }
+
+  const submissionChecks = [
+    {
+      label: "Clear title and category",
+      complete: draftState.metadataReady,
+    },
+    {
+      label: "Abstract or editorial summary prepared",
+      complete: draftState.abstractReady,
+    },
+    {
+      label: "Keywords included for routing",
+      complete: draftState.keywordsReady,
+    },
+    {
+      label: "Profile essentials already on file",
+      complete: profileMetrics.essentialsReady,
+    },
+    {
+      label: "Review file attached",
+      complete: draftState.fileReady,
+    },
+  ];
+  const completedChecks = submissionChecks.filter(
+    (item) => item.complete,
+  ).length;
+  const progressPercent = (completedChecks / submissionChecks.length) * 100;
+
+  updateProgressBar("submissionProgressBar", progressPercent);
+
+  const progressText = document.getElementById("submissionProgressText");
+  if (progressText) {
+    progressText.textContent = `${completedChecks} of ${submissionChecks.length} editorial checks complete`;
+  }
+
+  const submissionChecklist = document.getElementById("submissionChecklist");
+  if (submissionChecklist) {
+    submissionChecklist.innerHTML = renderChecklistMarkup(submissionChecks);
+  }
+}
+
+function updateAuthorReadiness(draftState, profileMetrics) {
+  const readinessItems = [
+    {
+      label: "Profile essentials on file",
+      complete: profileMetrics.essentialsReady,
+    },
+    {
+      label: "Discoverability signals added",
+      complete: profileMetrics.discoverabilityReady,
+    },
+    {
+      label: "Abstract and subject routing prepared",
+      complete: draftState.abstractReady && draftState.keywordsReady,
+    },
+    {
+      label: "Review file attached",
+      complete: draftState.fileReady,
+    },
+  ];
+  const completedReadinessItems = readinessItems.filter(
+    (item) => item.complete,
+  ).length;
+  const readinessScore = Math.round(
+    (completedReadinessItems / readinessItems.length) * 100,
+  );
+
+  const readinessScoreElement = document.getElementById("authorReadinessScore");
+  if (readinessScoreElement) {
+    readinessScoreElement.textContent = `${readinessScore}%`;
+  }
+  updateProgressBar("authorReadinessBar", readinessScore);
+
+  const readinessSummary = document.getElementById("authorReadinessSummary");
+  if (readinessSummary) {
+    if (readinessScore === 100) {
+      readinessSummary.textContent =
+        "Ready for editorial submission. Your profile and manuscript package look complete.";
+    } else if (!profileMetrics.essentialsReady) {
+      readinessSummary.textContent =
+        "Complete your faculty, department, and biography details to strengthen editorial routing.";
+    } else if (!draftState.abstractReady) {
+      readinessSummary.textContent =
+        "Expand the abstract so editors can assess the manuscript quickly.";
+    } else if (!draftState.fileReady) {
+      readinessSummary.textContent =
+        "Attach the manuscript file to finish the submission package.";
+    } else {
+      readinessSummary.textContent =
+        "Add a few more metadata details to make the submission package stronger.";
+    }
+  }
+
+  const readinessList = document.getElementById("authorReadinessList");
+  if (readinessList) {
+    readinessList.innerHTML = renderChecklistMarkup(readinessItems);
+  }
+}
+
+function parseCompletedStages(value) {
+  if (!value) return [];
+  return String(value)
+    .split(",")
+    .map((item) => item.trim())
+    .filter(Boolean);
+}
+
+function getWorkflowProgress(book) {
+  const completedStages = parseCompletedStages(book.completed_stages);
+  const completedStageSet = new Set(completedStages);
+  let lastStageLabel = "Editorial intake";
+
+  for (const stage of AUTHOR_WORKFLOW_STAGES) {
+    if (completedStageSet.has(stage.key)) {
+      lastStageLabel = stage.label;
+    }
+  }
+
+  if (book.status === "published") {
+    return {
+      percent: 100,
+      label: "Published",
+      detail: "Production and release complete",
+    };
+  }
+
+  const completedStageCount = AUTHOR_WORKFLOW_STAGES.filter((stage) =>
+    completedStageSet.has(stage.key),
+  ).length;
+  const percent = completedStageCount
+    ? Math.max(
+        12,
+        Math.round((completedStageCount / AUTHOR_WORKFLOW_STAGES.length) * 100),
+      )
+    : book.status === "under_review"
+      ? 18
+      : book.status === "revisions_requested"
+        ? 36
+        : 8;
+
+  return {
+    percent,
+    label: lastStageLabel,
+    detail: completedStageCount
+      ? `${completedStageCount} workflow stage${
+          completedStageCount === 1 ? "" : "s"
+        } recorded`
+      : "Awaiting editorial stage updates",
+  };
+}
+
+function renderAuthorRecentReviews(reviews) {
+  const reviewFeed = document.getElementById("authorRecentReviews");
+  if (!reviewFeed) return;
+
+  if (!Array.isArray(reviews) || reviews.length === 0) {
+    reviewFeed.innerHTML = `
+      <div class="author-review-empty">
+        Editorial updates will appear here after screening or peer review begins.
+      </div>
+    `;
+    return;
+  }
+
+  reviewFeed.innerHTML = reviews
+    .map((review) => {
+      const recommendation = review.recommendation
+        ? formatDashboardLabel(review.recommendation)
+        : "Editorial note";
+      const reviewSummary =
+        review.comments ||
+        review.review_comments ||
+        review.summary ||
+        "Editorial activity has been recorded for this manuscript.";
+      const reviewerName = review.reviewer_name || "Publishing team";
+      const bookTitle = review.book_title || "Current manuscript";
+
+      return `
+        <article class="author-review-item">
+          <div class="author-review-meta">
+            <span class="author-review-book">${escapeHtml(bookTitle)}</span>
+            <span class="status-badge status-${escapeHtml(
+              review.status || "completed",
+            )}">${escapeHtml(recommendation)}</span>
+          </div>
+          <p>${escapeHtml(reviewSummary)}</p>
+          <div class="author-review-footer">
+            <strong>${escapeHtml(reviewerName)}</strong>
+            <span>${escapeHtml(
+              formatDashboardDate(review.created_at, "Recently"),
+            )}</span>
+          </div>
+        </article>
+      `;
+    })
+    .join("");
+}
+
+function syncAuthorWorkspace() {
+  const profileMetrics = getAuthorProfileMetrics(authorProfileState);
+  const draftState = getSubmissionDraftState();
+
+  updateAuthorProfileSummary(profileMetrics);
+  updateSubmissionPreview(draftState, profileMetrics);
+  updateAuthorReadiness(draftState, profileMetrics);
+}
+
+function setupAuthorWorkspaceListeners() {
+  const authorProfilePictureInput = document.getElementById(
+    "authorProfilePicture",
+  );
+  const authorProfileImagePreview = document.getElementById(
+    "authorProfileImagePreview",
+  );
+  if (authorProfilePictureInput && authorProfileImagePreview) {
+    authorProfilePictureInput.addEventListener("change", function () {
+      const file = this.files && this.files[0];
+      if (!file) return;
+      authorProfileImagePreview.src = URL.createObjectURL(file);
+    });
+  }
+
+  const manuscriptFieldIds = [
+    "bookTitle",
+    "bookSubtitle",
+    "bookCategory",
+    "bookSubmissionType",
+    "bookKeywords",
+    "bookLanguage",
+    "bookAbstract",
+    "bookDescription",
+    "bookAuthorNotes",
+    "bookManuscriptFile",
+  ];
+
+  manuscriptFieldIds.forEach((fieldId) => {
+    const field = document.getElementById(fieldId);
+    if (!field) return;
+
+    const eventName =
+      field.type === "file" || field.tagName === "SELECT" ? "change" : "input";
+    field.addEventListener(eventName, syncAuthorWorkspace);
+  });
+}
+
+async function legacyLoadAuthorDashboard() {
   try {
     const token = localStorage.getItem("authToken");
     if (!token) return;
@@ -2154,7 +4022,8 @@ async function loadAuthorDashboard() {
         (Number(stats.under_review_books) || 0) +
         (Number(stats.revision_books) || 0) +
         (Number(stats.in_production_books) || 0);
-      document.getElementById("authorTotalBooks").textContent = stats.total_books || 0;
+      document.getElementById("authorTotalBooks").textContent =
+        stats.total_books || 0;
       document.getElementById("authorPublishedBooks").textContent =
         stats.published_books || 0;
       document.getElementById("authorInProgressBooks").textContent =
@@ -2171,15 +4040,18 @@ async function loadAuthorDashboard() {
         author.full_name || "";
       document.getElementById("authorProfileEmail").value = author.email || "";
       document.getElementById("authorProfilePhone").value = author.phone || "";
-      document.getElementById("authorProfileStaffId").value = author.staff_id || "";
-      document.getElementById("authorProfileFaculty").value = author.faculty || "";
+      document.getElementById("authorProfileStaffId").value =
+        author.staff_id || "";
+      document.getElementById("authorProfileFaculty").value =
+        author.faculty || "";
       document.getElementById("authorProfileDepartment").value =
         author.department || "";
       document.getElementById("authorProfileQualification").value =
         author.qualifications || "";
       document.getElementById("authorProfileExpertise").value =
         author.areas_of_expertise || "";
-      document.getElementById("authorProfileOrcidId").value = author.orcid_id || "";
+      document.getElementById("authorProfileOrcidId").value =
+        author.orcid_id || "";
       document.getElementById("authorProfileGoogleScholarId").value =
         author.google_scholar_id || "";
       document.getElementById("authorProfileLinkedIn").value =
@@ -2200,7 +4072,7 @@ async function loadAuthorDashboard() {
   }
 }
 
-function renderAuthorBooks(books) {
+function legacyRenderAuthorBooks(books) {
   const tbody = document.getElementById("authorBooksTableBody");
   if (!tbody) return;
 
@@ -2249,7 +4121,7 @@ function renderAuthorBooks(books) {
     .join("");
 }
 
-async function handleManuscriptSubmission(e) {
+async function legacyHandleManuscriptSubmission(e) {
   e.preventDefault();
 
   try {
@@ -2259,7 +4131,8 @@ async function handleManuscriptSubmission(e) {
       return;
     }
 
-    const manuscriptFile = document.getElementById("bookManuscriptFile").files[0];
+    const manuscriptFile =
+      document.getElementById("bookManuscriptFile").files[0];
     if (!manuscriptFile) {
       showNotification("Please select a manuscript file", "error");
       return;
@@ -2318,6 +4191,283 @@ async function handleManuscriptSubmission(e) {
   }
 }
 
+function validateManuscriptSubmission(draftState) {
+  if (!draftState.file) {
+    return "Please select a manuscript file before submitting.";
+  }
+
+  if (!draftState.metadataReady) {
+    return "Add a clear title and manuscript category before submitting.";
+  }
+
+  if (!draftState.abstractReady) {
+    return draftState.submissionType === "reprint" ||
+      draftState.submissionType === "translation"
+      ? "Provide either an abstract or a fuller description so editors can assess this submission."
+      : "Expand the abstract to at least 25 words so editors can screen the manuscript properly.";
+  }
+
+  const supportedExtensions = new Set([".pdf", ".doc", ".docx"]);
+  if (!supportedExtensions.has(getFileExtension(draftState.file.name))) {
+    return "Please upload the manuscript as a PDF, DOC, or DOCX file.";
+  }
+
+  if (draftState.file.size > 10 * 1024 * 1024) {
+    return "The manuscript file must be 10MB or smaller.";
+  }
+
+  return null;
+}
+
+async function loadAuthorDashboard() {
+  try {
+    const token = localStorage.getItem("authToken");
+    if (!token) return;
+
+    const [dashboardRes, profileRes] = await Promise.all([
+      fetch(`${API_BASE_URL}/author/dashboard`, {
+        headers: {
+          Authorization: `Bearer ${token}`,
+          Accept: "application/json",
+        },
+      }),
+      fetch(`${API_BASE_URL}/author/profile`, {
+        headers: {
+          Authorization: `Bearer ${token}`,
+          Accept: "application/json",
+        },
+      }),
+    ]);
+
+    const dashboardData = await dashboardRes.json();
+    const profileData = await profileRes.json();
+
+    if (dashboardData.success && dashboardData.data) {
+      authorDashboardState = dashboardData.data;
+      const stats = dashboardData.data.stats || {};
+      const royalties = dashboardData.data.royalties || {};
+      const inProgressCount =
+        (Number(stats.submitted_books) || 0) +
+        (Number(stats.under_review_books) || 0) +
+        (Number(stats.revision_books) || 0) +
+        (Number(stats.in_production_books) || 0);
+      document.getElementById("authorTotalBooks").textContent =
+        stats.total_books || 0;
+      document.getElementById("authorPublishedBooks").textContent =
+        stats.published_books || 0;
+      document.getElementById("authorInProgressBooks").textContent =
+        inProgressCount;
+      document.getElementById("authorTotalRoyalties").textContent =
+        formatCurrencyCode(royalties.total_royalties);
+      renderAuthorBooks(dashboardData.data.books || []);
+      renderAuthorRecentReviews(dashboardData.data.recentReviews || []);
+    }
+
+    if (profileData.success && profileData.author) {
+      const author = profileData.author;
+      authorProfileState = author;
+      document.getElementById("authorProfileFullName").value =
+        author.full_name || "";
+      document.getElementById("authorProfileEmail").value = author.email || "";
+      document.getElementById("authorProfilePhone").value = author.phone || "";
+      document.getElementById("authorProfileStaffId").value =
+        author.staff_id || "";
+      document.getElementById("authorProfileFaculty").value =
+        author.faculty || "";
+      document.getElementById("authorProfileDepartment").value =
+        author.department || "";
+      document.getElementById("authorProfileQualification").value =
+        author.qualifications || "";
+      document.getElementById("authorProfileExpertise").value =
+        author.areas_of_expertise || "";
+      document.getElementById("authorProfileOrcidId").value =
+        author.orcid_id || "";
+      document.getElementById("authorProfileGoogleScholarId").value =
+        author.google_scholar_id || "";
+      document.getElementById("authorProfileLinkedIn").value =
+        author.linkedin_url || "";
+      document.getElementById("authorProfileBiography").value =
+        author.biography || "";
+
+      const preview = document.getElementById("authorProfileImagePreview");
+      if (preview) {
+        preview.src = author.profile_image
+          ? resolveAssetUrl(author.profile_image)
+          : "assets/OIP.webp";
+      }
+    }
+
+    syncAuthorWorkspace();
+  } catch (error) {
+    console.error("Error loading author dashboard:", error);
+    showNotification("Failed to load author dashboard", "error");
+  }
+}
+
+function renderAuthorBooks(books) {
+  const tbody = document.getElementById("authorBooksTableBody");
+  if (!tbody) return;
+
+  const portfolioCount = document.getElementById("authorPortfolioCount");
+  if (portfolioCount) {
+    portfolioCount.textContent = `${Array.isArray(books) ? books.length : 0} manuscript${
+      Array.isArray(books) && books.length === 1 ? "" : "s"
+    }`;
+  }
+
+  if (!Array.isArray(books) || books.length === 0) {
+    tbody.innerHTML = `
+      <tr>
+        <td colspan="6" class="author-empty-state">
+          No manuscripts yet. Use "Submit Manuscript" to send your first file to the publishing team.
+        </td>
+      </tr>
+    `;
+    return;
+  }
+
+  tbody.innerHTML = books
+    .map((book) => {
+      const bookStatus = book.status || "submitted";
+      const submissionStatus = book.latest_submission_status || "pending";
+      const submissionType = formatDashboardLabel(
+        book.latest_submission_type || "publishing",
+        "Publishing",
+      );
+      const workflowProgress = getWorkflowProgress(book);
+      const latestActivityDate =
+        book.last_progress_date ||
+        book.latest_submission_date ||
+        book.updated_at ||
+        book.created_at;
+      const manuscriptLink = book.manuscript_file
+        ? `<a class="manuscript-link" href="${escapeHtml(resolveAssetUrl(book.manuscript_file))}" target="_blank" rel="noopener noreferrer">Open file</a>`
+        : `<span class="manuscript-link manuscript-link-disabled">No file</span>`;
+
+      return `
+        <tr>
+          <td>
+            <div class="author-manuscript-title">
+              <strong>${escapeHtml(book.title || "Untitled manuscript")}</strong>
+              <span class="author-manuscript-meta">${escapeHtml(
+                book.subtitle || submissionType,
+              )}</span>
+            </div>
+          </td>
+          <td>${escapeHtml(book.category || "N/A")}</td>
+          <td>
+            <div class="author-workflow-cell">
+              <span class="status-badge status-${escapeHtml(bookStatus)}">${escapeHtml(
+                formatDashboardLabel(bookStatus, "Submitted"),
+              )}</span>
+              <div class="author-progress-track author-progress-track-compact">
+                <span style="width: ${workflowProgress.percent}%"></span>
+              </div>
+              <span class="author-workflow-meta">${escapeHtml(
+                `${workflowProgress.label} - ${workflowProgress.detail}`,
+              )}</span>
+            </div>
+          </td>
+          <td>
+            <div class="author-submission-cell">
+              <strong>${escapeHtml(submissionType)}</strong>
+              <span class="status-badge status-${escapeHtml(
+                submissionStatus,
+              )}">${escapeHtml(
+                formatDashboardLabel(submissionStatus, "Pending"),
+              )}</span>
+            </div>
+          </td>
+          <td>
+            <div class="author-activity-cell">
+              <strong>${escapeHtml(
+                formatDashboardDate(latestActivityDate, "Awaiting activity"),
+              )}</strong>
+              <span class="author-table-meta">${escapeHtml(
+                workflowProgress.detail,
+              )}</span>
+            </div>
+          </td>
+          <td>${manuscriptLink}</td>
+        </tr>
+      `;
+    })
+    .join("");
+}
+
+async function handleManuscriptSubmission(e) {
+  e.preventDefault();
+
+  try {
+    const token = localStorage.getItem("authToken");
+    if (!token) {
+      showNotification("Please login again to continue", "error");
+      return;
+    }
+
+    const draftState = getSubmissionDraftState();
+    const validationMessage = validateManuscriptSubmission(draftState);
+
+    if (validationMessage) {
+      showNotification(validationMessage, "error");
+      return;
+    }
+
+    showLoading("Submitting manuscript...");
+
+    const formData = new FormData();
+    formData.append("title", draftState.title);
+    formData.append(
+      "subtitle",
+      document.getElementById("bookSubtitle").value.trim(),
+    );
+    formData.append("category", draftState.category);
+    formData.append("submission_type", draftState.submissionType);
+    formData.append(
+      "keywords",
+      document.getElementById("bookKeywords").value.trim(),
+    );
+    formData.append("language", draftState.language);
+    formData.append("abstract", draftState.abstract);
+    formData.append("description", draftState.description);
+    formData.append(
+      "author_notes",
+      document.getElementById("bookAuthorNotes").value.trim(),
+    );
+    formData.append("manuscript_file", draftState.file);
+
+    const response = await fetch(`${API_BASE_URL}/author/books`, {
+      method: "POST",
+      headers: {
+        Authorization: `Bearer ${token}`,
+        Accept: "application/json",
+      },
+      body: formData,
+    });
+
+    const data = await response.json();
+    if (!response.ok || !data.success) {
+      showNotification(data.message || "Failed to submit manuscript", "error");
+      return;
+    }
+
+    showNotification(
+      data.message || "Manuscript submitted successfully",
+      "success",
+    );
+    document.getElementById("submitBookForm").reset();
+    document.getElementById("bookLanguage").value = "English";
+    closeModal("submitBookModal");
+    syncAuthorWorkspace();
+    await loadAuthorDashboard();
+  } catch (error) {
+    console.error("Manuscript submission error:", error);
+    showNotification("Failed to submit manuscript", "error");
+  } finally {
+    hideLoading();
+  }
+}
+
 async function handleAuthorProfileUpdate(e) {
   e.preventDefault();
   try {
@@ -2331,8 +4481,14 @@ async function handleAuthorProfileUpdate(e) {
       "full_name",
       document.getElementById("authorProfileFullName").value,
     );
-    formData.append("email", document.getElementById("authorProfileEmail").value);
-    formData.append("phone", document.getElementById("authorProfilePhone").value);
+    formData.append(
+      "email",
+      document.getElementById("authorProfileEmail").value,
+    );
+    formData.append(
+      "phone",
+      document.getElementById("authorProfilePhone").value,
+    );
     formData.append(
       "staff_id",
       document.getElementById("authorProfileStaffId").value,
@@ -2396,6 +4552,9 @@ async function handleAuthorProfileUpdate(e) {
       currentUser.email = data.author?.email || currentUser.email;
       updateAuthUI();
     }
+    if (data.author) {
+      authorProfileState = data.author;
+    }
     if (data.author && data.author.profile_image) {
       const preview = document.getElementById("authorProfileImagePreview");
       if (preview) {
@@ -2403,6 +4562,7 @@ async function handleAuthorProfileUpdate(e) {
       }
     }
     document.getElementById("authorProfilePicture").value = "";
+    syncAuthorWorkspace();
   } catch (error) {
     console.error("Profile update error:", error);
     showNotification("Failed to update profile", "error");
@@ -2430,7 +4590,10 @@ async function viewAuthor(authorId) {
 
     const data = await response.json();
     if (!response.ok || !data.success || !data.author) {
-      showNotification(data.message || "Failed to load author details", "error");
+      showNotification(
+        data.message || "Failed to load author details",
+        "error",
+      );
       return;
     }
 
@@ -2589,10 +4752,6 @@ async function viewAuthor(authorId) {
 
 function editAuthor(authorId) {
   showNotification(`Edit author ${authorId} - Coming soon`, "info");
-}
-
-function viewBook(bookId) {
-  showNotification(`View book ${bookId} - Coming soon`, "info");
 }
 
 function editBook(bookId) {

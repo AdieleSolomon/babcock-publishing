@@ -973,6 +973,8 @@ const roleMiddleware = (roles) => {
   };
 };
 
+const adminPortalRoles = ["admin", "editor", "reviewer"];
+
 // Enhanced Database Schema
 const initDatabase = async () => {
   const queries = [
@@ -2346,6 +2348,77 @@ app.get("/api/authors/count", async (req, res) => {
   }
 });
 
+// Get published authors for public directory
+app.get("/api/authors/published", async (req, res) => {
+  try {
+    const requestedLimit = Number.parseInt(req.query.limit, 10);
+    const limit = Math.min(
+      Math.max(Number.isFinite(requestedLimit) ? requestedLimit : 24, 1),
+      60,
+    );
+
+    const [authors] = await dbQuery(
+      `
+        SELECT
+          a.id as author_id,
+          u.full_name,
+          u.email,
+          u.profile_image,
+          a.faculty,
+          a.department,
+          a.qualifications,
+          a.biography,
+          a.areas_of_expertise,
+          COUNT(DISTINCT b.id) as published_books_count,
+          MAX(COALESCE(b.publication_date, DATE(b.created_at))) as latest_publication_date,
+          GROUP_CONCAT(
+            b.title
+            ORDER BY COALESCE(b.publication_date, DATE(b.created_at)) DESC
+            SEPARATOR '|||'
+          ) as featured_titles
+        FROM authors a
+        JOIN users u ON a.user_id = u.id
+        JOIN books b ON b.author_id = a.id AND b.status = 'published'
+        WHERE u.status = 'active'
+        GROUP BY
+          a.id,
+          u.full_name,
+          u.email,
+          u.profile_image,
+          a.faculty,
+          a.department,
+          a.qualifications,
+          a.biography,
+          a.areas_of_expertise
+        ORDER BY published_books_count DESC, latest_publication_date DESC, u.full_name ASC
+        LIMIT ?
+      `,
+      [limit],
+    );
+
+    const normalizedAuthors = authors.map((author) => ({
+      ...author,
+      featured_titles: String(author.featured_titles || "")
+        .split("|||")
+        .map((title) => title.trim())
+        .filter(Boolean)
+        .slice(0, 3),
+    }));
+
+    res.json({
+      success: true,
+      authors: normalizedAuthors,
+      count: normalizedAuthors.length,
+    });
+  } catch (error) {
+    console.error("Get published authors error:", error);
+    res.status(500).json({
+      success: false,
+      message: "Failed to load published authors",
+    });
+  }
+});
+
 // Get training registrations count
 app.get("/api/training/count", async (req, res) => {
   try {
@@ -3145,7 +3218,11 @@ app.put("/api/admin/authors/:id/status", authMiddleware, async (req, res) => {
 // ============== BOOKS MANAGEMENT ==============
 
 // Get all books with filters
-app.get("/api/admin/books", authMiddleware, async (req, res) => {
+app.get(
+  "/api/admin/books",
+  authMiddleware,
+  roleMiddleware(adminPortalRoles),
+  async (req, res) => {
   try {
     const {
       status,
@@ -3194,8 +3271,8 @@ app.get("/api/admin/books", authMiddleware, async (req, res) => {
     }
 
     if (author_id) {
-      query += " AND b.user_id = ?";
-      countQuery += " AND b.user_id = ?";
+      query += " AND b.author_id = ?";
+      countQuery += " AND b.author_id = ?";
       params.push(author_id);
       countParams.push(author_id);
     }
@@ -3215,9 +3292,9 @@ app.get("/api/admin/books", authMiddleware, async (req, res) => {
     }
 
     if (search) {
-      query += " AND (b.title LIKE ? OR b.isbn LIKE ? OR a.full_name LIKE ?)";
+      query += " AND (b.title LIKE ? OR b.isbn LIKE ? OR u.full_name LIKE ?)";
       countQuery +=
-        " AND (b.title LIKE ? OR b.isbn LIKE ? OR a.full_name LIKE ?)";
+        " AND (b.title LIKE ? OR b.isbn LIKE ? OR u.full_name LIKE ?)";
       const searchTerm = `%${search}%`;
       params.push(searchTerm, searchTerm, searchTerm);
       countParams.push(searchTerm, searchTerm, searchTerm);
@@ -3262,14 +3339,126 @@ app.get("/api/admin/books", authMiddleware, async (req, res) => {
   }
 });
 
+app.post(
+  "/api/admin/books",
+  authMiddleware,
+  roleMiddleware(adminPortalRoles),
+  async (req, res) => {
+    try {
+      const {
+        author_id,
+        title,
+        subtitle,
+        category,
+        description,
+        abstract,
+        keywords,
+        language,
+        status = "draft",
+        price,
+        publication_date,
+      } = req.body;
+
+      if (!author_id || !title || !category) {
+        return res.status(400).json({
+          success: false,
+          message: "Author, title, and category are required",
+        });
+      }
+
+      const validStatuses = [
+        "draft",
+        "submitted",
+        "under_review",
+        "revisions_requested",
+        "accepted",
+        "in_production",
+        "published",
+        "rejected",
+        "archived",
+      ];
+
+      if (!validStatuses.includes(status)) {
+        return res.status(400).json({
+          success: false,
+          message: "Invalid book status",
+        });
+      }
+
+      const numericAuthorId = Number.parseInt(author_id, 10);
+      if (!Number.isFinite(numericAuthorId)) {
+        return res.status(400).json({
+          success: false,
+          message: "Invalid author selected",
+        });
+      }
+
+      const [authors] = await dbQuery("SELECT id FROM authors WHERE id = ?", [
+        numericAuthorId,
+      ]);
+      if (authors.length === 0) {
+        return res.status(404).json({
+          success: false,
+          message: "Selected author was not found",
+        });
+      }
+
+      const parsedPrice = toNullable(price);
+      if (parsedPrice !== null && !Number.isFinite(Number(parsedPrice))) {
+        return res.status(400).json({
+          success: false,
+          message: "Price must be a valid number",
+        });
+      }
+
+      const timestamp = new Date();
+      const createdBook = await insertRecordWithExistingColumns("books", {
+        author_id: numericAuthorId,
+        title: toNullable(title),
+        subtitle: toNullable(subtitle),
+        category: toNullable(category),
+        description: toNullable(description),
+        abstract: toNullable(abstract),
+        keywords: toNullable(keywords),
+        language: toNullable(language) || "English",
+        status,
+        price: parsedPrice === null ? null : Number(parsedPrice),
+        publication_date:
+          status === "published"
+            ? toNullable(publication_date) || timestamp.toISOString().slice(0, 10)
+            : toNullable(publication_date),
+        created_at: timestamp,
+        updated_at: timestamp,
+      });
+
+      res.json({
+        success: true,
+        message: "Book created successfully",
+        book_id: createdBook.insertId,
+      });
+    } catch (error) {
+      console.error("Create book error:", error);
+      res.status(500).json({
+        success: false,
+        message: "Failed to create book",
+      });
+    }
+  },
+);
+
 // Get single book with details
-app.get("/api/admin/books/:id", authMiddleware, async (req, res) => {
+app.get(
+  "/api/admin/books/:id",
+  authMiddleware,
+  roleMiddleware(adminPortalRoles),
+  async (req, res) => {
   try {
     const [books] = await dbQuery(
-      `SELECT b.*, a.full_name as author_name, a.email as author_email, 
-              a.faculty as author_faculty, a.department as author_department
+      `SELECT b.*, a.id as author_id, u.full_name as author_name, u.email as author_email,
+              u.phone as author_phone, a.faculty as author_faculty, a.department as author_department
        FROM books b
        LEFT JOIN authors a ON b.author_id = a.id
+       LEFT JOIN users u ON a.user_id = u.id
        WHERE b.id = ?`,
       [req.params.id],
     );
@@ -3300,12 +3489,18 @@ app.get("/api/admin/books/:id", authMiddleware, async (req, res) => {
       [book.id],
     );
 
+    const [progress] = await dbQuery(
+      "SELECT * FROM book_progress WHERE book_id = ? ORDER BY start_date ASC, created_at ASC",
+      [book.id],
+    ).catch(() => [[]]);
+
     // Get reviews for this book
     const [reviews] = await dbQuery(
       `
-      SELECT r.*, a.full_name as reviewer_name
+      SELECT r.*, u.full_name as reviewer_name
       FROM reviews r
       LEFT JOIN authors a ON r.reviewer_id = a.id
+      LEFT JOIN users u ON a.user_id = u.id
       WHERE r.submission_id IN (SELECT id FROM submissions WHERE book_id = ?)
       ORDER BY r.completed_date DESC
     `,
@@ -3331,6 +3526,7 @@ app.get("/api/admin/books/:id", authMiddleware, async (req, res) => {
         submissions,
         contracts,
         production,
+        progress,
         reviews,
         inventory,
         sales,
@@ -3343,9 +3539,13 @@ app.get("/api/admin/books/:id", authMiddleware, async (req, res) => {
 });
 
 // Update book status
-app.put("/api/admin/books/:id/status", authMiddleware, async (req, res) => {
+app.put(
+  "/api/admin/books/:id/status",
+  authMiddleware,
+  roleMiddleware(adminPortalRoles),
+  async (req, res) => {
   try {
-    const { status, notes } = req.body;
+    const { status, notes, publication_date, price } = req.body;
 
     const validStatuses = [
       "draft",
@@ -3365,9 +3565,54 @@ app.put("/api/admin/books/:id/status", authMiddleware, async (req, res) => {
         .json({ success: false, message: "Invalid status" });
     }
 
+    const parsedPrice =
+      price === undefined || price === null || String(price).trim() === ""
+        ? null
+        : Number(price);
+
+    if (
+      price !== undefined &&
+      price !== null &&
+      String(price).trim() !== "" &&
+      !Number.isFinite(parsedPrice)
+    ) {
+      return res
+        .status(400)
+        .json({ success: false, message: "Invalid price value" });
+    }
+
+    const updateClauses = ["status = ?"];
+    const updateValues = [status];
+
+    if (notes !== undefined) {
+      updateClauses.push("editor_notes = ?");
+      updateValues.push(toNullable(notes));
+    }
+
+    if (price !== undefined) {
+      updateClauses.push("price = ?");
+      updateValues.push(parsedPrice);
+    }
+
+    const normalizedPublicationDate =
+      publication_date === undefined ? undefined : toNullable(publication_date);
+
+    if (normalizedPublicationDate !== undefined) {
+      if (status === "published" && !normalizedPublicationDate) {
+        updateClauses.push(
+          "publication_date = COALESCE(publication_date, CURRENT_DATE)",
+        );
+      } else {
+        updateClauses.push("publication_date = ?");
+        updateValues.push(normalizedPublicationDate);
+      }
+    } else if (status === "published") {
+      updateClauses.push("publication_date = COALESCE(publication_date, CURRENT_DATE)");
+    }
+
     const [result] = await dbQuery(
-      "UPDATE books SET status = ?, editor_notes = COALESCE(?, editor_notes) WHERE id = ?",
-      [status, notes, req.params.id],
+      `UPDATE books SET ${updateClauses.join(", ")} WHERE id = ?`,
+      [...updateValues, req.params.id],
     );
 
     if (result.affectedRows === 0) {
@@ -3391,6 +3636,8 @@ app.put("/api/admin/books/:id/status", authMiddleware, async (req, res) => {
 // Upload book cover
 app.post(
   "/api/admin/books/:id/cover",
+  authMiddleware,
+  roleMiddleware(adminPortalRoles),
   upload.single("cover"),
   async (req, res) => {
     try {
@@ -3463,7 +3710,11 @@ app.post(
 // ============== SUBMISSIONS MANAGEMENT ==============
 
 // Get all submissions
-app.get("/api/admin/submissions", authMiddleware, async (req, res) => {
+app.get(
+  "/api/admin/submissions",
+  authMiddleware,
+  roleMiddleware(adminPortalRoles),
+  async (req, res) => {
   try {
     const { status, type, priority, page = 1, limit = 20 } = req.query;
     const pageNumber = Math.max(Number.parseInt(page, 10) || 1, 1);
@@ -3556,10 +3807,62 @@ app.get("/api/admin/submissions", authMiddleware, async (req, res) => {
   }
 });
 
+app.get(
+  "/api/admin/submissions/:id",
+  authMiddleware,
+  roleMiddleware(adminPortalRoles),
+  async (req, res) => {
+    try {
+      const [submissions] = await dbQuery(
+        `SELECT s.*, b.title as book_title, b.status as book_status, b.category as book_category,
+                b.author_id, u.full_name as author_name, u.email as author_email
+         FROM submissions s
+         JOIN books b ON s.book_id = b.id
+         LEFT JOIN authors a ON b.author_id = a.id
+         LEFT JOIN users u ON a.user_id = u.id
+         WHERE s.id = ?`,
+        [req.params.id],
+      );
+
+      if (submissions.length === 0) {
+        return res
+          .status(404)
+          .json({ success: false, message: "Submission not found" });
+      }
+
+      const submission = submissions[0];
+      const [reviews] = await dbQuery(
+        `SELECT r.*, reviewerUser.full_name as reviewer_name
+         FROM reviews r
+         LEFT JOIN authors reviewerAuthor ON r.reviewer_id = reviewerAuthor.id
+         LEFT JOIN users reviewerUser ON reviewerAuthor.user_id = reviewerUser.id
+         WHERE r.submission_id = ?
+         ORDER BY r.assigned_date DESC, r.completed_date DESC`,
+        [req.params.id],
+      ).catch(() => [[]]);
+
+      res.json({
+        success: true,
+        submission: {
+          ...submission,
+          reviews,
+        },
+      });
+    } catch (error) {
+      console.error("Get submission error:", error);
+      res.status(500).json({
+        success: false,
+        message: "Failed to load submission details",
+      });
+    }
+  },
+);
+
 // Assign submission to reviewer
 app.post(
   "/api/admin/submissions/:id/assign",
   authMiddleware,
+  roleMiddleware(adminPortalRoles),
   async (req, res) => {
     try {
       const { reviewer_id, due_date, priority } = req.body;
@@ -3588,10 +3891,149 @@ app.post(
   },
 );
 
+app.put(
+  "/api/admin/submissions/:id",
+  authMiddleware,
+  roleMiddleware(adminPortalRoles),
+  async (req, res) => {
+    try {
+      const { status, reviewer_id, due_date, priority, admin_notes } = req.body;
+      const validStatuses = [
+        "pending",
+        "assigned",
+        "in_review",
+        "review_completed",
+        "accepted",
+        "rejected",
+        "withdrawn",
+      ];
+      const validPriorities = ["low", "medium", "high", "urgent"];
+
+      if (status !== undefined && !validStatuses.includes(status)) {
+        return res.status(400).json({
+          success: false,
+          message: "Invalid submission status",
+        });
+      }
+
+      if (priority !== undefined && !validPriorities.includes(priority)) {
+        return res.status(400).json({
+          success: false,
+          message: "Invalid submission priority",
+        });
+      }
+
+      const submissionColumns = await getTableColumns("submissions");
+      const updates = [];
+      const values = [];
+
+      if (status !== undefined && submissionColumns.has("status")) {
+        updates.push("status = ?");
+        values.push(status);
+      }
+
+      if (reviewer_id !== undefined && submissionColumns.has("assigned_to")) {
+        updates.push("assigned_to = ?");
+        values.push(toNullable(reviewer_id));
+      }
+
+      if (due_date !== undefined && submissionColumns.has("due_date")) {
+        updates.push("due_date = ?");
+        values.push(toNullable(due_date));
+      }
+
+      if (priority !== undefined && submissionColumns.has("priority")) {
+        updates.push("priority = ?");
+        values.push(priority);
+      }
+
+      if (admin_notes !== undefined && submissionColumns.has("admin_notes")) {
+        updates.push("admin_notes = ?");
+        values.push(toNullable(admin_notes));
+      }
+
+      if (
+        reviewer_id !== undefined &&
+        status === undefined &&
+        submissionColumns.has("status")
+      ) {
+        updates.push("status = ?");
+        values.push("assigned");
+      }
+
+      if (updates.length === 0) {
+        return res.status(400).json({
+          success: false,
+          message: "No submission changes were provided",
+        });
+      }
+
+      const [result] = await dbQuery(
+        `UPDATE submissions SET ${updates.join(", ")} WHERE id = ?`,
+        [...values, req.params.id],
+      );
+
+      if (result.affectedRows === 0) {
+        return res
+          .status(404)
+          .json({ success: false, message: "Submission not found" });
+      }
+
+      const [[submissionRecord]] = await dbQuery(
+        "SELECT book_id FROM submissions WHERE id = ?",
+        [req.params.id],
+      );
+
+      if (submissionRecord?.book_id && status) {
+        const [[currentBook]] = await dbQuery(
+          "SELECT status FROM books WHERE id = ?",
+          [submissionRecord.book_id],
+        );
+
+        const currentBookStatus = currentBook?.status || "draft";
+        if (!["in_production", "published"].includes(currentBookStatus)) {
+          let nextBookStatus = null;
+          if (["pending", "assigned", "in_review", "review_completed"].includes(status)) {
+            nextBookStatus = "under_review";
+          } else if (status === "accepted") {
+            nextBookStatus = "accepted";
+          } else if (status === "rejected") {
+            nextBookStatus = "rejected";
+          } else if (status === "withdrawn") {
+            nextBookStatus = "archived";
+          }
+
+          if (nextBookStatus) {
+            await dbQuery("UPDATE books SET status = ? WHERE id = ?", [
+              nextBookStatus,
+              submissionRecord.book_id,
+            ]);
+          }
+        }
+      }
+
+      res.json({
+        success: true,
+        message: "Submission updated successfully",
+      });
+    } catch (error) {
+      console.error("Update submission error:", error);
+      res.status(500).json({
+        success: false,
+        message: "Failed to update submission",
+      });
+    }
+  },
+);
+
 // ============== CONTRACTS MANAGEMENT ==============
 
 // Get all contracts
-app.get("/api/admin/contracts", authMiddleware, async (req, res) => {
+app.get(
+  "/api/admin/contracts",
+  authMiddleware,
+  roleMiddleware(adminPortalRoles),
+  async (req, res) => {
   try {
     const { status, type, author_id, page = 1, limit = 20 } = req.query;
     const pageNumber = Math.max(Number.parseInt(page, 10) || 1, 1);
@@ -3652,13 +4094,55 @@ app.get("/api/admin/contracts", authMiddleware, async (req, res) => {
   }
 });
 
+app.get(
+  "/api/admin/contracts/:id",
+  authMiddleware,
+  roleMiddleware(adminPortalRoles),
+  async (req, res) => {
+    try {
+      const [contracts] = await dbQuery(
+        `SELECT c.*, b.title as book_title, b.status as book_status,
+                u.full_name as author_name, u.email as author_email
+         FROM contracts c
+         LEFT JOIN books b ON c.book_id = b.id
+         LEFT JOIN authors a ON c.author_id = a.id
+         LEFT JOIN users u ON a.user_id = u.id
+         WHERE c.id = ?`,
+        [req.params.id],
+      );
+
+      if (contracts.length === 0) {
+        return res
+          .status(404)
+          .json({ success: false, message: "Contract not found" });
+      }
+
+      res.json({
+        success: true,
+        contract: contracts[0],
+      });
+    } catch (error) {
+      console.error("Get contract error:", error);
+      res.status(500).json({
+        success: false,
+        message: "Failed to load contract details",
+      });
+    }
+  },
+);
+
 // Generate new contract
-app.post("/api/admin/contracts", authMiddleware, async (req, res) => {
+app.post(
+  "/api/admin/contracts",
+  authMiddleware,
+  roleMiddleware(adminPortalRoles),
+  async (req, res) => {
   try {
     const {
       book_id,
       author_id,
       contract_type,
+      status = "draft",
       royalty_percentage,
       advance_amount,
       start_date,
@@ -3668,29 +4152,73 @@ app.post("/api/admin/contracts", authMiddleware, async (req, res) => {
       payment_schedule,
     } = req.body;
 
+    if (!book_id || !author_id) {
+      return res.status(400).json({
+        success: false,
+        message: "Book and author are required",
+      });
+    }
+
+    const validContractTypes = ["standard", "royalty", "advance", "work_for_hire"];
+    const validContractStatuses = [
+      "draft",
+      "sent",
+      "signed",
+      "executed",
+      "expired",
+      "terminated",
+    ];
+
+    if (!validContractTypes.includes(contract_type || "standard")) {
+      return res.status(400).json({
+        success: false,
+        message: "Invalid contract type",
+      });
+    }
+
+    if (!validContractStatuses.includes(status)) {
+      return res.status(400).json({
+        success: false,
+        message: "Invalid contract status",
+      });
+    }
+
     // Generate contract number
     const contractNumber = `CONTRACT-${Date.now()}-${Math.floor(Math.random() * 1000)}`;
 
     const [result] = await dbQuery(
       `INSERT INTO contracts (
         book_id, author_id, contract_type, contract_number,
-        royalty_percentage, advance_amount, start_date, end_date,
+        status, royalty_percentage, advance_amount, start_date, end_date,
         rights_granted, territory, payment_schedule
-      ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
+      ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
       [
         book_id,
         author_id,
-        contract_type,
+        contract_type || "standard",
         contractNumber,
-        royalty_percentage,
-        advance_amount,
-        start_date,
-        end_date,
-        rights_granted,
-        territory,
-        payment_schedule,
+        status,
+        toNullable(royalty_percentage),
+        toNullable(advance_amount),
+        toNullable(start_date),
+        toNullable(end_date),
+        toNullable(rights_granted),
+        toNullable(territory),
+        toNullable(payment_schedule),
       ],
     );
+
+    if (status === "executed") {
+      await dbQuery(
+        "UPDATE books SET status = 'in_production' WHERE id = ? AND status NOT IN ('published')",
+        [book_id],
+      );
+    } else if (status === "signed") {
+      await dbQuery(
+        "UPDATE books SET status = 'accepted' WHERE id = ? AND status NOT IN ('in_production', 'published')",
+        [book_id],
+      );
+    }
 
     res.json({
       success: true,
@@ -3705,6 +4233,127 @@ app.post("/api/admin/contracts", authMiddleware, async (req, res) => {
       .json({ success: false, message: "Failed to create contract" });
   }
 });
+
+app.put(
+  "/api/admin/contracts/:id",
+  authMiddleware,
+  roleMiddleware(adminPortalRoles),
+  async (req, res) => {
+    try {
+      const {
+        contract_type,
+        status,
+        royalty_percentage,
+        advance_amount,
+        start_date,
+        end_date,
+        rights_granted,
+        territory,
+        payment_schedule,
+      } = req.body;
+
+      const validContractTypes = ["standard", "royalty", "advance", "work_for_hire"];
+      const validStatuses = [
+        "draft",
+        "sent",
+        "signed",
+        "executed",
+        "expired",
+        "terminated",
+      ];
+
+      if (contract_type !== undefined && !validContractTypes.includes(contract_type)) {
+        return res.status(400).json({
+          success: false,
+          message: "Invalid contract type",
+        });
+      }
+
+      if (status !== undefined && !validStatuses.includes(status)) {
+        return res.status(400).json({
+          success: false,
+          message: "Invalid contract status",
+        });
+      }
+
+      const updates = [];
+      const values = [];
+
+      const updateField = (fieldName, value) => {
+        updates.push(`${fieldName} = ?`);
+        values.push(value);
+      };
+
+      if (contract_type !== undefined) updateField("contract_type", contract_type);
+      if (status !== undefined) updateField("status", status);
+      if (royalty_percentage !== undefined) {
+        updateField("royalty_percentage", toNullable(royalty_percentage));
+      }
+      if (advance_amount !== undefined) {
+        updateField("advance_amount", toNullable(advance_amount));
+      }
+      if (start_date !== undefined) updateField("start_date", toNullable(start_date));
+      if (end_date !== undefined) updateField("end_date", toNullable(end_date));
+      if (rights_granted !== undefined) {
+        updateField("rights_granted", toNullable(rights_granted));
+      }
+      if (territory !== undefined) updateField("territory", toNullable(territory));
+      if (payment_schedule !== undefined) {
+        updateField("payment_schedule", toNullable(payment_schedule));
+      }
+
+      if (updates.length === 0) {
+        return res.status(400).json({
+          success: false,
+          message: "No contract changes were provided",
+        });
+      }
+
+      const [result] = await dbQuery(
+        `UPDATE contracts SET ${updates.join(", ")} WHERE id = ?`,
+        [...values, req.params.id],
+      );
+
+      if (result.affectedRows === 0) {
+        return res
+          .status(404)
+          .json({ success: false, message: "Contract not found" });
+      }
+
+      if (status) {
+        const [[contractRecord]] = await dbQuery(
+          "SELECT book_id FROM contracts WHERE id = ?",
+          [req.params.id],
+        );
+
+        if (contractRecord?.book_id) {
+          if (status === "executed") {
+            await dbQuery(
+              "UPDATE books SET status = 'in_production' WHERE id = ? AND status NOT IN ('published')",
+              [contractRecord.book_id],
+            );
+          } else if (status === "signed") {
+            await dbQuery(
+              "UPDATE books SET status = 'accepted' WHERE id = ? AND status NOT IN ('in_production', 'published')",
+              [contractRecord.book_id],
+            );
+          }
+        }
+      }
+
+      res.json({
+        success: true,
+        message: "Contract updated successfully",
+      });
+    } catch (error) {
+      console.error("Update contract error:", error);
+      res.status(500).json({
+        success: false,
+        message: "Failed to update contract",
+      });
+    }
+  },
+);
 
 // ============== TRAINING MANAGEMENT ==============
 
