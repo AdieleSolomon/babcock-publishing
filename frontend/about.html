@@ -2,7 +2,7 @@
 <html lang="en">
   <head>
     <meta charset="UTF-8" />
-    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover" />
     <title>About | Babcock Publishing & Knowledge Services</title>
     <meta
       name="description"
@@ -16,71 +16,444 @@
       href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700&family=Playfair+Display:wght@400;500;600;700&display=swap"
       rel="stylesheet" />
     <link rel="stylesheet" href="public/enterprise.css" />
+    <link rel="stylesheet" href="public/styles.css" />
   </head>
-  <body class="enterprise-page">
-    <header class="enterprise-static-header">
-      <div class="container enterprise-header-row">
-        <a href="index.html" class="enterprise-brand">
-          <img src="assets/OIP.webp" alt="Babcock University Logo" />
-          <div class="enterprise-brand-copy">
-            <span>Babcock University</span>
-            <strong>Publishing & Knowledge Services</strong>
+  <body class="press-page">
+    <div class="press-utility-bar">
+      <div class="container press-utility-inner">
+        <div class="press-utility-links">
+          <a href="https://umis.babcock.edu.ng" target="_blank" rel="noopener noreferrer">UMIS</a>
+          <a href="https://publication.babcock.edu.ng" target="_blank" rel="noopener noreferrer">Publications</a>
+          <a href="https://legacy.babcock.edu.ng/oer/bu_oer_intro.php" target="_blank" rel="noopener noreferrer">OER</a>
+          <a href="https://legacy.babcock.edu.ng/Virtual_tour/Babcock.html" target="_blank" rel="noopener noreferrer">Virtual Tour</a>
+          <a href="https://babcock.edu.ng/library" target="_blank" rel="noopener noreferrer">Library</a>
+        </div>
+        <div class="press-utility-meta">
+          <span>Mission and Academic Purpose</span>
+          <a href="https://legacy.babcock.edu.ng/search" target="_blank" rel="noopener noreferrer">Search</a>
+        </div>
+      </div>
+    </div>
+
+    <header class="press-main-header">
+      <div class="press-primary-bar">
+        <div class="container press-primary-row">
+          <a href="index.html" class="press-brand">
+            <img
+              class="press-brand-mark"
+              src="assets/OIP.webp"
+              alt="Babcock University logo" />
+            <div class="press-brand-copy">
+              <span>Babcock University</span>
+              <strong>Babcock University Press</strong>
+            </div>
+          </a>
+
+          <div class="press-primary-actions">
+            <nav class="press-global-nav" aria-label="University navigation">
+              <ul class="press-menu-list">
+                <li class="press-menu-item">
+                  <a class="press-menu-trigger" href="#">
+                    BU Links <i class="fas fa-chevron-down"></i>
+                  </a>
+                  <div class="press-dropdown-panel">
+                    <a href="https://legacy.babcock.edu.ng/about" target="_blank" rel="noopener noreferrer">About BU</a>
+                    <a href="https://legacy.babcock.edu.ng/undergraduate" target="_blank" rel="noopener noreferrer">Academics</a>
+                    <a href="https://legacy.babcock.edu.ng/admission" target="_blank" rel="noopener noreferrer">Admissions</a>
+                    <a href="https://legacy.babcock.edu.ng/bu_press" target="_blank" rel="noopener noreferrer">Resources</a>
+                    <a href="https://legacy.babcock.edu.ng/Virtual_tour/Babcock.html" target="_blank" rel="noopener noreferrer">Quick Links</a>
+                  </div>
+                </li>
+              </ul>
+            </nav>
+            <a
+              class="press-ghost-action"
+              href="https://legacy.babcock.edu.ng/bu_press"
+              target="_blank"
+              rel="noopener noreferrer">
+              <i class="fas fa-arrow-up-right-from-square"></i> Legacy BU Press
+            </a>
+            <a class="press-button press-button-primary" href="index.html">Open Portal</a>
           </div>
-        </a>
-        <nav class="enterprise-static-nav">
-          <ul class="enterprise-static-links">
-            <li><a href="solutions.html" data-page-link class="enterprise-page-link">Solutions</a></li>
-            <li><a href="publishing.html" data-page-link class="enterprise-page-link">Publishing</a></li>
-            <li><a href="products.html" data-page-link class="enterprise-page-link">Products</a></li>
-            <li><a href="insights.html" data-page-link class="enterprise-page-link">Insights</a></li>
-            <li><a href="about.html" data-page-link class="enterprise-page-link">About</a></li>
-            <li><a href="support.html" data-page-link class="enterprise-page-link">Support</a></li>
-          </ul>
-          <div class="enterprise-static-actions">
-            <a class="enterprise-btn enterprise-btn-secondary" href="index.html">Open Portal</a>
-            <a class="enterprise-btn enterprise-btn-primary" href="support.html">Contact Team</a>
+
+          <button
+            class="press-menu-toggle"
+            data-press-toggle
+            aria-label="Open menu">
+            <span></span><span></span><span></span>
+          </button>
+        </div>
+      </div>
+
+      <div class="press-subnav">
+        <div class="container press-subnav-row">
+          <div class="press-subnav-links">
+            <a href="index.html" data-page-link>Home</a>
+            <a href="about.html" class="is-active" data-page-link>About</a>
+            <a href="publications.html" data-page-link>Publications</a>
+            <a href="authors.html" data-page-link>Authors</a>
+            <a href="services.html" data-page-link>Services</a>
+            <a href="for-authors.html" data-page-link>For Authors</a>
+            <a href="rights-permissions.html" data-page-link>Rights &amp; Permissions</a>
+            <a href="staff.html" data-page-link>Staff</a>
+            <a href="gallery.html" data-page-link>Gallery</a>
           </div>
-        </nav>
-        <button class="enterprise-static-toggle" data-enterprise-toggle aria-label="Open menu">
-          <span></span><span></span><span></span>
-        </button>
+        </div>
       </div>
     </header>
 
-    <div class="enterprise-page-overlay" data-enterprise-overlay></div>
-    <aside class="enterprise-page-mobile-menu" data-enterprise-menu>
-      <ul class="enterprise-mobile-links">
-        <li><a href="solutions.html">Solutions</a></li>
-        <li><a href="publishing.html">Publishing</a></li>
-        <li><a href="products.html">Products</a></li>
-        <li><a href="insights.html">Insights</a></li>
-        <li><a href="about.html">About</a></li>
-        <li><a href="support.html">Support</a></li>
-      </ul>
-      <div class="enterprise-mobile-actions">
-        <a class="enterprise-btn enterprise-btn-secondary" href="index.html">Open Portal</a>
-        <a class="enterprise-btn enterprise-btn-primary" href="support.html">Contact Team</a>
+    <div class="press-overlay" data-press-overlay></div>
+    <aside class="press-mobile-drawer" data-press-menu>
+      <div class="press-mobile-section">
+        <h3>BU Press Pages</h3>
+        <ul class="press-mobile-links">
+          <li><a href="index.html">Home</a></li>
+          <li><a href="about.html">About</a></li>
+          <li><a href="publications.html">Publications</a></li>
+          <li><a href="authors.html">Authors</a></li>
+          <li><a href="services.html">Services</a></li>
+          <li><a href="for-authors.html">For Authors</a></li>
+          <li><a href="rights-permissions.html">Rights &amp; Permissions</a></li>
+          <li><a href="staff.html">Staff</a></li>
+          <li><a href="gallery.html">Gallery</a></li>
+        </ul>
+      </div>
+      <div class="press-mobile-section">
+        <h3>University Links</h3>
+        <ul class="press-mobile-list">
+          <li><a href="https://umis.babcock.edu.ng" target="_blank" rel="noopener noreferrer">UMIS</a></li>
+          <li><a href="https://publication.babcock.edu.ng" target="_blank" rel="noopener noreferrer">Publications</a></li>
+          <li><a href="https://babcock.edu.ng/library" target="_blank" rel="noopener noreferrer">Library</a></li>
+          <li><a href="https://legacy.babcock.edu.ng/Virtual_tour/Babcock.html" target="_blank" rel="noopener noreferrer">Virtual Tour</a></li>
+        </ul>
+      </div>
+      <div class="press-mobile-auth">
+        <a class="press-button press-button-secondary" href="https://legacy.babcock.edu.ng/bu_press" target="_blank" rel="noopener noreferrer">Legacy BU Press</a>
+        <a class="press-button press-button-primary" href="index.html">Open Portal</a>
       </div>
     </aside>
 
-    <main class="enterprise-page-main">
-      <section class="enterprise-page-hero">
-        <div class="container enterprise-page-hero-grid">
-          <div class="enterprise-page-hero-copy">
-            <span class="enterprise-pill"><i class="fas fa-earth-africa"></i> About</span>
-            <h1>Why Babcock is building a broader publishing and knowledge platform</h1>
+    <main>
+      <section class="press-page-hero">
+        <div class="container press-page-hero-grid">
+          <div class="press-page-hero-copy">
+            <span class="press-kicker"><i class="fas fa-earth-africa"></i> About Us</span>
+            <h1>
+              Why Babcock is building a broader publishing and knowledge
+              platform
+            </h1>
             <p>
-              This page reframes the organization beyond a single landing page
+              Our transformation reframes the organization beyond a single landing page
               and shows how publishing, learning, operational support, and
               digital discovery can sit inside one academic platform.
             </p>
+            <div class="press-breadcrumbs">
+              <a href="index.html">Babcock University Press</a>
+              <span>/</span>
+              <span>About</span>
+            </div>
           </div>
-          <div class="enterprise-page-panel">
-            <small>Focus areas</small>
-            <ul class="enterprise-bullet-list">
-              <li><i class="fas fa-check-circle"></i><span>Mission, leadership, and academic purpose.</span></li>
-              <li><i class="fas fa-check-circle"></i><span>Publishing operations and digital transformation.</span></li>
-              <li><i class="fas fa-check-circle"></i><span>Service orientation for students, faculty, and authors.</span></li>
+          <div class="press-card press-publication-shell">
+            <h3>Our Strategic Focus</h3>
+            <ul class="press-list">
+              <li>
+                <i class="fas fa-check-circle"></i>
+                <span>Mission, leadership, and academic purpose.</span>
+              </li>
+              <li>
+                <i class="fas fa-check-circle"></i>
+                <span>Publishing operations and digital transformation.</span>
+              </li>
+              <li>
+                <i class="fas fa-check-circle"></i>
+                <span>Service orientation for students, faculty, and authors.</span>
+              </li>
+            </ul>
+          </div>
+        </div>
+      </section>
+
+      <section class="press-section">
+        <div class="container">
+          <div class="press-detail-grid">
+            <article class="press-card press-detail-card">
+              <i class="fas fa-bullseye"></i>
+              <h3>Mission</h3>
+              <p>
+                Advance scholarly communication by helping research and teaching
+                communities publish with clarity and reach.
+              </p>
+            </article>
+            <article class="press-card press-detail-card">
+              <i class="fas fa-eye"></i>
+              <h3>Vision</h3>
+              <p>
+                Build a trusted, modern academic publishing presence rooted in
+                Babcock’s values and regional leadership.
+              </p>
+            </article>
+            <article class="press-card press-detail-card">
+              <i class="fas fa-network-wired"></i>
+              <h3>Transformation</h3>
+              <p>
+                Move from a single homepage into a more navigable ecosystem of
+                services, products, insights, and support.
+              </p>
+            </article>
+          </div>
+        </div>
+      </section>
+
+      <section class="press-section press-section-soft">
+        <div class="container press-split-grid">
+          <article class="press-card">
+            <span class="press-eyebrow">Academic Excellence</span>
+            <h2>About Babcock University Press</h2>
+            <div class="press-rich-text">
+              <p>
+                Babcock University Press is the scholarly publishing division of
+                Babcock University, dedicated to advancing academic excellence
+                through professional publishing, editorial services, and knowledge
+                dissemination.
+              </p>
+              <p>
+                As a university press, we combine the rigor of academic publishing
+                with the service orientation of Babcock University. We facilitate
+                the publication of original research, scholarly monographs,
+                textbooks, and institutional materials that contribute to
+                knowledge advancement in our region and beyond.
+              </p>
+            </div>
+          </article>
+          <article class="press-card press-profile-card">
+            <div class="press-card-title">
+              <i class="fas fa-landmark"></i>
+              <h3>Institutional Backing</h3>
+            </div>
+            <p>
+              Founded to support the university's commitment to rigorous scholarship, we serve faculty, students, researchers, and the broader academic community.
+            </p>
+            <div class="press-inline-links" style="margin-top: 20px">
+              <a href="staff.html"><i class="fas fa-users"></i> Leadership Team</a>
+              <a href="gallery.html"><i class="fas fa-image"></i> View Press Gallery</a>
+            </div>
+          </article>
+        </div>
+      </section>
+
+      <section class="press-section">
+        <div class="container">
+          <div class="press-section-heading">
+            <span class="press-eyebrow">Expertise</span>
+            <h2>Our Core Services</h2>
+            <p>Integrated publishing and print support for academic and institutional needs.</p>
+          </div>
+
+          <div class="press-service-grid">
+            <article class="press-card press-service-card">
+              <i class="fas fa-pen-fancy"></i>
+              <h3>Editorial Services</h3>
+              <p>
+                Professional manuscript review, developmental editing,
+                copyediting, and substantive editing to enhance clarity and
+                impact of your work.
+              </p>
+            </div>
+            <div class="enterprise-detail-card">
+              <i class="fas fa-palette"></i>
+              <h3>Design & Layout</h3>
+              <p>
+                Comprehensive book design, typography, cover design, and layout
+                services tailored to your manuscript's unique requirements.
+              </p>
+            </div>
+            <div class="enterprise-detail-card">
+              <i class="fas fa-print"></i>
+              <h3>Print Services</h3>
+              <p>
+                Professional printing, binding, and production coordination
+                ensuring quality publication in various formats.
+              </p>
+            </div>
+            <div class="enterprise-detail-card">
+              <i class="fas fa-book"></i>
+              <h3>Publishing Support</h3>
+              <p>
+                End-to-end publishing guidance from manuscript preparation
+                through distribution and promotion of your work.
+              </p>
+            </div>
+            <div class="enterprise-detail-card">
+              <i class="fas fa-graduation-cap"></i>
+              <h3>Author Development</h3>
+              <p>
+                Training workshops, mentoring, and consultancy in academic
+                writing, publishing ethics, and scholarly communication.
+              </p>
+            </div>
+            <div class="enterprise-detail-card">
+              <i class="fas fa-gavel"></i>
+              <h3>Rights & Permissions</h3>
+              <p>
+                Navigate copyright, licensing, translations, excerpts, and reuse
+                permissions with expert guidance and support.
+              </p>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <section class="enterprise-page-section">
+        <div class="container">
+          <div class="enterprise-section-heading">
+            <h2>Our Reach and Impact</h2>
+          </div>
+          <div class="enterprise-detail-grid">
+            <div class="enterprise-detail-card" style="text-align: center">
+              <h3
+                style="font-size: 2rem; color: #0f694d; margin-bottom: 0.5rem">
+                150+
+              </h3>
+              <p>Published titles across multiple disciplines</p>
+            </div>
+            <div class="enterprise-detail-card" style="text-align: center">
+              <h3
+                style="font-size: 2rem; color: #0f694d; margin-bottom: 0.5rem">
+                300+
+              </h3>
+              <p>Active authors and researchers supported</p>
+            </div>
+            <div class="enterprise-detail-card" style="text-align: center">
+              <h3
+                style="font-size: 2rem; color: #0f694d; margin-bottom: 0.5rem">
+                50+
+              </h3>
+              <p>Annual workshops and training sessions</p>
+            </div>
+            <div class="enterprise-detail-card" style="text-align: center">
+              <h3
+                style="font-size: 2rem; color: #0f694d; margin-bottom: 0.5rem">
+                100%
+              </h3>
+              <p>Commitment to quality and integrity</p>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <section
+        class="enterprise-page-section"
+        style="background-color: #f8f9fa">
+        <div class="container">
+          <div class="enterprise-section-heading">
+            <h2>Why Choose Babcock University Press</h2>
+          </div>
+          <div class="enterprise-rich-text">
+            <ul style="list-style: none; padding: 0">
+              <li
+                style="
+                  margin-bottom: 1rem;
+                  padding-left: 2rem;
+                  position: relative;
+                ">
+                <i
+                  class="fas fa-check-circle"
+                  style="
+                    position: absolute;
+                    left: 0;
+                    color: #0f694d;
+                    top: 0.25rem;
+                  "></i>
+                <strong>Institutional Credibility:</strong> Backed by Babcock
+                University's reputation for academic excellence and integrity.
+              </li>
+              <li
+                style="
+                  margin-bottom: 1rem;
+                  padding-left: 2rem;
+                  position: relative;
+                ">
+                <i
+                  class="fas fa-check-circle"
+                  style="
+                    position: absolute;
+                    left: 0;
+                    color: #0f694d;
+                    top: 0.25rem;
+                  "></i>
+                <strong>Regional Leadership:</strong> Serving the African
+                academic community with culturally informed publishing
+                standards.
+              </li>
+              <li
+                style="
+                  margin-bottom: 1rem;
+                  padding-left: 2rem;
+                  position: relative;
+                ">
+                <i
+                  class="fas fa-check-circle"
+                  style="
+                    position: absolute;
+                    left: 0;
+                    color: #0f694d;
+                    top: 0.25rem;
+                  "></i>
+                <strong>Expert Support:</strong> Dedicated team of editors,
+                designers, and publishing professionals with years of
+                experience.
+              </li>
+              <li
+                style="
+                  margin-bottom: 1rem;
+                  padding-left: 2rem;
+                  position: relative;
+                ">
+                <i
+                  class="fas fa-check-circle"
+                  style="
+                    position: absolute;
+                    left: 0;
+                    color: #0f694d;
+                    top: 0.25rem;
+                  "></i>
+                <strong>Comprehensive Services:</strong> One-stop solution for
+                editorial, design, printing, and distribution needs.
+              </li>
+              <li
+                style="
+                  margin-bottom: 1rem;
+                  padding-left: 2rem;
+                  position: relative;
+                ">
+                <i
+                  class="fas fa-check-circle"
+                  style="
+                    position: absolute;
+                    left: 0;
+                    color: #0f694d;
+                    top: 0.25rem;
+                  "></i>
+                <strong>Transparent Process:</strong> Clear communication, fair
+                pricing, and author-friendly publishing practices.
+              </li>
+              <li
+                style="
+                  margin-bottom: 1rem;
+                  padding-left: 2rem;
+                  position: relative;
+                ">
+                <i
+                  class="fas fa-check-circle"
+                  style="
+                    position: absolute;
+                    left: 0;
+                    color: #0f694d;
+                    top: 0.25rem;
+                  "></i>
+                <strong>Modern Infrastructure:</strong> Digital-first publishing
+                platform with accessibility and discoverability features.
+              </li>
             </ul>
           </div>
         </div>
@@ -88,22 +461,27 @@
 
       <section class="enterprise-page-section">
         <div class="container">
-          <div class="enterprise-detail-grid">
-            <div class="enterprise-detail-card">
-              <i class="fas fa-bullseye"></i>
-              <h3>Mission</h3>
-              <p>Advance scholarly communication by helping research and teaching communities publish with clarity and reach.</p>
-            </div>
-            <div class="enterprise-detail-card">
-              <i class="fas fa-eye"></i>
-              <h3>Vision</h3>
-              <p>Build a trusted, modern academic publishing presence rooted in Babcock’s values and regional leadership.</p>
-            </div>
-            <div class="enterprise-detail-card">
-              <i class="fas fa-network-wired"></i>
-              <h3>Transformation</h3>
-              <p>Move from a single homepage into a more navigable ecosystem of services, products, insights, and support.</p>
-            </div>
+          <div class="enterprise-section-heading">
+            <h2>Get Started With Us</h2>
+            <p>
+              Whether you're an author with a manuscript, a faculty member
+              seeking collaborative publication, or a department exploring
+              institutional publishing solutions, we're here to support your
+              goals.
+            </p>
+          </div>
+          <div style="text-align: center; margin-top: 2rem">
+            <a
+              href="for-authors.html"
+              class="enterprise-btn enterprise-btn-primary"
+              style="margin-right: 1rem"
+              >For Authors</a
+            >
+            <a
+              href="publishing.html"
+              class="enterprise-btn enterprise-btn-secondary"
+              >Publishing Services</a
+            >
           </div>
         </div>
       </section>
@@ -114,7 +492,9 @@
         <div class="enterprise-footer-grid">
           <div>
             <h3>Babcock Publishing & Knowledge Services</h3>
-            <p>Mission, direction, and the broader story behind the platform.</p>
+            <p>
+              Mission, direction, and the broader story behind the platform.
+            </p>
           </div>
           <div>
             <h4>Explore</h4>

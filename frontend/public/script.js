@@ -2177,6 +2177,150 @@ function renderWorkflowField(label, value) {
   `;
 }
 
+function getEditorialFeedbackBadgeMeta(entry = {}) {
+  const decision = String(entry.decision || entry.recommendation || "")
+    .trim()
+    .toLowerCase();
+
+  if (decision === "accept") {
+    return { className: "accepted", label: "Accepted" };
+  }
+
+  if (decision === "reject") {
+    return { className: "rejected", label: "Rejected" };
+  }
+
+  if (
+    entry.action_required ||
+    ["minor_revisions", "major_revisions", "resubmit"].includes(decision)
+  ) {
+    return {
+      className: "revisions_requested",
+      label: decision ? formatDashboardLabel(decision) : "Action Required",
+    };
+  }
+
+  if ((entry.audience || "").toLowerCase() === "internal") {
+    return { className: "draft", label: "Internal Note" };
+  }
+
+  const normalizedStatus = String(entry.status || "")
+    .trim()
+    .toLowerCase();
+  if (normalizedStatus) {
+    return {
+      className: normalizedStatus,
+      label: formatDashboardLabel(normalizedStatus),
+    };
+  }
+
+  return { className: "completed", label: "Editorial Note" };
+}
+
+function getEditorialFeedbackTitle(entry = {}) {
+  return (
+    entry.feedback_title ||
+    entry.title ||
+    (entry.decision || entry.recommendation
+      ? formatDashboardLabel(entry.decision || entry.recommendation)
+      : null) ||
+    "Editorial update"
+  );
+}
+
+function getEditorialFeedbackSummary(entry = {}) {
+  return (
+    entry.message ||
+    entry.summary ||
+    entry.comments ||
+    entry.review_comments ||
+    entry.content ||
+    "Editorial activity has been recorded for this manuscript."
+  );
+}
+
+function normalizeLegacyReviewEntry(entry = {}) {
+  return {
+    ...entry,
+    feedback_title:
+      entry.feedback_title || entry.title || "Editorial review note",
+    summary:
+      entry.summary ||
+      entry.message ||
+      entry.content ||
+      "Editorial activity has been recorded for this manuscript.",
+    recommendation: entry.recommendation || entry.decision || null,
+    action_required: Boolean(entry.action_required),
+  };
+}
+
+function renderEditorialFeedbackAttachment(
+  entry = {},
+  label = "Open attachment",
+) {
+  const attachmentUrl = entry.attachment_url || entry.attachmentUrl;
+  if (!attachmentUrl) return "";
+  return `
+    <a
+      class="workflow-attachment-link"
+      href="${escapeHtml(resolveAssetUrl(attachmentUrl))}"
+      target="_blank"
+      rel="noopener noreferrer">
+      <i class="fas fa-paperclip"></i> ${escapeHtml(label)}
+    </a>
+  `;
+}
+
+function renderEditorialFeedbackList(
+  entries,
+  emptyMessage,
+  { showAudience = false } = {},
+) {
+  const feedbackEntries = Array.isArray(entries) ? entries : [];
+  if (feedbackEntries.length === 0) {
+    return `<li class="workflow-empty">${escapeHtml(emptyMessage)}</li>`;
+  }
+
+  return feedbackEntries
+    .map((entry) => {
+      const badge = getEditorialFeedbackBadgeMeta(entry);
+      const title = getEditorialFeedbackTitle(entry);
+      const summary = getEditorialFeedbackSummary(entry);
+      const authorLabel =
+        entry.created_by_name || entry.reviewer_name || "Publishing team";
+      const attachmentMarkup = renderEditorialFeedbackAttachment(entry);
+      const audienceTag = showAudience
+        ? `<span class="workflow-note-tag">${escapeHtml(
+            (entry.audience || "author") === "internal"
+              ? "Internal"
+              : "Author Visible",
+          )}</span>`
+        : "";
+
+      return `
+        <li class="workflow-feedback-item${
+          entry.action_required ? " is-action-required" : ""
+        }">
+          <div class="workflow-feedback-copy">
+            <strong>${escapeHtml(title)}</strong>
+            <span class="workflow-feedback-meta">${escapeHtml(authorLabel)} • ${escapeHtml(
+              formatDashboardDate(entry.created_at, "Recently"),
+            )}</span>
+            <p>${escapeHtml(summary)}</p>
+            ${attachmentMarkup}
+          </div>
+          <div class="workflow-list-actions">
+            ${audienceTag}
+            <span class="status-badge status-${escapeHtml(
+              badge.className,
+            )}">${escapeHtml(badge.label)}</span>
+          </div>
+        </li>
+      `;
+    })
+    .join("");
+}
+
 function getReviewerOptionsMarkup(selectedReviewerId = "") {
   const normalizedSelected = String(selectedReviewerId || "");
   const options = adminAuthorsCache
@@ -2748,6 +2892,22 @@ async function viewSubmission(submissionId) {
         </li>
       `,
     );
+    const feedbackMarkup = renderEditorialFeedbackList(
+      submission.feedback,
+      "No editorial notes have been logged for this submission yet.",
+      { showAudience: true },
+    );
+    const manuscriptLink = submission.manuscript_file
+      ? `
+          <a
+            class="workflow-attachment-link"
+            href="${escapeHtml(resolveAssetUrl(submission.manuscript_file))}"
+            target="_blank"
+            rel="noopener noreferrer">
+            <i class="fas fa-file-arrow-down"></i> Open manuscript file
+          </a>
+        `
+      : `<span class="manuscript-link manuscript-link-disabled">No manuscript file uploaded</span>`;
 
     const content = document.getElementById("submissionDetailsContent");
     if (!content) return;
@@ -2891,7 +3051,77 @@ async function viewSubmission(submissionId) {
             <strong>Latest reviews</strong>
             <ul class="workflow-inline-list">${reviewsMarkup}</ul>
           </div>
+          <div class="workflow-inline-note">
+            <strong>Submitted file</strong>
+            <div class="workflow-link-group">${manuscriptLink}</div>
+          </div>
         </div>
+      </div>
+
+      <div class="workflow-form-grid">
+        <form
+          class="workflow-panel"
+          id="submissionFeedbackForm"
+          onsubmit="handleSubmissionFeedbackSubmit(event)">
+          <input type="hidden" id="submissionFeedbackId" value="${escapeHtml(submission.id)}" />
+          <span class="workflow-panel-label">Editorial Feedback</span>
+          <p class="workflow-panel-copy">
+            Share decision notes, revision requests, or an annotated review file with the author.
+          </p>
+          <div class="workflow-form-fields">
+            <div class="form-group">
+              <label for="submissionFeedbackTitle">Feedback Title</label>
+              <input
+                type="text"
+                id="submissionFeedbackTitle"
+                class="form-control"
+                placeholder="e.g. Initial screening outcome" />
+            </div>
+            <div class="form-group">
+              <label for="submissionFeedbackDecision">Recommendation</label>
+              <select id="submissionFeedbackDecision" class="form-control">
+                <option value="informational">Informational</option>
+                <option value="minor_revisions">Minor Revisions</option>
+                <option value="major_revisions">Major Revisions</option>
+                <option value="accept">Accept</option>
+                <option value="reject">Reject</option>
+                <option value="resubmit">Resubmit</option>
+              </select>
+            </div>
+            <div class="form-group">
+              <label for="submissionFeedbackAudience">Visibility</label>
+              <select id="submissionFeedbackAudience" class="form-control">
+                <option value="author">Share with Author</option>
+                <option value="internal">Internal Only</option>
+              </select>
+            </div>
+            <div class="form-group">
+              <label for="submissionFeedbackAttachment">Attachment</label>
+              <input
+                type="file"
+                id="submissionFeedbackAttachment"
+                class="form-control"
+                accept=".pdf,.doc,.docx,.png,.jpg,.jpeg,application/pdf,application/msword,application/vnd.openxmlformats-officedocument.wordprocessingml.document,image/png,image/jpeg" />
+            </div>
+            <div class="form-group workflow-form-full">
+              <label for="submissionFeedbackMessage">Feedback Message</label>
+              <textarea
+                id="submissionFeedbackMessage"
+                class="form-control"
+                rows="5"
+                placeholder="Summarize the editorial assessment, revision expectations, or decision details"
+                required></textarea>
+            </div>
+          </div>
+          <div class="workflow-form-actions">
+            <button type="submit" class="btn btn-primary">Save Feedback</button>
+          </div>
+        </form>
+
+        <section class="workflow-activity-panel workflow-activity-panel-full">
+          <h5>Editorial Log</h5>
+          <ul class="workflow-feedback-list">${feedbackMarkup}</ul>
+        </section>
       </div>
     `;
 
@@ -2956,6 +3186,85 @@ async function handleSubmissionWorkflowUpdate(event) {
   } catch (error) {
     console.error("Submission workflow update error:", error);
     showNotification("Failed to update submission", "error");
+  } finally {
+    hideLoading();
+  }
+}
+
+async function handleSubmissionFeedbackSubmit(event) {
+  event.preventDefault();
+
+  try {
+    const token = localStorage.getItem("authToken");
+    const submissionId = document.getElementById("submissionFeedbackId")?.value;
+    if (!token || !submissionId) {
+      showNotification("Please login again", "error");
+      return;
+    }
+
+    const message = document
+      .getElementById("submissionFeedbackMessage")
+      ?.value.trim();
+    if (!message) {
+      showNotification("Please add the editorial feedback message", "error");
+      return;
+    }
+
+    showLoading("Saving editorial feedback...");
+
+    const formData = new FormData();
+    formData.append(
+      "title",
+      document.getElementById("submissionFeedbackTitle")?.value.trim() || "",
+    );
+    formData.append(
+      "decision",
+      document.getElementById("submissionFeedbackDecision")?.value ||
+        "informational",
+    );
+    formData.append(
+      "audience",
+      document.getElementById("submissionFeedbackAudience")?.value || "author",
+    );
+    formData.append("message", message);
+
+    const attachmentFile = document.getElementById(
+      "submissionFeedbackAttachment",
+    )?.files?.[0];
+    if (attachmentFile) {
+      formData.append("attachment", attachmentFile);
+    }
+
+    const response = await fetch(
+      `${API_BASE_URL}/admin/submissions/${submissionId}/feedback`,
+      {
+        method: "POST",
+        headers: {
+          Authorization: `Bearer ${token}`,
+          Accept: "application/json",
+        },
+        body: formData,
+      },
+    );
+
+    const data = await response.json();
+    if (!response.ok || !data.success) {
+      showNotification(
+        data.message || "Failed to save editorial feedback",
+        "error",
+      );
+      return;
+    }
+
+    showNotification(
+      data.message || "Editorial feedback saved successfully",
+      "success",
+    );
+    await Promise.all([loadSubmissions(), loadBooks(), loadAdminDashboard()]);
+    await viewSubmission(submissionId);
+  } catch (error) {
+    console.error("Submission feedback submit error:", error);
+    showNotification("Failed to save editorial feedback", "error");
   } finally {
     hideLoading();
   }
@@ -3417,7 +3726,10 @@ function initAnimations() {
 
       if (scrollProgress >= -0.3 && scrollProgress <= 1) {
         const parallaxValue = scrollProgress * 30;
-        heroSection.style.backgroundPosition = `center ${parallaxValue}px`;
+        heroSection.style.setProperty(
+          "--press-hero-parallax",
+          `${parallaxValue}px`,
+        );
       }
     }
   }
@@ -3473,8 +3785,12 @@ function initHeroCarousel() {
 function resolveAssetUrl(path) {
   if (!path) return "";
   if (path.startsWith("http://") || path.startsWith("https://")) return path;
-  if (path.startsWith("/")) return path;
-  return `/${path}`;
+
+  // Prepend the backend host if the path is relative
+  const backendBase = API_BASE_URL.replace(/\/api$/, "");
+  const normalizedPath = path.startsWith("/") ? path : `/${path}`;
+
+  return `${backendBase}${normalizedPath}`;
 }
 
 function escapeHtml(value) {
@@ -3912,26 +4228,34 @@ function renderAuthorRecentReviews(reviews) {
 
   reviewFeed.innerHTML = reviews
     .map((review) => {
-      const recommendation = review.recommendation
-        ? formatDashboardLabel(review.recommendation)
-        : "Editorial note";
-      const reviewSummary =
-        review.comments ||
-        review.review_comments ||
-        review.summary ||
-        "Editorial activity has been recorded for this manuscript.";
-      const reviewerName = review.reviewer_name || "Publishing team";
+      const badge = getEditorialFeedbackBadgeMeta(review);
+      const reviewSummary = getEditorialFeedbackSummary(review);
+      const reviewerName =
+        review.created_by_name || review.reviewer_name || "Publishing team";
       const bookTitle = review.book_title || "Current manuscript";
+      const feedbackTitle = getEditorialFeedbackTitle(review);
+      const attachmentMarkup = renderEditorialFeedbackAttachment(
+        review,
+        "Open editor file",
+      );
 
       return `
-        <article class="author-review-item">
+        <article class="author-review-item${
+          review.action_required ? " author-review-item-action" : ""
+        }">
           <div class="author-review-meta">
-            <span class="author-review-book">${escapeHtml(bookTitle)}</span>
+            <div class="author-review-heading-block">
+              <span class="author-review-book">${escapeHtml(bookTitle)}</span>
+              <strong class="author-review-heading">${escapeHtml(
+                feedbackTitle,
+              )}</strong>
+            </div>
             <span class="status-badge status-${escapeHtml(
-              review.status || "completed",
-            )}">${escapeHtml(recommendation)}</span>
+              badge.className,
+            )}">${escapeHtml(badge.label)}</span>
           </div>
           <p>${escapeHtml(reviewSummary)}</p>
+          ${attachmentMarkup ? `<div class="workflow-link-group">${attachmentMarkup}</div>` : ""}
           <div class="author-review-footer">
             <strong>${escapeHtml(reviewerName)}</strong>
             <span>${escapeHtml(
@@ -4335,12 +4659,29 @@ function renderAuthorBooks(books) {
         "Publishing",
       );
       const workflowProgress = getWorkflowProgress(book);
-      const latestActivityDate =
+      const latestFeedbackDate =
+        book.latest_feedback_date ||
         book.last_progress_date ||
         book.latest_submission_date ||
         book.updated_at ||
         book.created_at;
-      const manuscriptLink = book.manuscript_file
+      const latestFeedbackSummary =
+        book.latest_feedback_title ||
+        book.latest_feedback_summary ||
+        workflowProgress.detail;
+      const latestFeedbackBadge = book.latest_feedback_decision
+        ? getEditorialFeedbackBadgeMeta({
+            decision: book.latest_feedback_decision,
+            action_required: book.latest_feedback_action_required,
+          })
+        : book.latest_feedback_action_required
+          ? getEditorialFeedbackBadgeMeta({
+              action_required: book.latest_feedback_action_required,
+            })
+          : null;
+      const latestActivityDate =
+        latestFeedbackDate || book.updated_at || book.created_at;
+      const manuscriptLinkMarkup = book.manuscript_file
         ? `<a class="manuscript-link" href="${escapeHtml(resolveAssetUrl(book.manuscript_file))}" target="_blank" rel="noopener noreferrer">Open file</a>`
         : `<span class="manuscript-link manuscript-link-disabled">No file</span>`;
 
@@ -4384,15 +4725,354 @@ function renderAuthorBooks(books) {
                 formatDashboardDate(latestActivityDate, "Awaiting activity"),
               )}</strong>
               <span class="author-table-meta">${escapeHtml(
-                workflowProgress.detail,
+                latestFeedbackSummary,
               )}</span>
+              ${
+                latestFeedbackBadge
+                  ? `<span class="status-badge status-${escapeHtml(
+                      latestFeedbackBadge.className,
+                    )}">${escapeHtml(latestFeedbackBadge.label)}</span>`
+                  : ""
+              }
             </div>
           </td>
-          <td>${manuscriptLink}</td>
+          <td>
+            <div class="author-manuscript-actions">
+              ${manuscriptLinkMarkup}
+              <button
+                type="button"
+                class="table-action-btn info"
+                onclick="viewAuthorBookWorkflow(${book.id})">
+                Workflow
+              </button>
+            </div>
+          </td>
         </tr>
       `;
     })
     .join("");
+}
+
+async function viewAuthorBookWorkflow(bookId) {
+  try {
+    const token = localStorage.getItem("authToken");
+    if (!token) {
+      showNotification("Please login again to continue", "error");
+      return;
+    }
+
+    showLoading("Loading manuscript workflow...");
+
+    const response = await fetch(`${API_BASE_URL}/author/books/${bookId}`, {
+      headers: {
+        Authorization: `Bearer ${token}`,
+        Accept: "application/json",
+      },
+    });
+
+    const data = await response.json();
+    if (!response.ok || !data.success || !data.data?.book) {
+      showNotification(
+        data.message || "Failed to load manuscript workflow",
+        "error",
+      );
+      return;
+    }
+
+    const workflowData = data.data;
+    const book = workflowData.book;
+    const latestSubmission = Array.isArray(workflowData.submissions)
+      ? workflowData.submissions[0]
+      : null;
+    const authorVisibleFeedback = Array.isArray(workflowData.feedback)
+      ? workflowData.feedback
+      : [];
+    const legacyReviewEntries = Array.isArray(workflowData.reviews)
+      ? workflowData.reviews.map((entry) => normalizeLegacyReviewEntry(entry))
+      : [];
+    const editorialActivity = [
+      ...authorVisibleFeedback,
+      ...legacyReviewEntries,
+    ].sort(
+      (left, right) =>
+        new Date(right.created_at || 0).getTime() -
+        new Date(left.created_at || 0).getTime(),
+    );
+    const latestAuthorFeedback = editorialActivity[0] || null;
+    const feedbackMarkup = renderEditorialFeedbackList(
+      editorialActivity,
+      "No author-visible editorial feedback has been shared for this manuscript yet.",
+    );
+    const progressMarkup = renderWorkflowList(
+      workflowData.progress,
+      "Workflow milestones will appear here after editorial review begins.",
+      (progressItem) => `
+        <li>
+          <div>
+            <strong>${escapeHtml(
+              formatDashboardLabel(progressItem.stage || "workflow"),
+            )}</strong>
+            <span>${escapeHtml(
+              progressItem.notes ||
+                formatDashboardDate(
+                  progressItem.completed_date || progressItem.start_date,
+                  "No milestone date",
+                ),
+            )}</span>
+          </div>
+          <div class="workflow-list-actions">
+            ${renderStatusBadge(progressItem.status || "not_started", "Not Started")}
+          </div>
+        </li>
+      `,
+    );
+    const manuscriptLinkMarkup = book.manuscript_file
+      ? `
+          <a
+            class="workflow-attachment-link"
+            href="${escapeHtml(resolveAssetUrl(book.manuscript_file))}"
+            target="_blank"
+            rel="noopener noreferrer">
+            <i class="fas fa-file-arrow-down"></i> Open current manuscript
+          </a>
+        `
+      : `<span class="manuscript-link manuscript-link-disabled">No manuscript file uploaded</span>`;
+    const needsRevision =
+      book.status === "revisions_requested" ||
+      authorVisibleFeedback.some((entry) => entry.action_required);
+
+    const workflowContent = document.getElementById("authorWorkflowContent");
+    if (!workflowContent) return;
+
+    workflowContent.innerHTML = `
+      <div class="workflow-profile workflow-profile-compact">
+        <div class="workflow-profile-copy">
+          <span class="workflow-kicker">Author Workflow</span>
+          <h4>${escapeHtml(book.title || "Untitled manuscript")}</h4>
+          <p>${escapeHtml(book.category || "Manuscript record")}</p>
+          <div class="workflow-status-row">
+            ${renderStatusBadge(book.status || "submitted", "Submitted")}
+            ${
+              latestSubmission
+                ? `<span class="workflow-meta">${escapeHtml(
+                    `Latest submission: ${formatDashboardLabel(
+                      latestSubmission.submission_type || "publishing",
+                      "Publishing",
+                    )}`,
+                  )}</span>`
+                : ""
+            }
+          </div>
+        </div>
+      </div>
+
+      <div class="workflow-summary-grid">
+        <article class="workflow-summary-card">
+          <span>Latest Submission</span>
+          <strong>${escapeHtml(
+            latestSubmission
+              ? formatDashboardDate(
+                  latestSubmission.submission_date,
+                  "No submission date",
+                )
+              : "Not yet submitted",
+          )}</strong>
+        </article>
+        <article class="workflow-summary-card">
+          <span>Latest Decision</span>
+          <strong>${escapeHtml(
+            latestAuthorFeedback?.decision
+              ? formatDashboardLabel(latestAuthorFeedback.decision)
+              : "Awaiting feedback",
+          )}</strong>
+        </article>
+        <article class="workflow-summary-card">
+          <span>Current File</span>
+          <strong>${escapeHtml(
+            getFileExtension(book.manuscript_file || "") || "Document",
+          )}</strong>
+        </article>
+        <article class="workflow-summary-card">
+          <span>Action Needed</span>
+          <strong>${escapeHtml(needsRevision ? "Revision Requested" : "Monitor Activity")}</strong>
+        </article>
+      </div>
+
+      <div class="workflow-form-grid">
+        <section class="workflow-activity-panel workflow-activity-panel-full">
+          <h5>Editorial Feedback</h5>
+          <ul class="workflow-feedback-list">${feedbackMarkup}</ul>
+        </section>
+
+        <section class="workflow-panel">
+          <span class="workflow-panel-label">Current Manuscript</span>
+          <p>
+            Use the latest file link below to keep track of the version currently
+            in editorial review.
+          </p>
+          <div class="workflow-link-group">${manuscriptLinkMarkup}</div>
+          ${
+            latestSubmission
+              ? `
+                <div class="workflow-inline-note">
+                  <strong>Submission State</strong>
+                  <ul class="workflow-inline-list">
+                    <li>
+                      <div>
+                        <strong>${escapeHtml(
+                          formatDashboardLabel(
+                            latestSubmission.submission_type || "publishing",
+                          ),
+                        )}</strong>
+                        <span>${escapeHtml(
+                          formatDashboardDate(
+                            latestSubmission.submission_date,
+                            "No date",
+                          ),
+                        )}</span>
+                      </div>
+                      <div class="workflow-list-actions">
+                        ${renderStatusBadge(
+                          latestSubmission.status || "pending",
+                          "Pending",
+                        )}
+                      </div>
+                    </li>
+                  </ul>
+                </div>
+              `
+              : ""
+          }
+        </section>
+      </div>
+
+      <div class="workflow-form-grid">
+        <section class="workflow-activity-panel workflow-activity-panel-full">
+          <h5>Workflow Timeline</h5>
+          <ul>${progressMarkup}</ul>
+        </section>
+
+        <form class="workflow-panel" onsubmit="handleAuthorResubmission(event)">
+          <input type="hidden" id="authorRevisionBookId" value="${escapeHtml(
+            book.id,
+          )}" />
+          <span class="workflow-panel-label">Revision Response</span>
+          <p class="workflow-panel-copy">
+            ${
+              needsRevision
+                ? "Upload your revised manuscript and respond to the latest editorial request."
+                : "Revision upload stays locked until the editorial team asks for changes."
+            }
+          </p>
+          <input type="hidden" id="authorRevisionAllowed" value="${needsRevision ? "true" : "false"}" />
+          <div class="workflow-form-fields">
+            <div class="form-group workflow-form-full">
+              <label for="authorRevisionFile">Revised Manuscript</label>
+              <input
+                type="file"
+                id="authorRevisionFile"
+                class="form-control"
+                accept=".pdf,.doc,.docx,application/pdf,application/msword,application/vnd.openxmlformats-officedocument.wordprocessingml.document"
+                ${needsRevision ? "required" : "disabled"} />
+            </div>
+            <div class="form-group workflow-form-full">
+              <label for="authorRevisionNote">Response Note</label>
+              <textarea
+                id="authorRevisionNote"
+                class="form-control"
+                rows="4"
+                placeholder="Summarize what you revised or clarify any response to the editorial comments"
+                ${needsRevision ? "" : "disabled"}></textarea>
+            </div>
+          </div>
+          <div class="workflow-form-actions">
+            <button type="submit" class="btn btn-primary" ${needsRevision ? "" : "disabled"}>
+              Submit Revision
+            </button>
+          </div>
+        </form>
+      </div>
+    `;
+
+    showModal("authorWorkflowModal");
+  } catch (error) {
+    console.error("View author workflow error:", error);
+    showNotification("Failed to load manuscript workflow", "error");
+  } finally {
+    hideLoading();
+  }
+}
+
+async function handleAuthorResubmission(event) {
+  event.preventDefault();
+
+  try {
+    const token = localStorage.getItem("authToken");
+    const bookId = document.getElementById("authorRevisionBookId")?.value;
+    const canResubmit =
+      document.getElementById("authorRevisionAllowed")?.value === "true";
+    const revisionFile =
+      document.getElementById("authorRevisionFile")?.files?.[0];
+    const responseNote =
+      document.getElementById("authorRevisionNote")?.value.trim() || "";
+
+    if (!token || !bookId) {
+      showNotification("Please login again to continue", "error");
+      return;
+    }
+
+    if (!canResubmit) {
+      showNotification(
+        "Revision upload becomes available after editorial feedback requests changes",
+        "warning",
+      );
+      return;
+    }
+
+    if (!revisionFile) {
+      showNotification("Please choose the revised manuscript file", "error");
+      return;
+    }
+
+    showLoading("Submitting revised manuscript...");
+
+    const formData = new FormData();
+    formData.append("manuscript_file", revisionFile);
+    formData.append("author_notes", responseNote);
+
+    const response = await fetch(
+      `${API_BASE_URL}/author/books/${bookId}/resubmit`,
+      {
+        method: "POST",
+        headers: {
+          Authorization: `Bearer ${token}`,
+          Accept: "application/json",
+        },
+        body: formData,
+      },
+    );
+
+    const data = await response.json();
+    if (!response.ok || !data.success) {
+      showNotification(
+        data.message || "Failed to submit revised manuscript",
+        "error",
+      );
+      return;
+    }
+
+    showNotification(
+      data.message || "Revised manuscript submitted successfully",
+      "success",
+    );
+    await loadAuthorDashboard();
+    await viewAuthorBookWorkflow(bookId);
+  } catch (error) {
+    console.error("Author resubmission error:", error);
+    showNotification("Failed to submit revised manuscript", "error");
+  } finally {
+    hideLoading();
+  }
 }
 
 async function handleManuscriptSubmission(e) {

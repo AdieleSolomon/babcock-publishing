@@ -484,6 +484,43 @@ function toNullable(value) {
   return text === "" ? null : text;
 }
 
+function parseBooleanInput(value) {
+  if (typeof value === "boolean") return value;
+  const normalizedValue = String(value || "")
+    .trim()
+    .toLowerCase();
+  return ["1", "true", "yes", "on"].includes(normalizedValue);
+}
+
+function normalizeFeedbackAudience(value) {
+  const audience = String(value || "")
+    .trim()
+    .toLowerCase();
+  return audience === "internal" ? "internal" : "author";
+}
+
+function normalizeEditorialDecision(value) {
+  const decision = String(value || "")
+    .trim()
+    .toLowerCase();
+  const allowedDecisions = new Set([
+    "informational",
+    "accept",
+    "minor_revisions",
+    "major_revisions",
+    "reject",
+    "resubmit",
+  ]);
+  return allowedDecisions.has(decision) ? decision : null;
+}
+
+function formatTokenLabel(value, fallback = "N/A") {
+  if (!value) return fallback;
+  return String(value)
+    .replaceAll("_", " ")
+    .replace(/\b\w/g, (character) => character.toUpperCase());
+}
+
 function toNumber(value, fallback = 0) {
   const parsed = Number(value);
   return Number.isFinite(parsed) ? parsed : fallback;
@@ -522,6 +559,134 @@ async function insertRecordWithExistingColumns(tableName, payload) {
   );
 
   return result;
+}
+
+async function ensureSubmissionFeedbackSchema() {
+  if (isPostgres) {
+    await dbQuery(`
+      CREATE TABLE IF NOT EXISTS submission_feedback (
+        id SERIAL PRIMARY KEY,
+        submission_id INTEGER NOT NULL REFERENCES submissions(id) ON DELETE CASCADE,
+        book_id INTEGER REFERENCES books(id) ON DELETE SET NULL,
+        created_by INTEGER REFERENCES users(id) ON DELETE SET NULL,
+        audience TEXT DEFAULT 'author',
+        entry_type TEXT DEFAULT 'editorial_note',
+        title VARCHAR(255),
+        message TEXT NOT NULL,
+        decision TEXT,
+        attachment_url VARCHAR(255),
+        action_required BOOLEAN DEFAULT FALSE,
+        created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+        updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+      )
+    `);
+    await dbQuery(
+      "CREATE INDEX IF NOT EXISTS idx_submission_feedback_submission ON submission_feedback(submission_id)",
+    );
+    await dbQuery(
+      "CREATE INDEX IF NOT EXISTS idx_submission_feedback_book ON submission_feedback(book_id)",
+    );
+    return;
+  }
+
+  await dbQuery(`
+    CREATE TABLE IF NOT EXISTS submission_feedback (
+      id INT PRIMARY KEY AUTO_INCREMENT,
+      submission_id INT NOT NULL,
+      book_id INT NULL,
+      created_by INT NULL,
+      audience ENUM('author', 'internal') DEFAULT 'author',
+      entry_type VARCHAR(50) DEFAULT 'editorial_note',
+      title VARCHAR(255),
+      message TEXT NOT NULL,
+      decision VARCHAR(50),
+      attachment_url VARCHAR(255),
+      action_required BOOLEAN DEFAULT FALSE,
+      created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+      updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+      FOREIGN KEY (submission_id) REFERENCES submissions(id) ON DELETE CASCADE,
+      FOREIGN KEY (book_id) REFERENCES books(id) ON DELETE SET NULL,
+      FOREIGN KEY (created_by) REFERENCES users(id) ON DELETE SET NULL,
+      INDEX idx_submission_feedback_submission (submission_id),
+      INDEX idx_submission_feedback_book (book_id)
+    )
+  `);
+
+  const feedbackColumns = await getTableColumns("submission_feedback");
+  const alterStatements = [];
+
+  if (!feedbackColumns.has("book_id")) {
+    alterStatements.push("ADD COLUMN book_id INT NULL");
+  }
+  if (!feedbackColumns.has("created_by")) {
+    alterStatements.push("ADD COLUMN created_by INT NULL");
+  }
+  if (!feedbackColumns.has("audience")) {
+    alterStatements.push(
+      "ADD COLUMN audience ENUM('author', 'internal') DEFAULT 'author'",
+    );
+  }
+  if (!feedbackColumns.has("entry_type")) {
+    alterStatements.push(
+      "ADD COLUMN entry_type VARCHAR(50) DEFAULT 'editorial_note'",
+    );
+  }
+  if (!feedbackColumns.has("title")) {
+    alterStatements.push("ADD COLUMN title VARCHAR(255)");
+  }
+  if (!feedbackColumns.has("decision")) {
+    alterStatements.push("ADD COLUMN decision VARCHAR(50)");
+  }
+  if (!feedbackColumns.has("attachment_url")) {
+    alterStatements.push("ADD COLUMN attachment_url VARCHAR(255)");
+  }
+  if (!feedbackColumns.has("action_required")) {
+    alterStatements.push("ADD COLUMN action_required BOOLEAN DEFAULT FALSE");
+  }
+  if (!feedbackColumns.has("updated_at")) {
+    alterStatements.push(
+      "ADD COLUMN updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP",
+    );
+  }
+
+  if (alterStatements.length > 0) {
+    await dbQuery(
+      `ALTER TABLE submission_feedback ${alterStatements.join(", ")}`,
+    );
+  }
+}
+
+async function logBookProgressStage({
+  bookId,
+  stage,
+  status,
+  notes,
+  dueDate,
+  completed = false,
+}) {
+  if (!bookId || !stage || !status) return;
+
+  try {
+    const progressColumns = await getTableColumns("book_progress");
+    if (progressColumns.size === 0) return;
+
+    const timestamp = new Date();
+    const dateStamp = timestamp.toISOString().slice(0, 10);
+
+    await insertRecordWithExistingColumns("book_progress", {
+      book_id: bookId,
+      stage,
+      status,
+      start_date: dateStamp,
+      due_date: toNullable(dueDate),
+      completed_date: completed ? dateStamp : undefined,
+      notes: toNullable(notes),
+      created_at: timestamp,
+      updated_at: timestamp,
+    });
+  } catch (error) {
+    console.warn("Book progress logging warning:", error.message);
+  }
 }
 
 function wait(ms) {
@@ -3815,7 +3980,7 @@ app.get(
     try {
       const [submissions] = await dbQuery(
         `SELECT s.*, b.title as book_title, b.status as book_status, b.category as book_category,
-                b.author_id, u.full_name as author_name, u.email as author_email
+                b.author_id, b.manuscript_file, u.full_name as author_name, u.email as author_email
          FROM submissions s
          JOIN books b ON s.book_id = b.id
          LEFT JOIN authors a ON b.author_id = a.id
@@ -3841,11 +4006,21 @@ app.get(
         [req.params.id],
       ).catch(() => [[]]);
 
+      const [feedback] = await dbQuery(
+        `SELECT sf.*, creator.full_name as created_by_name
+         FROM submission_feedback sf
+         LEFT JOIN users creator ON sf.created_by = creator.id
+         WHERE sf.submission_id = ?
+         ORDER BY sf.created_at DESC`,
+        [req.params.id],
+      ).catch(() => [[]]);
+
       res.json({
         success: true,
         submission: {
           ...submission,
           reviews,
+          feedback,
         },
       });
     } catch (error) {
@@ -4010,6 +4185,27 @@ app.put(
             ]);
           }
         }
+
+        if (["assigned", "in_review"].includes(status)) {
+          await logBookProgressStage({
+            bookId: submissionRecord.book_id,
+            stage: "initial_review",
+            status: "in_progress",
+            notes:
+              reviewer_id !== undefined && reviewer_id
+                ? "Submission assigned for editorial review."
+                : "Editorial review is in progress.",
+            dueDate,
+          });
+        } else if (status === "review_completed") {
+          await logBookProgressStage({
+            bookId: submissionRecord.book_id,
+            stage: "peer_review",
+            status: "completed",
+            notes: "Editorial review cycle completed.",
+            completed: true,
+          });
+        }
       }
 
       res.json({
@@ -4021,6 +4217,171 @@ app.put(
       res.status(500).json({
         success: false,
         message: "Failed to update submission",
+      });
+    }
+  },
+);
+
+app.post(
+  "/api/admin/submissions/:id/feedback",
+  authMiddleware,
+  roleMiddleware(adminPortalRoles),
+  upload.single("attachment"),
+  async (req, res) => {
+    try {
+      const [submissionRows] = await dbQuery(
+        `SELECT s.id, s.book_id, s.status as submission_status,
+                b.title as book_title, b.status as book_status,
+                u.email as author_email, u.full_name as author_name
+         FROM submissions s
+         JOIN books b ON s.book_id = b.id
+         LEFT JOIN authors a ON b.author_id = a.id
+         LEFT JOIN users u ON a.user_id = u.id
+         WHERE s.id = ?`,
+        [req.params.id],
+      );
+
+      if (submissionRows.length === 0) {
+        return res.status(404).json({
+          success: false,
+          message: "Submission not found",
+        });
+      }
+
+      const submission = submissionRows[0];
+      const audience = normalizeFeedbackAudience(req.body?.audience);
+      const decision = normalizeEditorialDecision(req.body?.decision);
+      const message = toNullable(req.body?.message);
+      const title =
+        toNullable(req.body?.title) ||
+        (decision ? formatTokenLabel(decision) : null);
+
+      if (!message) {
+        return res.status(400).json({
+          success: false,
+          message: "Feedback message is required",
+        });
+      }
+
+      const actionRequired =
+        parseBooleanInput(req.body?.action_required) ||
+        ["minor_revisions", "major_revisions", "resubmit"].includes(
+          decision || "",
+        );
+      const attachmentUrl = getUploadPath(req.file);
+      const entryType = decision
+        ? ["minor_revisions", "major_revisions", "resubmit"].includes(decision)
+          ? "revision_request"
+          : "decision"
+        : audience === "internal"
+          ? "internal_note"
+          : "editorial_note";
+
+      await insertRecordWithExistingColumns("submission_feedback", {
+        submission_id: submission.id,
+        book_id: submission.book_id,
+        created_by: req.user.id,
+        audience,
+        entry_type: entryType,
+        title,
+        message,
+        decision,
+        attachment_url: attachmentUrl,
+        action_required: actionRequired,
+        created_at: new Date(),
+      });
+
+      let nextSubmissionStatus = null;
+      let nextBookStatus = null;
+
+      if (decision === "accept") {
+        nextSubmissionStatus = "accepted";
+        nextBookStatus = "accepted";
+        await logBookProgressStage({
+          bookId: submission.book_id,
+          stage: "initial_review",
+          status: "completed",
+          notes: title || "Submission accepted for the next publishing stage",
+          completed: true,
+        });
+      } else if (decision === "reject") {
+        nextSubmissionStatus = "rejected";
+        nextBookStatus = "rejected";
+        await logBookProgressStage({
+          bookId: submission.book_id,
+          stage: "initial_review",
+          status: "completed",
+          notes: title || "Submission rejected after editorial review",
+          completed: true,
+        });
+      } else if (
+        decision === "minor_revisions" ||
+        decision === "major_revisions" ||
+        decision === "resubmit"
+      ) {
+        nextSubmissionStatus = "review_completed";
+        nextBookStatus = "revisions_requested";
+        await logBookProgressStage({
+          bookId: submission.book_id,
+          stage: "revisions",
+          status: "in_progress",
+          notes: title || "Revisions requested from the author",
+        });
+      }
+
+      if (nextSubmissionStatus) {
+        await dbQuery("UPDATE submissions SET status = ? WHERE id = ?", [
+          nextSubmissionStatus,
+          submission.id,
+        ]);
+      }
+
+      if (nextBookStatus) {
+        await dbQuery("UPDATE books SET status = ? WHERE id = ?", [
+          nextBookStatus,
+          submission.book_id,
+        ]);
+      }
+
+      if (isEmailConfigured && audience === "author" && submission.author_email) {
+        const emailLines = [
+          `Hello ${submission.author_name || "Author"},`,
+          "",
+          `The editorial team has shared an update on "${submission.book_title || "your manuscript"}".`,
+          "",
+          `Feedback title: ${title || "Editorial update"}`,
+          `Recommendation: ${
+            decision ? formatTokenLabel(decision) : "Editorial note"
+          }`,
+          "",
+          message,
+        ];
+
+        if (attachmentUrl) {
+          emailLines.push("", `Attachment available in the portal: ${attachmentUrl}`);
+        }
+
+        emailLines.push("", "Please sign in to the author workspace to review the latest workflow activity.");
+
+        void sendEmail({
+          to: submission.author_email,
+          subject: `Editorial feedback: ${submission.book_title || "Manuscript update"}`,
+          text: emailLines.join("\n"),
+        });
+      }
+
+      res.json({
+        success: true,
+        message:
+          audience === "author"
+            ? "Editorial feedback shared with the author"
+            : "Internal editorial note saved successfully",
+      });
+    } catch (error) {
+      console.error("Submission feedback error:", error);
+      res.status(500).json({
+        success: false,
+        message: "Failed to save editorial feedback",
       });
     }
   },
@@ -5059,6 +5420,24 @@ app.post(
         },
       );
 
+      await insertRecordWithExistingColumns("submission_feedback", {
+        submission_id: submissionResult.insertId,
+        book_id: bookResult.insertId,
+        created_by: req.user.id,
+        audience: "internal",
+        entry_type: "author_submission",
+        title: "Initial manuscript submitted",
+        message:
+          "Author submitted the first review-ready manuscript package for editorial screening.",
+        action_required: false,
+        created_at: timestamp,
+      }).catch((feedbackError) => {
+        console.warn(
+          "Initial submission feedback log warning:",
+          feedbackError.message,
+        );
+      });
+
       try {
         const bookProgressColumns = await getTableColumns("book_progress");
         if (bookProgressColumns.size > 0) {
@@ -5168,6 +5547,29 @@ app.get("/api/author/dashboard", authMiddleware, async (req, res) => {
       [authorId],
     );
 
+    const [feedbackEntries] = await dbQuery(
+      `SELECT
+          sf.id,
+          sf.book_id,
+          sf.submission_id,
+          sf.title as feedback_title,
+          sf.message as summary,
+          sf.decision as recommendation,
+          sf.action_required,
+          sf.attachment_url,
+          sf.created_at,
+          sf.audience,
+          b.title as book_title,
+          creator.full_name as reviewer_name
+       FROM submission_feedback sf
+       JOIN books b ON sf.book_id = b.id
+       LEFT JOIN users creator ON sf.created_by = creator.id
+       WHERE b.author_id = ?
+         AND COALESCE(sf.audience, 'author') = 'author'
+       ORDER BY sf.created_at DESC`,
+      [authorId],
+    ).catch(() => [[]]);
+
     const latestSubmissionByBookId = new Map();
     for (const submission of submissions) {
       if (!latestSubmissionByBookId.has(submission.book_id)) {
@@ -5175,13 +5577,27 @@ app.get("/api/author/dashboard", authMiddleware, async (req, res) => {
       }
     }
 
+    const latestFeedbackByBookId = new Map();
+    for (const feedbackEntry of feedbackEntries) {
+      if (!latestFeedbackByBookId.has(feedbackEntry.book_id)) {
+        latestFeedbackByBookId.set(feedbackEntry.book_id, feedbackEntry);
+      }
+    }
+
     const booksWithSubmissionState = books.map((book) => {
       const latestSubmission = latestSubmissionByBookId.get(book.id);
+      const latestFeedback = latestFeedbackByBookId.get(book.id);
       return {
         ...book,
         latest_submission_status: latestSubmission?.status || null,
         latest_submission_type: latestSubmission?.submission_type || null,
         latest_submission_date: latestSubmission?.submission_date || null,
+        latest_feedback_title: latestFeedback?.feedback_title || null,
+        latest_feedback_summary: latestFeedback?.summary || null,
+        latest_feedback_decision: latestFeedback?.recommendation || null,
+        latest_feedback_date: latestFeedback?.created_at || null,
+        latest_feedback_attachment: latestFeedback?.attachment_url || null,
+        latest_feedback_action_required: Boolean(latestFeedback?.action_required),
       };
     });
 
@@ -5199,7 +5615,7 @@ app.get("/api/author/dashboard", authMiddleware, async (req, res) => {
       [authorId],
     );
 
-    // Get recent reviews
+    // Get recent legacy reviews
     const [reviews] = await dbQuery(
       `SELECT r.*, b.title as book_title, u.full_name as reviewer_name
        FROM book_reviews r
@@ -5210,6 +5626,23 @@ app.get("/api/author/dashboard", authMiddleware, async (req, res) => {
        LIMIT 5`,
       [authorId],
     );
+
+    const normalizedLegacyReviews = reviews.map((review) => ({
+      ...review,
+      feedback_title: review.title || null,
+      summary: review.content || null,
+      recommendation: null,
+      attachment_url: null,
+      action_required: false,
+    }));
+
+    const recentActivity = [...feedbackEntries, ...normalizedLegacyReviews]
+      .sort((left, right) => {
+        const leftTime = new Date(left.created_at || 0).getTime();
+        const rightTime = new Date(right.created_at || 0).getTime();
+        return rightTime - leftTime;
+      })
+      .slice(0, 8);
 
     // Get royalty summary
     const [royalties] = await dbQuery(
@@ -5227,7 +5660,7 @@ app.get("/api/author/dashboard", authMiddleware, async (req, res) => {
       data: {
         books: booksWithSubmissionState,
         stats: stats[0],
-        recentReviews: reviews,
+        recentReviews: recentActivity,
         royalties: royalties[0],
       },
     });
@@ -5277,6 +5710,21 @@ app.get("/api/author/books/:id", authMiddleware, async (req, res) => {
       [bookId],
     );
 
+    const [submissions] = await dbQuery(
+      "SELECT * FROM submissions WHERE book_id = ? ORDER BY submission_date DESC",
+      [bookId],
+    ).catch(() => [[]]);
+
+    const [feedback] = await dbQuery(
+      `SELECT sf.*, creator.full_name as created_by_name
+       FROM submission_feedback sf
+       LEFT JOIN users creator ON sf.created_by = creator.id
+       WHERE sf.book_id = ?
+         AND COALESCE(sf.audience, 'author') = 'author'
+       ORDER BY sf.created_at DESC`,
+      [bookId],
+    ).catch(() => [[]]);
+
     // Get reviews
     const [book_reviews] = await dbQuery(
       "SELECT * FROM book_reviews WHERE book_id = ? ORDER BY created_at DESC",
@@ -5300,6 +5748,8 @@ app.get("/api/author/books/:id", authMiddleware, async (req, res) => {
       data: {
         book,
         progress,
+        submissions,
+        feedback,
         reviews: book_reviews,
         sales,
         royalties,
@@ -5313,6 +5763,147 @@ app.get("/api/author/books/:id", authMiddleware, async (req, res) => {
     });
   }
 });
+
+app.post(
+  "/api/author/books/:id/resubmit",
+  authMiddleware,
+  roleMiddleware(["author"]),
+  upload.single("manuscript_file"),
+  async (req, res) => {
+    try {
+      const bookId = req.params.id;
+      const userId = req.user.id;
+      const responseNote = toNullable(req.body?.author_notes);
+
+      if (!req.file) {
+        return res.status(400).json({
+          success: false,
+          message: "Please upload the revised manuscript file",
+        });
+      }
+
+      const [authorRows] = await dbQuery(
+        "SELECT a.id FROM authors a JOIN books b ON a.id = b.author_id WHERE a.user_id = ? AND b.id = ?",
+        [userId, bookId],
+      );
+
+      if (authorRows.length === 0) {
+        return res.status(403).json({
+          success: false,
+          message: "Unauthorized access",
+        });
+      }
+
+      const [bookRows] = await dbQuery(
+        "SELECT id, title, status FROM books WHERE id = ?",
+        [bookId],
+      );
+
+      if (bookRows.length === 0) {
+        return res.status(404).json({
+          success: false,
+          message: "Book not found",
+        });
+      }
+
+      if (bookRows[0].status !== "revisions_requested") {
+        return res.status(409).json({
+          success: false,
+          message:
+            "The editorial team has not requested a revision for this manuscript yet",
+        });
+      }
+
+      const [submissionRows] = await dbQuery(
+        "SELECT submission_type FROM submissions WHERE book_id = ? ORDER BY submission_date DESC LIMIT 1",
+        [bookId],
+      ).catch(() => [[]]);
+
+      const latestSubmissionType =
+        submissionRows.length > 0
+          ? submissionRows[0].submission_type || "publishing"
+          : "publishing";
+      const manuscriptPath = getUploadPath(req.file);
+      const timestamp = new Date();
+
+      await dbQuery(
+        "UPDATE books SET manuscript_file = ?, status = 'under_review', updated_at = ? WHERE id = ?",
+        [manuscriptPath, timestamp, bookId],
+      );
+
+      const submissionResult = await insertRecordWithExistingColumns(
+        "submissions",
+        {
+          book_id: bookId,
+          submission_type: latestSubmissionType,
+          status: "pending",
+          author_notes: responseNote,
+          submission_date: timestamp,
+          created_at: timestamp,
+        },
+      );
+
+      await insertRecordWithExistingColumns("submission_feedback", {
+        submission_id: submissionResult.insertId,
+        book_id: bookId,
+        created_by: userId,
+        audience: "internal",
+        entry_type: "author_resubmission",
+        title: "Author resubmitted manuscript",
+        message:
+          responseNote ||
+          "Author uploaded a revised manuscript in response to editorial feedback.",
+        attachment_url: manuscriptPath,
+        action_required: false,
+        created_at: timestamp,
+      }).catch((feedbackError) => {
+        console.warn("Author resubmission log warning:", feedbackError.message);
+      });
+
+      await logBookProgressStage({
+        bookId,
+        stage: "revisions",
+        status: "completed",
+        notes:
+          responseNote ||
+          "Author responded to the latest revision request and resubmitted the manuscript.",
+        completed: true,
+      });
+
+      await logBookProgressStage({
+        bookId,
+        stage: "initial_review",
+        status: "in_progress",
+        notes: "Editorial team notified of revised manuscript resubmission.",
+      });
+
+      if (isEmailConfigured) {
+        const adminRecipient = process.env.ADMIN_EMAIL || emailConfig.sender;
+        if (adminRecipient) {
+          void sendEmail({
+            to: adminRecipient,
+            subject: `Revised manuscript submitted: ${bookRows[0].title || "Book update"}`,
+            text: `A revised manuscript has been submitted.\n\nTitle: ${bookRows[0].title || "Untitled manuscript"}\nBook ID: ${bookId}\nSubmission ID: ${submissionResult.insertId}\n\nAuthor note:\n${responseNote || "No note provided."}`,
+          });
+        }
+      }
+
+      res.json({
+        success: true,
+        message:
+          "Revised manuscript submitted successfully. The editorial team can continue the review.",
+        submissionId: submissionResult.insertId,
+        manuscript_file: manuscriptPath,
+      });
+    } catch (error) {
+      console.error("Author manuscript resubmission error:", error);
+      res.status(500).json({
+        success: false,
+        message: "Failed to submit revised manuscript",
+      });
+    }
+  },
+);
 
 // ============== ENHANCED SECTIONS ==============
 
@@ -5786,10 +6377,12 @@ async function initializeDatabase() {
         await ensurePostgresSchema();
         await reconcilePostgresSchemaColumns();
         await ensureAuthorProfileColumns();
+        await ensureSubmissionFeedbackSchema();
         await seedPostgresDefaults();
       } else {
         await initDatabase();
         await ensureAuthorProfileColumns();
+        await ensureSubmissionFeedbackSchema();
       }
       return true;
     } catch (error) {

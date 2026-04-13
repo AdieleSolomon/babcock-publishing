@@ -446,6 +446,11 @@ video {
   padding: 0;
 }
 
+.press-subnav-dark {
+  background: #07183d;
+  color: #ffffff;
+}
+
 .press-subnav-row {
   display: flex;
   align-items: center;
@@ -484,6 +489,16 @@ video {
   background: transparent;
   color: var(--press-forest);
   border-bottom-color: var(--press-forest);
+}
+
+.press-subnav-dark .press-subnav-links a {
+  color: rgba(255, 255, 255, 0.9);
+}
+
+.press-subnav-dark .press-subnav-links a:hover,
+.press-subnav-dark .press-subnav-links a.is-active {
+  color: #ffffff;
+  border-bottom-color: rgba(255, 255, 255, 0.92);
 }
 
 .press-overlay,
@@ -618,6 +633,19 @@ video {
   content: "";
   position: absolute;
   inset: 0;
+  z-index: 0;
+}
+
+.press-hero::before {
+  background: linear-gradient(
+    112deg,
+    rgba(7, 18, 31, 0.76) 0%,
+    rgba(9, 25, 42, 0.68) 40%,
+    rgba(14, 64, 53, 0.54) 100%
+  );
+}
+
+.press-page-hero::before {
   background:
     linear-gradient(
       120deg,
@@ -633,6 +661,31 @@ video {
   content: "";
   position: absolute;
   inset: 0;
+  z-index: 1;
+  pointer-events: none;
+}
+
+.press-hero::after {
+  background:
+    radial-gradient(
+      circle at 16% 18%,
+      rgba(255, 255, 255, 0.14),
+      transparent 22%
+    ),
+    radial-gradient(
+      circle at 84% 16%,
+      rgba(197, 149, 59, 0.22),
+      transparent 24%
+    ),
+    linear-gradient(
+      180deg,
+      rgba(4, 11, 20, 0.1) 0%,
+      rgba(4, 11, 20, 0) 32%,
+      rgba(4, 11, 20, 0.34) 100%
+    );
+}
+
+.press-page-hero::after {
   background:
     radial-gradient(
       circle at 18% 14%,
@@ -649,12 +702,13 @@ video {
 .press-hero .container,
 .press-page-hero .container {
   position: relative;
-  z-index: 1;
+  z-index: 2;
 }
 
 .press-hero {
   padding: 84px 0 72px;
   position: relative;
+  isolation: isolate;
 }
 
 /* Hero Carousel Styling */
@@ -663,6 +717,29 @@ video {
   inset: 0;
   overflow: hidden;
   z-index: 0;
+  transform: translate3d(0, var(--press-hero-parallax, 0px), 0);
+}
+
+.press-hero-carousel::after {
+  content: "";
+  position: absolute;
+  inset: 0;
+  z-index: 1;
+  pointer-events: none;
+  background:
+    linear-gradient(
+      96deg,
+      rgba(8, 19, 34, 0.92) 0%,
+      rgba(8, 19, 34, 0.7) 38%,
+      rgba(8, 19, 34, 0.3) 72%,
+      rgba(8, 19, 34, 0.68) 100%
+    ),
+    linear-gradient(
+      180deg,
+      rgba(2, 8, 15, 0.2) 0%,
+      rgba(2, 8, 15, 0.02) 24%,
+      rgba(2, 8, 15, 0.54) 100%
+    );
 }
 
 .press-hero-carousel-image {
@@ -673,23 +750,25 @@ video {
   object-fit: cover;
   object-position: center;
   opacity: 0;
-  animation: carouselFade 20s infinite;
+  filter: saturate(0.92) contrast(1.04) brightness(0.88);
+  will-change: opacity, transform;
+  transform: scale(1.06);
+  animation: carouselFade 24s infinite ease-in-out;
 }
 
 .press-hero-carousel-image:nth-child(1) {
   animation-delay: 0s;
+  object-position: center 55%;
 }
 
 .press-hero-carousel-image:nth-child(2) {
-  animation-delay: 5s;
+  animation-delay: 8s;
+  object-position: center center;
 }
 
 .press-hero-carousel-image:nth-child(3) {
-  animation-delay: 10s;
-}
-
-.press-hero-carousel-image:nth-child(4) {
-  animation-delay: 15s;
+  animation-delay: 16s;
+  object-position: 62% center;
 }
 
 /* Enhanced Hero Animations */
@@ -747,19 +826,39 @@ video {
 
 @keyframes carouselFade {
   0% {
-    opacity: 0;
-  }
-  5% {
     opacity: 1;
+    transform: scale(1.06);
   }
-  25% {
+  26% {
     opacity: 1;
+    transform: scale(1.12);
   }
-  30% {
+  33% {
     opacity: 0;
+    transform: scale(1.15);
   }
   100% {
     opacity: 0;
+    transform: scale(1.15);
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .press-hero-carousel {
+    transform: none;
+  }
+
+  .press-hero-carousel-image {
+    animation: none;
+    transform: none;
+  }
+
+  .press-hero-carousel-image:first-child {
+    opacity: 1;
+  }
+
+  .press-hero-carousel-image:not(:first-child) {
+    display: none;
   }
 }
 

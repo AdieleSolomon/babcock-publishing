@@ -319,6 +319,14 @@ body {
   transform: translateY(0);
 }
 
+.btn:disabled,
+.btn[disabled] {
+  opacity: 0.55;
+  cursor: not-allowed;
+  transform: none;
+  box-shadow: none;
+}
+
 .btn-secondary {
   background: var(--secondary-color);
   color: var(--gray-800);
@@ -2533,6 +2541,13 @@ textarea.form-control {
   color: var(--gray-700);
 }
 
+.workflow-panel-copy {
+  margin: 0 0 14px;
+  font-size: 13px;
+  line-height: 1.7;
+  color: var(--gray-600);
+}
+
 .workflow-form-grid {
   display: grid;
   grid-template-columns: repeat(2, minmax(0, 1fr));
@@ -2624,6 +2639,99 @@ textarea.form-control {
   color: #102e23;
 }
 
+.workflow-feedback-list {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: grid;
+  gap: 12px;
+}
+
+.workflow-feedback-item {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  gap: 16px;
+  padding: 16px;
+  border-radius: 18px;
+  background: white;
+  border: 1px solid rgba(17, 49, 38, 0.08);
+}
+
+.workflow-feedback-item.is-action-required {
+  border-color: rgba(255, 140, 0, 0.22);
+  background: linear-gradient(180deg, #fffaf3 0%, #ffffff 100%);
+}
+
+.workflow-feedback-copy {
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.workflow-feedback-copy strong {
+  font-size: 15px;
+  color: #102e23;
+}
+
+.workflow-feedback-meta {
+  font-size: 12px;
+  color: var(--gray-500);
+}
+
+.workflow-feedback-copy p {
+  margin: 0;
+  font-size: 14px;
+  line-height: 1.7;
+  color: var(--gray-600);
+}
+
+.workflow-note-tag {
+  display: inline-flex;
+  align-items: center;
+  min-height: 28px;
+  padding: 5px 10px;
+  border-radius: 999px;
+  background: rgba(17, 49, 38, 0.06);
+  border: 1px solid rgba(17, 49, 38, 0.1);
+  font-size: 11px;
+  font-weight: 700;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: var(--gray-500);
+}
+
+.workflow-link-group {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 10px;
+  margin-top: 12px;
+}
+
+.workflow-attachment-link {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  min-height: 34px;
+  padding: 8px 12px;
+  border-radius: 999px;
+  background: rgba(0, 103, 71, 0.08);
+  border: 1px solid rgba(0, 103, 71, 0.12);
+  color: #0f694d;
+  font-size: 13px;
+  font-weight: 600;
+  text-decoration: none;
+}
+
+.workflow-attachment-link:hover {
+  background: rgba(0, 103, 71, 0.14);
+}
+
+.workflow-activity-panel-full {
+  min-height: 100%;
+}
+
 .workflow-static-summary {
   margin-bottom: 18px;
 }
@@ -2687,6 +2795,10 @@ textarea.form-control {
   .workflow-activity-grid,
   .workflow-form-grid {
     grid-template-columns: 1fr;
+  }
+
+  .workflow-feedback-item {
+    flex-direction: column;
   }
 }
 
@@ -3292,6 +3404,13 @@ textarea.form-control {
   color: #102e23;
 }
 
+.author-manuscript-actions {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  flex-wrap: wrap;
+}
+
 .author-manuscript-meta {
   font-size: 12px;
   letter-spacing: 0.08em;
@@ -3333,7 +3452,9 @@ textarea.form-control {
 }
 
 .status-under_review,
-.status-in_progress {
+.status-in_progress,
+.status-assigned,
+.status-review_completed {
   background: rgba(23, 162, 184, 0.12);
   border-color: rgba(23, 162, 184, 0.2);
   color: #0b6674;
@@ -3342,7 +3463,8 @@ textarea.form-control {
 .status-published,
 .status-active,
 .status-approved,
-.status-completed {
+.status-completed,
+.status-accepted {
   background: rgba(40, 167, 69, 0.12);
   border-color: rgba(40, 167, 69, 0.18);
   color: #1b7334;
@@ -3631,11 +3753,27 @@ textarea.form-control {
   color: #122d22;
 }
 
+.author-review-heading-block {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.author-review-heading {
+  font-size: 15px;
+  color: #102e23;
+}
+
 .author-review-item p {
   margin: 0 0 14px;
   font-size: 14px;
   line-height: 1.7;
   color: var(--gray-600);
+}
+
+.author-review-item-action {
+  border-color: rgba(255, 140, 0, 0.2);
+  background: linear-gradient(180deg, #fffaf3 0%, #ffffff 100%);
 }
 
 .author-review-footer {

@@ -189,7 +189,7 @@
           </div>
         </div>
 
-        <div class="press-subnav">
+        <div class="press-subnav press-subnav-dark">
           <div class="container press-subnav-row">
             <div class="press-subnav-links">
               <a href="index.html" class="is-active" data-page-link>Home</a>
@@ -285,24 +285,21 @@
 
       <section class="press-hero" id="home">
         <!-- Hero Image Carousel Background -->
-        <div class="press-hero-carousel">
+        <div class="press-hero-carousel" aria-hidden="true">
           <img
-            src="https://images.unsplash.com/photo-1507842217343-583f20270319?w=1400&h=900&crop=faces&auto=compress,format"
-            alt="Academic library and books"
+            src="public/hero-reading-room.jpg"
+            alt=""
             class="press-hero-carousel-image"
             loading="eager" />
-          <img 
-            src="https://images.unsplash.com/photo-1517842645767-c0ade7a27bba?w=1400&h=900&crop=faces&auto=compress,format"
-            alt="Students studying and collaborating"
+          <img
+            src="public/hero-library.jpg"
+            alt=""
             class="press-hero-carousel-image"
             loading="lazy" />
-          <img 
-            src="https://images.unsplash.com/photo-1507842217343-583f20270319?w=1400&h=900&crop=edges&auto=compress,format"
-            alt="Open book and writing"
+          <img
+            src="public/hero-print-press.jpg"
+            alt=""
             class="press-hero-carousel-image"
-            loading="lazy" />
-          <img 
-            src="https://images.unsplash.com/photo-1524995997946-a1c2e315a42f?w=1400&h=900&crop=edges&auto=compress,format"
             loading="lazy" />
         </div>
 
@@ -461,7 +458,7 @@
           <div class="press-gallery-grid">
             <article class="press-gallery-card">
               <img
-                src="https://images.unsplash.com/photo-1507842217343-583f20270319?w=500&q=80&auto=format&fit=crop"
+                src="public/photo-1521587760476-6c12a4b040da.avif"
                 alt="Academic library with books"
                 loading="lazy" />
               <div class="press-gallery-caption">
@@ -494,7 +491,7 @@
 
             <article class="press-gallery-card">
               <img
-                src="https://images.unsplash.com/photo-1488188840594-e421a5dff421?w=500&q=80&auto=format&fit=crop"
+                src="public/winterterm2.jpg"
                 alt="Training and educational workshops"
                 loading="lazy" />
               <div class="press-gallery-caption">
@@ -2918,6 +2915,22 @@
         </div>
         <div class="modal-body" id="submissionDetailsContent">
           Loading submission workflow...
+        </div>
+      </div>
+    </div>
+
+    <div class="modal" id="authorWorkflowModal">
+      <div class="modal-content workflow-modal-content">
+        <div class="modal-header">
+          <h3>Manuscript Workflow</h3>
+          <button
+            class="modal-close"
+            onclick="closeModal('authorWorkflowModal')">
+            &times;
+          </button>
+        </div>
+        <div class="modal-body" id="authorWorkflowContent">
+          Loading manuscript workflow...
         </div>
       </div>
     </div>
