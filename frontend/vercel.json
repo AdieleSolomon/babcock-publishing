@@ -1,12 +1,69 @@
 {
   "version": 2,
-  "cleanUrls": false,
+  "cleanUrls": true,
+  "trailingSlash": false,
   "rewrites": [
     { "source": "/", "destination": "/index.html" },
     { "source": "/staff", "destination": "/staff.html" },
+    { "source": "/staff.html", "destination": "/staff.html" },
     { "source": "/services", "destination": "/services.html" },
+    { "source": "/services.html", "destination": "/services.html" },
     { "source": "/publications", "destination": "/publications.html" },
-    { "source": "/gallery", "destination": "/gallery.html" }
+    { "source": "/publications.html", "destination": "/publications.html" },
+    { "source": "/gallery", "destination": "/gallery.html" },
+    { "source": "/gallery.html", "destination": "/gallery.html" },
+    { "source": "/about", "destination": "/about.html" },
+    { "source": "/about.html", "destination": "/about.html" },
+    { "source": "/authors", "destination": "/authors.html" },
+    { "source": "/authors.html", "destination": "/authors.html" },
+    { "source": "/for-authors", "destination": "/for-authors.html" },
+    { "source": "/for-authors.html", "destination": "/for-authors.html" },
+    { "source": "/insights", "destination": "/insights.html" },
+    { "source": "/insights.html", "destination": "/insights.html" },
+    { "source": "/products", "destination": "/products.html" },
+    { "source": "/products.html", "destination": "/products.html" },
+    { "source": "/publishing", "destination": "/publishing.html" },
+    { "source": "/publishing.html", "destination": "/publishing.html" },
+    {
+      "source": "/rights-permissions",
+      "destination": "/rights-permissions.html"
+    },
+    {
+      "source": "/rights-permissions.html",
+      "destination": "/rights-permissions.html"
+    },
+    { "source": "/solutions", "destination": "/solutions.html" },
+    { "source": "/solutions.html", "destination": "/solutions.html" },
+    { "source": "/support", "destination": "/support.html" },
+    { "source": "/support.html", "destination": "/support.html" }
+  ],
+  "headers": [
+    {
+      "source": "/:path*.(js|css|png|jpg|jpeg|gif|svg|ico|webp|avif|woff|woff2|ttf|eot)",
+      "headers": [
+        {
+          "key": "Cache-Control",
+          "value": "public, max-age=31536000, immutable"
+        }
+      ]
+    },
+    {
+      "source": "/(index|.*)\\.html",
+      "headers": [
+        {
+          "key": "Cache-Control",
+          "value": "public, max-age=0, must-revalidate"
+        }
+      ]
+    },
+    {
+      "source": "/public/:path*",
+      "headers": [
+        {
+          "key": "Cache-Control",
+          "value": "public, max-age=86400"
+        }
+      ]
+    }
   ]
 }
-

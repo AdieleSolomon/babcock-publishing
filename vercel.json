@@ -1,21 +1,5 @@
 {
   "version": 2,
-  "cleanUrls": false,
-  "rewrites": [
-    { "source": "/", "destination": "/frontend/index.html" },
-    { "source": "/index.html", "destination": "/frontend/index.html" },
-    { "source": "/staff", "destination": "/frontend/staff.html" },
-    { "source": "/staff.html", "destination": "/frontend/staff.html" },
-    { "source": "/services", "destination": "/frontend/services.html" },
-    { "source": "/services.html", "destination": "/frontend/services.html" },
-    { "source": "/publications", "destination": "/frontend/publications.html" },
-    { "source": "/publications.html", "destination": "/frontend/publications.html" },
-    { "source": "/gallery", "destination": "/frontend/gallery.html" },
-    { "source": "/gallery.html", "destination": "/frontend/gallery.html" },
-    { "source": "/robots.txt", "destination": "/frontend/robots.txt" },
-    { "source": "/sitemap.xml", "destination": "/frontend/sitemap.xml" },
-    { "source": "/assets/:path*", "destination": "/frontend/assets/:path*" },
-    { "source": "/public/:path*", "destination": "/frontend/public/:path*" }
-  ]
+  "note": "This is a monorepo. For Vercel deployment, use the frontend folder as the root.",
+  "deploymentDocumentation": "See VERCEL_DEPLOYMENT_GUIDE.md for detailed setup instructions"
 }
-
