@@ -41,3 +41,7 @@ build/
 
 \*.md
 docs/
+
+# Canonical pages live at frontend/*.html.
+# Ignore stale public/*.html copies so Vercel does not shadow new page edits.
+public/*.html

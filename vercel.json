@@ -1,5 +1,3 @@
 {
-  "version": 2,
-  "note": "This is a monorepo. For Vercel deployment, use the frontend folder as the root.",
-  "deploymentDocumentation": "See VERCEL_DEPLOYMENT_GUIDE.md for detailed setup instructions"
+  "version": 2
 }

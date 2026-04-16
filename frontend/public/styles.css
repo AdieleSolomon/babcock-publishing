@@ -3181,6 +3181,134 @@ textarea.form-control {
   color: var(--gray-600);
 }
 
+.author-profile-panel-actions {
+  display: flex;
+  align-items: center;
+}
+
+.author-profile-display {
+  display: grid;
+  gap: 18px;
+  margin-bottom: 24px;
+}
+
+.author-profile-display[hidden],
+.author-profile-form[hidden] {
+  display: none !important;
+}
+
+.author-profile-display-shell {
+  display: grid;
+}
+
+.author-profile-overview-card {
+  display: grid;
+  grid-template-columns: minmax(0, 1.5fr) minmax(250px, 0.85fr);
+  gap: 18px;
+  padding: 22px;
+  border-radius: 24px;
+  background: linear-gradient(135deg, rgba(0, 103, 71, 0.08) 0%, rgba(255, 255, 255, 0.95) 100%);
+  border: 1px solid rgba(17, 49, 38, 0.08);
+}
+
+.author-profile-side-card,
+.author-profile-detail-card,
+.author-profile-biography-card {
+  padding: 22px;
+  border-radius: 24px;
+  background: linear-gradient(180deg, #ffffff 0%, #f8faf8 100%);
+  border: 1px solid rgba(17, 49, 38, 0.08);
+  box-shadow: 0 14px 28px rgba(17, 49, 38, 0.06);
+}
+
+.author-profile-side-card {
+  display: grid;
+  align-content: start;
+  gap: 10px;
+}
+
+.author-profile-card-label {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  font-size: 11px;
+  font-weight: 700;
+  letter-spacing: 0.16em;
+  text-transform: uppercase;
+  color: var(--gray-500);
+}
+
+.author-profile-side-card strong,
+.author-profile-detail-list strong {
+  color: #102e23;
+  font-size: 15px;
+  line-height: 1.6;
+  word-break: break-word;
+}
+
+.author-profile-side-card p,
+.author-profile-biography-card p {
+  margin: 0;
+  font-size: 14px;
+  line-height: 1.75;
+  color: var(--gray-600);
+}
+
+.author-profile-pill-row {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 10px;
+}
+
+.author-profile-pill {
+  display: inline-flex;
+  align-items: center;
+  padding: 10px 14px;
+  border-radius: 999px;
+  background: rgba(255, 255, 255, 0.94);
+  border: 1px solid rgba(17, 49, 38, 0.08);
+  font-size: 12px;
+  font-weight: 600;
+  color: #113126;
+}
+
+.author-profile-detail-grid {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 16px;
+}
+
+.author-profile-detail-card {
+  display: grid;
+  gap: 16px;
+  min-width: 0;
+}
+
+.author-profile-detail-list {
+  display: grid;
+  gap: 14px;
+}
+
+.author-profile-detail-list div {
+  display: grid;
+  gap: 4px;
+  padding-bottom: 14px;
+  border-bottom: 1px solid rgba(17, 49, 38, 0.08);
+}
+
+.author-profile-detail-list div:last-child {
+  padding-bottom: 0;
+  border-bottom: none;
+}
+
+.author-profile-detail-list span {
+  font-size: 11px;
+  font-weight: 700;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+  color: var(--gray-500);
+}
+
 .author-profile-form {
   display: flex;
   flex-direction: column;
@@ -3838,6 +3966,13 @@ textarea.form-control {
   flex-wrap: wrap;
 }
 
+.author-form-button-row {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: flex-end;
+  gap: 12px;
+}
+
 .author-form-footnote {
   margin: 0;
   max-width: 520px;
@@ -4145,6 +4280,11 @@ textarea.form-control {
     grid-template-columns: 1fr;
   }
 
+  .author-profile-overview-card,
+  .author-profile-detail-grid {
+    grid-template-columns: 1fr;
+  }
+
   .author-hero,
   .author-panel-header-spread,
   .author-profile-top {
@@ -4208,6 +4348,12 @@ textarea.form-control {
     align-items: flex-start;
   }
 
+  .author-profile-side-card,
+  .author-profile-detail-card,
+  .author-profile-biography-card {
+    padding: 18px;
+  }
+
   .author-stats-grid {
     grid-template-columns: 1fr;
   }
@@ -4248,7 +4394,8 @@ textarea.form-control {
 
   .author-hero-actions .btn,
   .author-panel-header-spread .btn,
-  .author-manuscripts-actions .btn {
+  .author-manuscripts-actions .btn,
+  .author-form-button-row .btn {
     width: 100%;
   }
 

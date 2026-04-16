@@ -101,7 +101,9 @@ function updateCatalogSummary(books) {
 function renderBookCard(book) {
   const title = escapeHtml(book.title || "Untitled publication");
   const category = escapeHtml(book.category || "Academic");
-  const authorName = escapeHtml(book.author_name || "Babcock Author");
+  const authorHeading = escapeHtml(formatAuthorHeading(book));
+  const authorAffiliation = escapeHtml(getAuthorAffiliation(book));
+  const authorSnapshot = escapeHtml(getAuthorSnapshot(book));
   const description = escapeHtml(
     truncateText(
       book.description || book.abstract || "Published by Babcock University Press.",
@@ -122,7 +124,19 @@ function renderBookCard(book) {
       <div class="publication-content">
         <span class="publication-category">${category}</span>
         <h3 class="publication-title">${title}</h3>
-        <p class="publication-author"><i class="fas fa-user"></i> ${authorName}</p>
+        <div class="publication-author-block">
+          <p class="publication-author"><i class="fas fa-user"></i> ${authorHeading}</p>
+          ${
+            authorAffiliation
+              ? `<p class="publication-author-details"><i class="fas fa-building-columns"></i> ${authorAffiliation}</p>`
+              : ""
+          }
+          ${
+            authorSnapshot
+              ? `<p class="publication-author-bio">${authorSnapshot}</p>`
+              : ""
+          }
+        </div>
         <p class="publication-description">${description}</p>
         <div class="publication-meta">
           <span><i class="far fa-calendar"></i> ${publicationYear}</span>
@@ -131,6 +145,36 @@ function renderBookCard(book) {
       </div>
     </article>
   `;
+}
+
+function formatAuthorHeading(book) {
+  const authorName = String(book.author_name || "Babcock Author").trim();
+  const qualifications = String(book.author_qualifications || "").trim();
+
+  return qualifications ? `${authorName}, ${qualifications}` : authorName;
+}
+
+function getAuthorAffiliation(book) {
+  return [book.author_faculty, book.author_department]
+    .map((value) => String(value || "").trim())
+    .filter(Boolean)
+    .join(" • ");
+}
+
+function getAuthorSnapshot(book) {
+  const biography = String(book.author_biography || "").trim();
+  if (biography) {
+    return truncateText(biography, 120);
+  }
+
+  const expertise = String(book.author_areas_of_expertise || "")
+    .split(/[,;]+/)
+    .map((entry) => entry.trim())
+    .filter(Boolean)
+    .slice(0, 3)
+    .join(" • ");
+
+  return expertise;
 }
 
 function setCatalogStatus(message, state) {

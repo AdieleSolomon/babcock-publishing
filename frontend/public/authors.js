@@ -10,19 +10,19 @@ const API_BASE_URL = (runtimeApiBase ||
 ).replace(/\/+$/, "");
 
 document.addEventListener("DOMContentLoaded", () => {
-  loadPublishedAuthorsDirectory();
+  loadAuthorsDirectory();
 });
 
-async function loadPublishedAuthorsDirectory() {
+async function loadAuthorsDirectory() {
   const statusElement = document.getElementById("authorsDirectoryStatus");
   const gridElement = document.getElementById("authorsDirectoryGrid");
 
   if (!statusElement || !gridElement) return;
 
-  setDirectoryStatus("Loading authors and contributors...", "loading");
+  setDirectoryStatus("Loading registered authors and contributors...", "loading");
 
   try {
-    const response = await fetch(`${API_BASE_URL}/authors/published?limit=24`, {
+    const response = await fetch(`${API_BASE_URL}/authors/directory`, {
       headers: {
         Accept: "application/json",
       },
@@ -41,12 +41,12 @@ async function loadPublishedAuthorsDirectory() {
       gridElement.innerHTML = `
         <article class="press-card press-publication-empty">
           <i class="fas fa-users"></i>
-          <h3>No published authors yet</h3>
-          <p>The public author directory will appear here as books are published.</p>
+          <h3>No registered authors yet</h3>
+          <p>The public author directory will appear here as approved author profiles become available.</p>
         </article>
       `;
       setDirectoryStatus(
-        "No published authors are available in the public directory yet.",
+        "No registered authors are available in the public directory yet.",
         "success",
       );
       return;
@@ -54,7 +54,7 @@ async function loadPublishedAuthorsDirectory() {
 
     gridElement.innerHTML = authors.map(renderAuthorCard).join("");
     setDirectoryStatus(
-      `${authors.length} published author${authors.length === 1 ? "" : "s"} loaded from the live directory.`,
+      `${authors.length} author profile${authors.length === 1 ? "" : "s"} loaded from the live directory.`,
       "success",
     );
   } catch (error) {
@@ -91,25 +91,30 @@ function updateDirectorySummary(authors) {
 
 function renderAuthorCard(author) {
   const authorName = escapeHtml(author.full_name || "Babcock Author");
+  const publishedBooksCountValue = Number.parseInt(author.published_books_count, 10);
+  const publishedBooksCount = Number.isFinite(publishedBooksCountValue)
+    ? publishedBooksCountValue
+    : 0;
   const biography = escapeHtml(
     truncateText(
       author.biography ||
-        "Published contributor in the Babcock University Press network.",
+        "Registered contributor in the Babcock University Press network.",
       200,
     ),
   );
   const faculty = escapeHtml(author.faculty || "Babcock University");
   const department = escapeHtml(author.department || "Publishing network");
   const qualifications = escapeHtml(author.qualifications || "Author");
-  const publishedBooksCount = escapeHtml(author.published_books_count || 0);
+  const authorLabel = publishedBooksCount > 0 ? "Published author" : "Registered author";
   const latestYear = escapeHtml(getPublicationYear(author.latest_publication_date));
   const expertiseTags = getExpertiseTags(author.areas_of_expertise);
   const featuredTitles = Array.isArray(author.featured_titles)
     ? author.featured_titles
     : [];
+  const avatarUrl = resolveAuthorImageUrl(author.profile_image);
 
-  const avatarMarkup = author.profile_image
-    ? `<img src="${escapeHtml(resolveAssetUrl(author.profile_image))}" alt="${authorName}" loading="lazy" />`
+  const avatarMarkup = avatarUrl
+    ? `<img src="${escapeHtml(avatarUrl)}" alt="${authorName}" loading="lazy" />`
     : '<i class="fas fa-feather-pointed" aria-hidden="true"></i>';
 
   return `
@@ -119,7 +124,7 @@ function renderAuthorCard(author) {
           ${avatarMarkup}
         </div>
         <div class="press-author-copy">
-          <span>BU Press Author</span>
+          <span>${authorLabel}</span>
           <h3>${authorName}</h3>
           <p>${qualifications}</p>
         </div>
@@ -169,7 +174,7 @@ function renderAuthorCard(author) {
             : `
               <li>
                 <i class="fas fa-book-open"></i>
-                <span>Published title information will appear here.</span>
+                <span>Published title information will appear here once this author releases a book.</span>
               </li>
             `
         }
@@ -177,7 +182,7 @@ function renderAuthorCard(author) {
 
       <div class="press-metric-strip">
         <div>
-          <strong>${publishedBooksCount}</strong>
+          <strong>${escapeHtml(String(publishedBooksCount))}</strong>
           <span>Published titles</span>
         </div>
         <div>
@@ -216,10 +221,10 @@ function getLatestPublicationYear(authors) {
 }
 
 function getPublicationYear(value) {
-  if (!value) return "Recent";
+  if (!value) return "--";
 
   const parsedDate = new Date(value);
-  if (Number.isNaN(parsedDate.getTime())) return "Recent";
+  if (Number.isNaN(parsedDate.getTime())) return "--";
 
   return String(parsedDate.getFullYear());
 }
@@ -246,6 +251,22 @@ function resolveAssetUrl(path) {
   const normalizedPath = path.startsWith("/") ? path : `/${path}`;
 
   return `${apiOrigin}${normalizedPath}`;
+}
+
+function resolveAuthorImageUrl(path) {
+  return isRenderableImagePath(path) ? resolveAssetUrl(path) : "";
+}
+
+function isRenderableImagePath(path) {
+  if (!path) return false;
+  if (String(path).startsWith("data:image/")) return true;
+
+  try {
+    const pathname = new URL(path, window.location.origin).pathname.toLowerCase();
+    return /\.(avif|gif|jpe?g|png|svg|webp)$/.test(pathname);
+  } catch (error) {
+    return /\.(avif|gif|jpe?g|png|svg|webp)$/i.test(String(path));
+  }
 }
 
 function getApiOrigin() {

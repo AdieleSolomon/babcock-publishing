@@ -6,7 +6,7 @@
     <title>BU Press Authors | Babcock University Press</title>
     <meta
       name="description"
-      content="Meet published authors and contributors in the Babcock University Press network." />
+      content="Meet registered and published authors in the Babcock University Press network." />
     <link rel="icon" type="image/png" href="assets/legacy/main_logo.png" />
     <link rel="apple-touch-icon" href="assets/legacy/main_logo.png" />
     <link
@@ -53,7 +53,7 @@
           >
         </div>
         <div class="press-utility-meta">
-          <span>Published authors, contributors, and subject voices</span>
+          <span>Registered authors, contributors, and subject voices</span>
           <a
             href="https://legacy.babcock.edu.ng/search"
             target="_blank"
@@ -239,14 +239,14 @@
               ><i class="fas fa-feather-pointed"></i> Authors</span
             >
             <h1>
-              Published writers, scholars, and contributors shaping the BU Press
-              list.
+              Registered writers, scholars, and contributors shaping the BU
+              Press community.
             </h1>
             <p>
               A professional press should make its author community visible.
-              This page turns your backend publishing data into a public author
-              directory so readers, departments, and partners can see who the
-              press publishes.
+              This page turns your approved author profiles and publishing data
+              into a public directory so readers, departments, and partners can
+              see the people behind the press and the titles they publish.
             </p>
             <div class="press-breadcrumbs">
               <a href="index.html">Babcock University Press</a>
@@ -264,7 +264,10 @@
             <ul class="press-list">
               <li>
                 <i class="fas fa-check-circle"></i
-                ><span>Live author visibility linked to published books.</span>
+                ><span
+                  >Live author visibility linked to author registration and
+                  published books.</span
+                >
               </li>
               <li>
                 <i class="fas fa-check-circle"></i
@@ -289,19 +292,57 @@
         <div class="container">
           <div class="press-section-heading">
             <span class="press-eyebrow">Directory</span>
-            <h2>Published authors from the live press catalog</h2>
+            <h2>Registered authors from the live press network</h2>
             <p>
-              The directory below is powered by published-book data from the
-              project backend, so it can grow alongside the press list instead
-              of staying frozen as static marketing copy.
+              The directory below is powered by approved author profiles and
+              published-book data from the project backend, so it can grow with
+              the press instead of staying frozen as static marketing copy.
             </p>
+          </div>
+
+          <div class="press-author-directory-toolbar">
+            <label class="press-author-search-shell" for="authorsDirectorySearch">
+              <span class="press-author-control-label">Search the directory</span>
+              <span class="press-author-search-input">
+                <i class="fas fa-magnifying-glass" aria-hidden="true"></i>
+                <input
+                  id="authorsDirectorySearch"
+                  type="search"
+                  placeholder="Search by name, faculty, department, or expertise" />
+              </span>
+            </label>
+
+            <div class="press-author-directory-side">
+              <div class="press-author-directory-note">
+                <span class="press-author-control-label">Live directory</span>
+                <p id="authorsDirectoryActiveSummary">
+                  Showing all approved BU Press author profiles.
+                </p>
+              </div>
+
+              <label class="press-author-sort-shell" for="authorsDirectorySort">
+                <span class="press-author-control-label">Sort</span>
+                <select id="authorsDirectorySort">
+                  <option value="featured">Most published first</option>
+                  <option value="recent">Most recent publication</option>
+                  <option value="name">Name A-Z</option>
+                </select>
+              </label>
+            </div>
+          </div>
+
+          <div class="press-author-filter-row">
+            <span class="press-author-control-label">Filter by faculty</span>
+            <div
+              class="press-author-filter-chips"
+              id="authorsDirectoryFilters"></div>
           </div>
 
           <div class="press-publication-summary-grid">
             <article class="press-card press-publication-stat">
-              <span>Published authors</span>
+              <span>Registered authors</span>
               <strong id="authorsDirectoryCount">0</strong>
-              <p>Visible contributors in the current public directory.</p>
+              <p>Approved contributors currently visible in the directory.</p>
             </article>
             <article class="press-card press-publication-stat">
               <span>Faculties represented</span>
@@ -311,7 +352,7 @@
             <article class="press-card press-publication-stat">
               <span>Latest publication year</span>
               <strong id="authorsLatestYear">--</strong>
-              <p>The newest year represented by a published BU Press title.</p>
+              <p>The newest year represented by any published BU Press title.</p>
             </article>
           </div>
 
@@ -342,8 +383,8 @@
               <li>
                 <i class="fas fa-check-circle"></i
                 ><span
-                  >Authors gain a clearer public identity once their books move
-                  into the published catalog.</span
+                  >Authors gain a clearer public identity before and after
+                  their books move into the published catalog.</span
                 >
               </li>
               <li>

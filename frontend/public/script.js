@@ -910,6 +910,13 @@ async function handleAuthorRegistration(e) {
     const profilePicture =
       document.getElementById("regProfilePicture").files[0];
     if (profilePicture) {
+      if (!isSupportedImageFile(profilePicture)) {
+        showNotification(
+          "Profile picture must be a valid image file.",
+          "error",
+        );
+        return;
+      }
       formData.append("profile_image", profilePicture);
     }
 
@@ -3793,6 +3800,22 @@ function resolveAssetUrl(path) {
   return `${backendBase}${normalizedPath}`;
 }
 
+function isRenderableImageAsset(path) {
+  if (!path) return false;
+  if (String(path).startsWith("data:image/")) return true;
+
+  try {
+    const pathname = new URL(path, window.location.origin).pathname.toLowerCase();
+    return /\.(avif|gif|jpe?g|png|svg|webp)$/.test(pathname);
+  } catch (error) {
+    return /\.(avif|gif|jpe?g|png|svg|webp)$/i.test(String(path));
+  }
+}
+
+function getRenderableImageUrl(path, fallback = "assets/OIP.webp") {
+  return isRenderableImageAsset(path) ? resolveAssetUrl(path) : fallback;
+}
+
 function escapeHtml(value) {
   if (value === null || value === undefined) return "";
   return String(value)
@@ -3853,6 +3876,23 @@ function getKeywordList(value) {
 function getFileExtension(filename) {
   if (!filename || !filename.includes(".")) return "";
   return filename.slice(filename.lastIndexOf(".")).toLowerCase();
+}
+
+function isSupportedImageFile(file) {
+  if (!file) return false;
+
+  const imageExtensions = new Set([
+    ".jpg",
+    ".jpeg",
+    ".png",
+    ".gif",
+    ".webp",
+    ".avif",
+    ".svg",
+  ]);
+  const mimeType = String(file.type || "").toLowerCase();
+
+  return mimeType.startsWith("image/") || imageExtensions.has(getFileExtension(file.name));
 }
 
 function updateProgressBar(elementId, percent) {
@@ -3995,6 +4035,233 @@ function updateAuthorProfileSummary(profileMetrics) {
   if (discoverabilityCopy) {
     discoverabilityCopy.textContent = profileMetrics.discoverabilityCopy;
   }
+}
+
+function setAuthorProfileText(elementId, value, fallback = "Not provided") {
+  const element = document.getElementById(elementId);
+  if (!element) return;
+
+  const normalizedValue = String(value || "").trim();
+  element.textContent = normalizedValue || fallback;
+}
+
+function hasSavedAuthorProfile(author = {}) {
+  return [
+    author.full_name,
+    author.email,
+    author.phone,
+    author.staff_id,
+    author.faculty,
+    author.department,
+    author.qualifications,
+    author.areas_of_expertise,
+    author.orcid_id,
+    author.google_scholar_id,
+    author.linkedin_url,
+    author.biography,
+    author.profile_image,
+  ].some((value) => String(value || "").trim().length > 0);
+}
+
+function populateAuthorProfileForm(author = {}) {
+  const fieldMap = [
+    ["authorProfileFullName", author.full_name],
+    ["authorProfileEmail", author.email],
+    ["authorProfilePhone", author.phone],
+    ["authorProfileStaffId", author.staff_id],
+    ["authorProfileFaculty", author.faculty],
+    ["authorProfileDepartment", author.department],
+    ["authorProfileQualification", author.qualifications],
+    ["authorProfileExpertise", author.areas_of_expertise],
+    ["authorProfileOrcidId", author.orcid_id],
+    ["authorProfileGoogleScholarId", author.google_scholar_id],
+    ["authorProfileLinkedIn", author.linkedin_url],
+    ["authorProfileBiography", author.biography],
+  ];
+
+  fieldMap.forEach(([fieldId, value]) => {
+    const field = document.getElementById(fieldId);
+    if (field) {
+      field.value = value || "";
+    }
+  });
+
+  const preview = document.getElementById("authorProfileImagePreview");
+  if (preview) {
+    preview.src = getRenderableImageUrl(author.profile_image);
+  }
+
+  const pictureInput = document.getElementById("authorProfilePicture");
+  if (pictureInput) {
+    pictureInput.value = "";
+  }
+}
+
+function renderAuthorProfileTags(author = {}) {
+  const tagContainer = document.getElementById("authorProfileViewTags");
+  if (!tagContainer) return;
+
+  const tagValues = [
+    author.faculty,
+    author.department,
+    author.qualifications,
+    ...getKeywordList(author.areas_of_expertise).slice(0, 2),
+  ]
+    .map((value) => String(value || "").trim())
+    .filter(Boolean);
+
+  const uniqueTags = [...new Set(tagValues)];
+  const tagsToRender = (uniqueTags.length
+    ? uniqueTags
+    : ["Complete your profile to surface editorial metadata here."]
+  ).slice(0, 5);
+
+  tagContainer.innerHTML = tagsToRender
+    .map((tag) => `<span class="author-profile-pill">${escapeHtml(tag)}</span>`)
+    .join("");
+}
+
+function renderAuthorProfileView(author = {}) {
+  const profileMetrics = getAuthorProfileMetrics(author);
+  const affiliation = [author.department, author.faculty]
+    .map((value) => String(value || "").trim())
+    .filter(Boolean)
+    .join(", ");
+  const qualification = String(author.qualifications || "").trim();
+  const fallbackHeadline =
+    "Your saved academic profile supports editorial routing, contracts, and publication metadata.";
+  const headline = affiliation
+    ? qualification
+      ? `${affiliation} - ${qualification}`
+      : affiliation
+    : qualification || fallbackHeadline;
+  const lastUpdated = formatDashboardDate(author.updated_at, "recently");
+  const statusTitle = profileMetrics.essentialsReady
+    ? "Ready for editorial use"
+    : "Saved with missing details";
+  const statusCopy = profileMetrics.essentialsReady
+    ? `Last updated ${lastUpdated}. Use settings anytime to refresh your biography, identifiers, or profile image.`
+    : `Last updated ${lastUpdated}. Open settings to finish the missing essentials and strengthen routing quality.`;
+
+  const viewImage = document.getElementById("authorProfileViewImage");
+  if (viewImage) {
+    viewImage.src = getRenderableImageUrl(author.profile_image);
+  }
+
+  setAuthorProfileText(
+    "authorProfileViewName",
+    author.full_name,
+    "Author profile",
+  );
+  setAuthorProfileText(
+    "authorProfileViewHeadline",
+    headline,
+    fallbackHeadline,
+  );
+  setAuthorProfileText(
+    "authorProfileViewUpdated",
+    statusTitle,
+    "Profile saved",
+  );
+  setAuthorProfileText(
+    "authorProfileViewStatus",
+    statusCopy,
+    "Use settings anytime to update your saved profile.",
+  );
+  setAuthorProfileText("authorProfileViewEmail", author.email);
+  setAuthorProfileText("authorProfileViewPhone", author.phone);
+  setAuthorProfileText("authorProfileViewStaffId", author.staff_id);
+  setAuthorProfileText("authorProfileViewFaculty", author.faculty);
+  setAuthorProfileText("authorProfileViewDepartment", author.department);
+  setAuthorProfileText(
+    "authorProfileViewQualification",
+    author.qualifications,
+  );
+  setAuthorProfileText(
+    "authorProfileViewExpertise",
+    author.areas_of_expertise,
+  );
+  setAuthorProfileText("authorProfileViewOrcid", author.orcid_id);
+  setAuthorProfileText(
+    "authorProfileViewScholar",
+    author.google_scholar_id,
+  );
+  setAuthorProfileText(
+    "authorProfileViewLinkedIn",
+    author.linkedin_url,
+  );
+  setAuthorProfileText(
+    "authorProfileViewBiography",
+    author.biography,
+    "No biography added yet.",
+  );
+
+  renderAuthorProfileTags(author);
+}
+
+function setAuthorProfileEditMode(shouldEdit, options = {}) {
+  const hasProfile = hasSavedAuthorProfile(authorProfileState);
+  const isEditing = hasProfile ? Boolean(shouldEdit) : true;
+  const form = document.getElementById("authorProfileForm");
+  const view = document.getElementById("authorProfileView");
+  const settingsButton = document.getElementById(
+    "authorProfileSettingsButton",
+  );
+  const heroButton = document.getElementById("authorHeroProfileButton");
+  const buttonMarkup = !hasProfile
+    ? '<i class="fas fa-id-card"></i> Complete Profile'
+    : isEditing
+      ? '<i class="fas fa-eye"></i> View Saved Profile'
+      : '<i class="fas fa-gear"></i> Profile Settings';
+
+  if (form) {
+    form.hidden = !isEditing;
+  }
+
+  if (view) {
+    view.hidden = isEditing || !hasProfile;
+  }
+
+  if (settingsButton) {
+    settingsButton.innerHTML = buttonMarkup;
+    settingsButton.setAttribute("aria-expanded", String(isEditing));
+  }
+
+  if (heroButton) {
+    heroButton.innerHTML = buttonMarkup;
+  }
+
+  if (options.scroll) {
+    const fallbackTarget = document.getElementById("authorProfilePanel");
+    const target = isEditing
+      ? form || fallbackTarget
+      : !view || view.hidden
+        ? fallbackTarget
+        : view;
+
+    target?.scrollIntoView({ behavior: "smooth", block: "start" });
+  }
+}
+
+function renderAuthorProfileWorkspace(author = {}) {
+  authorProfileState = author || {};
+  populateAuthorProfileForm(authorProfileState);
+  renderAuthorProfileView(authorProfileState);
+  setAuthorProfileEditMode(!hasSavedAuthorProfile(authorProfileState));
+}
+
+function toggleAuthorProfileEditor(forceState) {
+  const form = document.getElementById("authorProfileForm");
+  const isCurrentlyEditing = form ? !form.hidden : false;
+  const nextState =
+    typeof forceState === "boolean" ? forceState : !isCurrentlyEditing;
+
+  if (authorProfileState) {
+    populateAuthorProfileForm(authorProfileState);
+    renderAuthorProfileView(authorProfileState);
+  }
+
+  setAuthorProfileEditMode(nextState, { scroll: true });
 }
 
 function updateSubmissionPreview(draftState, profileMetrics) {
@@ -4288,6 +4555,14 @@ function setupAuthorWorkspaceListeners() {
     authorProfilePictureInput.addEventListener("change", function () {
       const file = this.files && this.files[0];
       if (!file) return;
+      if (!isSupportedImageFile(file)) {
+        showNotification("Profile picture must be a valid image file.", "error");
+        this.value = "";
+        authorProfileImagePreview.src = getRenderableImageUrl(
+          authorProfileState?.profile_image,
+        );
+        return;
+      }
       authorProfileImagePreview.src = URL.createObjectURL(file);
     });
   }
@@ -4385,9 +4660,7 @@ async function legacyLoadAuthorDashboard() {
 
       const preview = document.getElementById("authorProfileImagePreview");
       if (preview) {
-        preview.src = author.profile_image
-          ? resolveAssetUrl(author.profile_image)
-          : "assets/OIP.webp";
+        preview.src = getRenderableImageUrl(author.profile_image);
       }
     }
   } catch (error) {
@@ -4588,37 +4861,7 @@ async function loadAuthorDashboard() {
     }
 
     if (profileData.success && profileData.author) {
-      const author = profileData.author;
-      authorProfileState = author;
-      document.getElementById("authorProfileFullName").value =
-        author.full_name || "";
-      document.getElementById("authorProfileEmail").value = author.email || "";
-      document.getElementById("authorProfilePhone").value = author.phone || "";
-      document.getElementById("authorProfileStaffId").value =
-        author.staff_id || "";
-      document.getElementById("authorProfileFaculty").value =
-        author.faculty || "";
-      document.getElementById("authorProfileDepartment").value =
-        author.department || "";
-      document.getElementById("authorProfileQualification").value =
-        author.qualifications || "";
-      document.getElementById("authorProfileExpertise").value =
-        author.areas_of_expertise || "";
-      document.getElementById("authorProfileOrcidId").value =
-        author.orcid_id || "";
-      document.getElementById("authorProfileGoogleScholarId").value =
-        author.google_scholar_id || "";
-      document.getElementById("authorProfileLinkedIn").value =
-        author.linkedin_url || "";
-      document.getElementById("authorProfileBiography").value =
-        author.biography || "";
-
-      const preview = document.getElementById("authorProfileImagePreview");
-      if (preview) {
-        preview.src = author.profile_image
-          ? resolveAssetUrl(author.profile_image)
-          : "assets/OIP.webp";
-      }
+      renderAuthorProfileWorkspace(profileData.author);
     }
 
     syncAuthorWorkspace();
@@ -5208,6 +5451,13 @@ async function handleAuthorProfileUpdate(e) {
 
     const newPicture = document.getElementById("authorProfilePicture").files[0];
     if (newPicture) {
+      if (!isSupportedImageFile(newPicture)) {
+        showNotification(
+          "Profile picture must be a valid image file.",
+          "error",
+        );
+        return;
+      }
       formData.append("profile_image", newPicture);
     }
 
@@ -5233,15 +5483,8 @@ async function handleAuthorProfileUpdate(e) {
       updateAuthUI();
     }
     if (data.author) {
-      authorProfileState = data.author;
+      renderAuthorProfileWorkspace(data.author);
     }
-    if (data.author && data.author.profile_image) {
-      const preview = document.getElementById("authorProfileImagePreview");
-      if (preview) {
-        preview.src = resolveAssetUrl(data.author.profile_image);
-      }
-    }
-    document.getElementById("authorProfilePicture").value = "";
     syncAuthorWorkspace();
   } catch (error) {
     console.error("Profile update error:", error);
@@ -5278,9 +5521,7 @@ async function viewAuthor(authorId) {
     }
 
     const author = data.author;
-    const profileImage = author.profile_image
-      ? resolveAssetUrl(author.profile_image)
-      : "assets/OIP.webp";
+    const profileImage = getRenderableImageUrl(author.profile_image);
     const content = document.getElementById("authorDetailsContent");
     if (!content) return;
 

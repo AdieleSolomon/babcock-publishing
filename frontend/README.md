@@ -2,6 +2,9 @@
 
 This directory is the static frontend.
 
+Canonical editable pages live in `frontend/*.html`.
+The `frontend/public/` folder is for shared assets and scripts, not page copies.
+
 ## Files
 
 - `index.html`

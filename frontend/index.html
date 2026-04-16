@@ -48,8 +48,8 @@
     <link
       rel="stylesheet"
       href="https://cdn.datatables.net/1.13.6/css/jquery.dataTables.min.css" />
-    <link rel="stylesheet" href="public/styles.css" />
-    <link rel="stylesheet" href="public/enterprise.css" />
+    <link rel="stylesheet" href="public/styles.css?v=1.0.1" />
+    <link rel="stylesheet" href="public/enterprise.css?v=1.0.1" />
   </head>
   <body>
     <!-- ============= HOMEPAGE ============= -->
@@ -1721,7 +1721,7 @@
         <aside class="sidebar" id="sidebar">
           <div class="sidebar-header">
             <div class="logo">
-              <img src="assets/OIP.webp" alt="Logo" class="logo-img" />
+              <img src="public/OIP.webp" alt="Logo" class="logo-img" />
               <div class="logo-text">
                 <h2>BU Publishing</h2>
                 <p>Admin Panel</p>
@@ -2232,13 +2232,11 @@
                 <i class="fas fa-file-upload"></i> Submit Manuscript
               </button>
               <button
+                id="authorHeroProfileButton"
                 class="btn btn-outline"
-                onclick="
-                  document
-                    .getElementById('authorProfileForm')
-                    .scrollIntoView({ behavior: 'smooth', block: 'start' })
-                ">
-                <i class="fas fa-id-card"></i> Update Profile
+                type="button"
+                onclick="toggleAuthorProfileEditor()">
+                <i class="fas fa-gear"></i> Profile Settings
               </button>
             </div>
             <div class="author-hero-metrics">
@@ -2425,8 +2423,10 @@
         </section>
 
         <div class="author-content-grid">
-          <section class="author-panel author-profile-panel">
-            <div class="author-panel-header">
+          <section
+            id="authorProfilePanel"
+            class="author-panel author-profile-panel">
+            <div class="author-panel-header author-panel-header-spread">
               <div>
                 <span class="author-panel-eyebrow">Profile</span>
                 <h2 class="author-panel-title">
@@ -2436,6 +2436,17 @@
                   Editors use these details across review, contracts,
                   discoverability, and publication metadata.
                 </p>
+              </div>
+              <div class="author-profile-panel-actions">
+                <button
+                  id="authorProfileSettingsButton"
+                  type="button"
+                  class="btn btn-outline"
+                  onclick="toggleAuthorProfileEditor()"
+                  aria-controls="authorProfileForm"
+                  aria-expanded="false">
+                  <i class="fas fa-gear"></i> Profile Settings
+                </button>
               </div>
             </div>
 
@@ -2468,6 +2479,120 @@
               </article>
             </div>
 
+            <div id="authorProfileView" class="author-profile-display" hidden>
+              <div class="author-profile-display-shell">
+                <article class="author-profile-overview-card">
+                  <div class="author-profile-summary">
+                    <img
+                      id="authorProfileViewImage"
+                      src="public/OIP.webp"
+                      alt="Saved author profile"
+                      class="author-profile-avatar" />
+                    <div class="author-profile-text">
+                      <span class="author-profile-card-label">Saved Profile</span>
+                      <h3 id="authorProfileViewName">Author profile</h3>
+                      <p id="authorProfileViewHeadline">
+                        Your saved academic profile supports editorial routing,
+                        contracts, and publication metadata.
+                      </p>
+                    </div>
+                  </div>
+                  <div class="author-profile-side-card">
+                    <span class="author-profile-card-label">Profile Status</span>
+                    <strong id="authorProfileViewUpdated">
+                      Ready for editorial use
+                    </strong>
+                    <p id="authorProfileViewStatus">
+                      Use settings anytime you want to update your biography,
+                      scholarly identifiers, or profile photo.
+                    </p>
+                  </div>
+                </article>
+              </div>
+
+              <div
+                class="author-profile-pill-row"
+                id="authorProfileViewTags"
+                aria-label="Saved profile tags"></div>
+
+              <div class="author-profile-detail-grid">
+                <article class="author-profile-detail-card">
+                  <span class="author-profile-card-label">Contact</span>
+                  <div class="author-profile-detail-list">
+                    <div>
+                      <span>Email</span>
+                      <strong id="authorProfileViewEmail">Not provided</strong>
+                    </div>
+                    <div>
+                      <span>Phone</span>
+                      <strong id="authorProfileViewPhone">Not provided</strong>
+                    </div>
+                    <div>
+                      <span>Staff / Student ID</span>
+                      <strong id="authorProfileViewStaffId">Not provided</strong>
+                    </div>
+                  </div>
+                </article>
+
+                <article class="author-profile-detail-card">
+                  <span class="author-profile-card-label">Academic Record</span>
+                  <div class="author-profile-detail-list">
+                    <div>
+                      <span>Faculty</span>
+                      <strong id="authorProfileViewFaculty">Not provided</strong>
+                    </div>
+                    <div>
+                      <span>Department</span>
+                      <strong id="authorProfileViewDepartment">
+                        Not provided
+                      </strong>
+                    </div>
+                    <div>
+                      <span>Highest Qualification</span>
+                      <strong id="authorProfileViewQualification">
+                        Not provided
+                      </strong>
+                    </div>
+                  </div>
+                </article>
+
+                <article class="author-profile-detail-card">
+                  <span class="author-profile-card-label">Discoverability</span>
+                  <div class="author-profile-detail-list">
+                    <div>
+                      <span>Expertise</span>
+                      <strong id="authorProfileViewExpertise">
+                        Not provided
+                      </strong>
+                    </div>
+                    <div>
+                      <span>ORCID iD</span>
+                      <strong id="authorProfileViewOrcid">Not provided</strong>
+                    </div>
+                    <div>
+                      <span>Google Scholar ID</span>
+                      <strong id="authorProfileViewScholar">
+                        Not provided
+                      </strong>
+                    </div>
+                    <div>
+                      <span>LinkedIn URL</span>
+                      <strong id="authorProfileViewLinkedIn">
+                        Not provided
+                      </strong>
+                    </div>
+                  </div>
+                </article>
+              </div>
+
+              <article class="author-profile-biography-card">
+                <span class="author-profile-card-label">Biography</span>
+                <p id="authorProfileViewBiography">
+                  No biography added yet.
+                </p>
+              </article>
+            </div>
+
             <form
               id="authorProfileForm"
               class="author-profile-form"
@@ -2476,7 +2601,7 @@
                 <div class="author-profile-summary">
                   <img
                     id="authorProfileImagePreview"
-                    src="assets/OIP.webp"
+                    src="public/OIP.webp"
                     alt="Author profile"
                     class="author-profile-avatar" />
                   <div class="author-profile-text">
@@ -2631,9 +2756,17 @@
                   Saved profile details support contracts, review assignments,
                   and publication metadata across the press workflow.
                 </p>
-                <button type="submit" class="btn btn-primary">
-                  <i class="fas fa-save"></i> Save Profile
-                </button>
+                <div class="author-form-button-row">
+                  <button
+                    type="button"
+                    class="btn btn-outline"
+                    onclick="toggleAuthorProfileEditor(false)">
+                    <i class="fas fa-times"></i> Cancel
+                  </button>
+                  <button type="submit" class="btn btn-primary">
+                    <i class="fas fa-save"></i> Save Profile
+                  </button>
+                </div>
               </div>
             </form>
           </section>
@@ -3346,7 +3479,7 @@
 
     <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
     <script src="https://cdn.datatables.net/1.13.6/js/jquery.dataTables.min.js"></script>
-    <script src="public/config.js"></script>
-    <script src="public/script.js"></script>
+    <script src="public/config.js?v=1.0.1"></script>
+    <script src="public/script.js?v=1.0.1"></script>
   </body>
 </html>

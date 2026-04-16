@@ -176,22 +176,61 @@ const storage = multer.diskStorage({
   },
 });
 
-const upload = multer({
-  storage: storage,
-  limits: { fileSize: 10 * 1024 * 1024 }, // 10MB
-  fileFilter: (req, file, cb) => {
-    const allowedTypes = /jpeg|jpg|png|gif|pdf|doc|docx/;
-    const extname = allowedTypes.test(
-      path.extname(file.originalname).toLowerCase(),
-    );
-    const mimetype = allowedTypes.test(file.mimetype);
+const IMAGE_EXTENSIONS = new Set([
+  ".jpg",
+  ".jpeg",
+  ".png",
+  ".gif",
+  ".webp",
+  ".avif",
+  ".svg",
+]);
+const DOCUMENT_EXTENSIONS = new Set([".pdf", ".doc", ".docx"]);
+const DOCUMENT_MIME_TYPES = new Set([
+  "application/pdf",
+  "application/msword",
+  "application/vnd.openxmlformats-officedocument.wordprocessingml.document",
+]);
 
-    if (mimetype && extname) {
-      return cb(null, true);
-    } else {
-      cb(new Error("Error: File type not allowed!"));
-    }
-  },
+function getNormalizedFileExtension(filename) {
+  return path.extname(String(filename || "")).toLowerCase();
+}
+
+function isImageFile(file) {
+  const extension = getNormalizedFileExtension(file?.originalname);
+  const mimeType = String(file?.mimetype || "").toLowerCase();
+  return IMAGE_EXTENSIONS.has(extension) && mimeType.startsWith("image/");
+}
+
+function isDocumentFile(file) {
+  const extension = getNormalizedFileExtension(file?.originalname);
+  const mimeType = String(file?.mimetype || "").toLowerCase();
+  return DOCUMENT_EXTENSIONS.has(extension) && DOCUMENT_MIME_TYPES.has(mimeType);
+}
+
+function createUploader({ validator, errorMessage }) {
+  return multer({
+    storage,
+    limits: { fileSize: 10 * 1024 * 1024 }, // 10MB
+    fileFilter: (req, file, cb) => {
+      if (validator(file)) {
+        cb(null, true);
+        return;
+      }
+
+      cb(new Error(errorMessage));
+    },
+  });
+}
+
+const upload = createUploader({
+  validator: (file) => isImageFile(file) || isDocumentFile(file),
+  errorMessage: "Only image, PDF, DOC, and DOCX files are allowed.",
+});
+
+const imageUpload = createUploader({
+  validator: isImageFile,
+  errorMessage: "Only image files are allowed for this upload.",
 });
 
 app.use(cors(corsOptions));
@@ -2469,15 +2508,31 @@ app.delete(
 // Get published books for homepage
 app.get("/api/books/published", async (req, res) => {
   try {
-    const [books] = await dbQuery(`
-            SELECT b.*, u.full_name as author_name 
-            FROM books b 
-            LEFT JOIN authors a ON b.author_id = a.id 
-            LEFT JOIN users u ON a.user_id = u.id 
-            WHERE b.status = 'published' 
-            ORDER BY COALESCE(b.publication_date, DATE(b.created_at)) DESC 
-            LIMIT 20
-        `);
+    const requestedLimit = Number.parseInt(req.query.limit, 10);
+    const hasLimit = Number.isFinite(requestedLimit);
+    const limit = hasLimit
+      ? Math.min(Math.max(requestedLimit, 1), 120)
+      : null;
+
+    const query = `
+      SELECT
+        b.*,
+        u.full_name as author_name,
+        u.profile_image as author_profile_image,
+        a.faculty as author_faculty,
+        a.department as author_department,
+        a.qualifications as author_qualifications,
+        a.biography as author_biography,
+        a.areas_of_expertise as author_areas_of_expertise
+      FROM books b
+      LEFT JOIN authors a ON b.author_id = a.id
+      LEFT JOIN users u ON a.user_id = u.id
+      WHERE b.status = 'published'
+      ORDER BY COALESCE(b.publication_date, DATE(b.created_at)) DESC
+      ${hasLimit ? "LIMIT ?" : ""}
+    `;
+
+    const [books] = await dbQuery(query, hasLimit ? [limit] : []);
 
     res.json({
       success: true,
@@ -2509,6 +2564,79 @@ app.get("/api/authors/count", async (req, res) => {
     res.status(500).json({
       success: false,
       message: "Failed to load authors count",
+    });
+  }
+});
+
+// Get all active authors for the public directory
+app.get("/api/authors/directory", async (req, res) => {
+  try {
+    const requestedLimit = Number.parseInt(req.query.limit, 10);
+    const hasLimit = Number.isFinite(requestedLimit);
+    const limit = hasLimit
+      ? Math.min(Math.max(requestedLimit, 1), 240)
+      : null;
+
+    const query = `
+      SELECT
+        a.id as author_id,
+        u.full_name,
+        u.email,
+        u.profile_image,
+        a.faculty,
+        a.department,
+        a.qualifications,
+        a.biography,
+        a.areas_of_expertise,
+        COUNT(DISTINCT b.id) as published_books_count,
+        MAX(COALESCE(b.publication_date, DATE(b.created_at))) as latest_publication_date,
+        GROUP_CONCAT(
+          CASE
+            WHEN b.id IS NOT NULL THEN b.title
+            ELSE NULL
+          END
+          ORDER BY COALESCE(b.publication_date, DATE(b.created_at)) DESC
+          SEPARATOR '|||'
+        ) as featured_titles
+      FROM authors a
+      JOIN users u ON a.user_id = u.id
+      LEFT JOIN books b ON b.author_id = a.id AND b.status = 'published'
+      WHERE u.status = 'active'
+      GROUP BY
+        a.id,
+        u.full_name,
+        u.email,
+        u.profile_image,
+        a.faculty,
+        a.department,
+        a.qualifications,
+        a.biography,
+        a.areas_of_expertise
+      ORDER BY published_books_count DESC, u.full_name ASC
+      ${hasLimit ? "LIMIT ?" : ""}
+    `;
+
+    const [authors] = await dbQuery(query, hasLimit ? [limit] : []);
+
+    const normalizedAuthors = authors.map((author) => ({
+      ...author,
+      featured_titles: String(author.featured_titles || "")
+        .split("|||")
+        .map((title) => title.trim())
+        .filter(Boolean)
+        .slice(0, 3),
+    }));
+
+    res.json({
+      success: true,
+      authors: normalizedAuthors,
+      count: normalizedAuthors.length,
+    });
+  } catch (error) {
+    console.error("Get authors directory error:", error);
+    res.status(500).json({
+      success: false,
+      message: "Failed to load authors directory",
     });
   }
 });
@@ -2607,7 +2735,7 @@ app.get("/api/training/count", async (req, res) => {
 // Author registration (public endpoint)
 app.post(
   "/api/authors/register",
-  upload.single("profile_image"),
+  imageUpload.single("profile_image"),
   async (req, res) => {
     try {
       await ensureAuthorProfileColumns();
@@ -3803,7 +3931,7 @@ app.post(
   "/api/admin/books/:id/cover",
   authMiddleware,
   roleMiddleware(adminPortalRoles),
-  upload.single("cover"),
+  imageUpload.single("cover"),
   async (req, res) => {
     try {
       if (!req.file) {
@@ -5195,7 +5323,7 @@ app.get("/api/author/profile", authMiddleware, async (req, res) => {
 app.put(
   "/api/author/profile",
   authMiddleware,
-  upload.single("profile_image"),
+  imageUpload.single("profile_image"),
   async (req, res) => {
     try {
       await ensureAuthorProfileColumns();
@@ -6355,6 +6483,26 @@ app.use((req, res) => {
 // Error handling middleware
 app.use((err, req, res, next) => {
   console.error("Unhandled error:", err);
+
+  if (err instanceof multer.MulterError) {
+    res.status(400).json({
+      success: false,
+      message: err.message || "Invalid file upload",
+    });
+    return;
+  }
+
+  if (
+    typeof err?.message === "string" &&
+    err.message.toLowerCase().includes("only image")
+  ) {
+    res.status(400).json({
+      success: false,
+      message: err.message,
+    });
+    return;
+  }
+
   res.status(500).json({
     success: false,
     message: "Internal server error",
