@@ -45,6 +45,7 @@ let adminAuthorsCache = [];
 let adminBooksCache = [];
 let adminSubmissionsCache = [];
 let adminContractsCache = [];
+let pendingBookPublishBookId = null;
 
 // Initialize the application
 document.addEventListener("DOMContentLoaded", function () {
@@ -1846,6 +1847,7 @@ async function loadBooks() {
     adminBooksCache = data.books;
     tbody.innerHTML = data.books
       .map((book) => {
+        const canPublish = currentUser && currentUser.role === "admin";
         const price =
           book.price !== null && book.price !== undefined
             ? `₦${Number(book.price).toLocaleString()}`
@@ -1861,6 +1863,11 @@ async function loadBooks() {
               <div class="table-action-group">
                 <button class="table-action-btn info" onclick="viewBook(${book.id})">View</button>
                 <button class="table-action-btn success" onclick="openContractEditorForBook(${book.id})">Contract</button>
+                ${
+                  canPublish
+                    ? `<button class="table-action-btn primary" onclick="openPublishForBook(${book.id})">Publish</button>`
+                    : ""
+                }
               </div>
             </td>
           </tr>
@@ -2021,7 +2028,7 @@ async function loadContracts() {
   try {
     const token = localStorage.getItem("authToken");
     if (!token) {
-      renderAdminTableMessage(tbody, 6, "Please login again");
+      renderAdminTableMessage(tbody, 7, "Please login again");
       return;
     }
 
@@ -2041,7 +2048,7 @@ async function loadContracts() {
     if (!tbody) return;
 
     if (response.status === 401 || response.status === 403) {
-      renderAdminTableMessage(tbody, 6, data.message || "Please login again");
+      renderAdminTableMessage(tbody, 7, data.message || "Please login again");
       handleAdminSectionAuthFailure(data.message);
       return;
     }
@@ -2050,7 +2057,7 @@ async function loadContracts() {
       adminContractsCache = [];
       renderAdminTableMessage(
         tbody,
-        6,
+        7,
         data.message || "Failed to load contracts",
       );
       return;
@@ -2058,33 +2065,80 @@ async function loadContracts() {
 
     if (!data.contracts || data.contracts.length === 0) {
       adminContractsCache = [];
-      renderAdminTableMessage(tbody, 6, "No contracts found");
+      renderAdminTableMessage(tbody, 7, "No contracts found");
       return;
     }
 
     adminContractsCache = data.contracts;
     tbody.innerHTML = data.contracts
-      .map(
-        (contract) => `
-        <tr>
-          <td>${contract.contract_number || "N/A"}</td>
-          <td>${contract.book_title || "N/A"}</td>
-          <td>${contract.author_name || "N/A"}</td>
-          <td>${contract.contract_type || "N/A"}</td>
-          <td><span class="status-badge status-${contract.status || "draft"}">${contract.status || "draft"}</span></td>
-          <td>
-            <div class="table-action-group">
-              <button class="table-action-btn info" onclick="openContractEditor(${contract.id})">View</button>
-            </div>
-          </td>
-        </tr>
-      `,
-      )
+      .map((contract) => {
+        const contractType = formatDashboardLabel(
+          contract.contract_type || "standard",
+          "Standard",
+        );
+        const royaltyText =
+          contract.royalty_percentage !== null &&
+          contract.royalty_percentage !== undefined &&
+          String(contract.royalty_percentage).trim() !== ""
+            ? `${contract.royalty_percentage}%`
+            : "—";
+        const advanceText =
+          contract.advance_amount !== null &&
+          contract.advance_amount !== undefined &&
+          String(contract.advance_amount).trim() !== ""
+            ? formatCurrencyCode(contract.advance_amount)
+            : "—";
+        const dateRange =
+          contract.start_date || contract.end_date
+            ? `${formatDashboardDate(contract.start_date, "—")} → ${formatDashboardDate(
+                contract.end_date,
+                "—",
+              )}`
+            : "—";
+        const documentMarkup = contract.contract_file
+          ? `<a class="table-action-btn info" href="${escapeHtml(
+              resolveAssetUrl(contract.contract_file),
+            )}" target="_blank" rel="noopener noreferrer">Download</a>`
+          : `<span class="workflow-meta">—</span>`;
+
+        return `
+          <tr>
+            <td>${escapeHtml(contract.contract_number || "N/A")}</td>
+            <td>${escapeHtml(contract.book_title || "N/A")}</td>
+            <td>
+              <div>
+                <strong>${escapeHtml(contract.author_name || "N/A")}</strong>
+                <span class="author-table-meta">${escapeHtml(
+                  contract.author_email || "",
+                )}</span>
+              </div>
+            </td>
+            <td>
+              <div>
+                <strong>${escapeHtml(contractType)}</strong>
+                <span class="author-table-meta">${escapeHtml(
+                  `Royalty: ${royaltyText} • Advance: ${advanceText}`,
+                )}</span>
+                <span class="author-table-meta">${escapeHtml(
+                  `Effective: ${dateRange}`,
+                )}</span>
+              </div>
+            </td>
+            <td>${renderStatusBadge(contract.status || "draft", "Draft")}</td>
+            <td>${documentMarkup}</td>
+            <td>
+              <div class="table-action-group">
+                <button class="table-action-btn info" onclick="openContractEditor(${contract.id})">View</button>
+              </div>
+            </td>
+          </tr>
+        `;
+      })
       .join("");
   } catch (error) {
     console.error("Error loading contracts:", error);
     adminContractsCache = [];
-    renderAdminTableMessage(tbody, 6, "Error loading contracts");
+    renderAdminTableMessage(tbody, 7, "Error loading contracts");
   }
 }
 
@@ -2467,6 +2521,11 @@ async function handleAdminBookCreate(event) {
   }
 }
 
+function openPublishForBook(bookId) {
+  pendingBookPublishBookId = bookId;
+  viewBook(bookId);
+}
+
 async function viewBook(bookId) {
   try {
     const token = localStorage.getItem("authToken");
@@ -2494,6 +2553,7 @@ async function viewBook(bookId) {
     const coverImage = book.cover_image
       ? resolveAssetUrl(book.cover_image)
       : "assets/OIP.webp";
+    const canPublish = currentUser && currentUser.role === "admin";
     const content = document.getElementById("bookDetailsContent");
     if (!content) return;
 
@@ -2536,9 +2596,28 @@ async function viewBook(bookId) {
                 "Standard",
               ),
             )}</span>
+            <span>${escapeHtml(
+              [
+                contract.start_date
+                  ? `Start: ${formatDashboardDate(contract.start_date, "—")}`
+                  : null,
+                contract.end_date
+                  ? `End: ${formatDashboardDate(contract.end_date, "—")}`
+                  : null,
+              ]
+                .filter(Boolean)
+                .join(" • ") || "Dates not set",
+            )}</span>
           </div>
           <div class="workflow-list-actions">
             ${renderStatusBadge(contract.status || "draft", "Draft")}
+            ${
+              contract.contract_file
+                ? `<a class="table-action-btn info" href="${escapeHtml(
+                    resolveAssetUrl(contract.contract_file),
+                  )}" target="_blank" rel="noopener noreferrer">Document</a>`
+                : ""
+            }
             <button type="button" class="table-action-btn info" onclick="openContractEditor(${contract.id})">Open</button>
           </div>
         </li>
@@ -2605,6 +2684,11 @@ async function viewBook(bookId) {
               book.manuscript_file
                 ? `<a class="table-action-btn info" href="${escapeHtml(resolveAssetUrl(book.manuscript_file))}" target="_blank" rel="noopener noreferrer">Open Manuscript</a>`
                 : `<span class="workflow-meta">No manuscript file uploaded</span>`
+            }
+            ${
+              book.published_file
+                ? `<a class="table-action-btn success" href="${escapeHtml(resolveAssetUrl(book.published_file))}" target="_blank" rel="noopener noreferrer">Open Published File</a>`
+                : `<span class="workflow-meta">No published file uploaded</span>`
             }
           </div>
         </div>
@@ -2711,6 +2795,42 @@ async function viewBook(bookId) {
             <button type="submit" class="btn btn-primary">Upload Cover</button>
           </div>
         </form>
+
+        ${
+          canPublish
+            ? `
+              <form class="workflow-panel" id="bookPublishForm" onsubmit="handleBookPublish(event)">
+                <input type="hidden" id="bookPublishBookId" value="${escapeHtml(book.id)}" />
+                <span class="workflow-panel-label">Publish Book</span>
+                <div class="workflow-upload-meta">
+                  <p>Upload the final book file and mark the title as published.</p>
+                  ${
+                    book.published_file
+                      ? `<div class="workflow-link-group"><a class="workflow-attachment-link" href="${escapeHtml(resolveAssetUrl(book.published_file))}" target="_blank" rel="noopener noreferrer"><i class="fas fa-file-arrow-down"></i> Current published file</a></div>`
+                      : ""
+                  }
+                </div>
+                <div class="workflow-form-fields">
+                  <div class="form-group">
+                    <label for="bookPublishFile">Final Book File</label>
+                    <input type="file" id="bookPublishFile" class="form-control" accept=".pdf,.doc,.docx,application/pdf,application/msword,application/vnd.openxmlformats-officedocument.wordprocessingml.document" />
+                  </div>
+                  <div class="form-group">
+                    <label for="bookPublishPrice">Price</label>
+                    <input type="number" id="bookPublishPrice" class="form-control" min="0" step="0.01" value="${escapeHtml(book.price ?? "")}" />
+                  </div>
+                  <div class="form-group">
+                    <label for="bookPublishPublicationDate">Publication Date</label>
+                    <input type="date" id="bookPublishPublicationDate" class="form-control" value="${escapeHtml(formatDateForInput(book.publication_date))}" />
+                  </div>
+                </div>
+                <div class="workflow-form-actions">
+                  <button type="submit" class="btn btn-primary">Upload & Publish</button>
+                </div>
+              </form>
+            `
+            : ""
+        }
       </div>
 
       <div class="workflow-activity-grid">
@@ -2734,6 +2854,17 @@ async function viewBook(bookId) {
     `;
 
     showModal("bookDetailsModal");
+    if (
+      pendingBookPublishBookId &&
+      String(pendingBookPublishBookId) === String(book.id)
+    ) {
+      pendingBookPublishBookId = null;
+      const publishInput = document.getElementById("bookPublishFile");
+      if (publishInput) {
+        publishInput.scrollIntoView({ behavior: "smooth", block: "center" });
+        publishInput.focus();
+      }
+    }
   } catch (error) {
     console.error("View book error:", error);
     showNotification("Failed to load book details", "error");
@@ -2843,6 +2974,79 @@ async function handleBookCoverUpload(event) {
   } catch (error) {
     console.error("Book cover upload error:", error);
     showNotification("Failed to upload book cover", "error");
+  } finally {
+    hideLoading();
+  }
+}
+
+async function handleBookPublish(event) {
+  event.preventDefault();
+
+  try {
+    const token = localStorage.getItem("authToken");
+    const bookId = document.getElementById("bookPublishBookId")?.value;
+    const bookFile = document.getElementById("bookPublishFile")?.files?.[0];
+
+    if (!token || !bookId) {
+      showNotification("Please login again", "error");
+      return;
+    }
+
+    if (!bookFile) {
+      showNotification("Please choose the final book file to upload", "error");
+      return;
+    }
+
+    showLoading("Publishing book...");
+
+    const formData = new FormData();
+    formData.append("book_file", bookFile);
+
+    const priceValue = document.getElementById("bookPublishPrice")?.value;
+    if (
+      priceValue === undefined ||
+      priceValue === null ||
+      String(priceValue).trim() === ""
+    ) {
+      showNotification(
+        "Please set a price (use 0 if the book is free)",
+        "error",
+      );
+      return;
+    }
+    formData.append("price", priceValue);
+
+    const publicationDate = document.getElementById(
+      "bookPublishPublicationDate",
+    )?.value;
+    if (publicationDate) {
+      formData.append("publication_date", publicationDate);
+    }
+
+    const response = await fetch(
+      `${API_BASE_URL}/admin/books/${bookId}/publish`,
+      {
+        method: "POST",
+        headers: {
+          Authorization: `Bearer ${token}`,
+          Accept: "application/json",
+        },
+        body: formData,
+      },
+    );
+
+    const data = await response.json();
+    if (!response.ok || !data.success) {
+      showNotification(data.message || "Failed to publish book", "error");
+      return;
+    }
+
+    showNotification(data.message || "Book published successfully", "success");
+    await Promise.all([loadBooks(), loadAdminDashboard(), loadHomepageData()]);
+    await viewBook(bookId);
+  } catch (error) {
+    console.error("Book publish error:", error);
+    showNotification("Failed to publish book", "error");
   } finally {
     hideLoading();
   }
@@ -3342,6 +3546,14 @@ async function openContractEditor(contractId = null, prefill = {}) {
 
     form.reset();
     document.getElementById("contractEditorId").value = "";
+    const numberField = document.getElementById("contractEditorNumber");
+    if (numberField) numberField.value = "";
+    const signedDateField = document.getElementById("contractEditorSignedDate");
+    if (signedDateField) signedDateField.value = "";
+    const fileLink = document.getElementById("contractEditorFileLink");
+    if (fileLink) {
+      fileLink.textContent = "No contract document uploaded yet.";
+    }
     document.getElementById("contractEditorStatus").value = "draft";
     document.getElementById("contractEditorType").value = "standard";
     populateContractBookOptions(prefill.bookId || "");
@@ -3377,6 +3589,9 @@ async function openContractEditor(contractId = null, prefill = {}) {
 
       const contract = data.contract;
       document.getElementById("contractEditorId").value = contract.id;
+      if (numberField) {
+        numberField.value = contract.contract_number || "";
+      }
       populateContractBookOptions(contract.book_id || "");
       document.getElementById("contractEditorBook").value =
         contract.book_id || "";
@@ -3392,12 +3607,22 @@ async function openContractEditor(contractId = null, prefill = {}) {
         formatDateForInput(contract.start_date);
       document.getElementById("contractEditorEndDate").value =
         formatDateForInput(contract.end_date);
+      if (signedDateField) {
+        signedDateField.value = formatDateForInput(contract.signed_date);
+      }
       document.getElementById("contractEditorTerritory").value =
         contract.territory || "";
       document.getElementById("contractEditorRightsGranted").value =
         contract.rights_granted || "";
       document.getElementById("contractEditorPaymentSchedule").value =
         contract.payment_schedule || "";
+      if (fileLink) {
+        fileLink.innerHTML = contract.contract_file
+          ? `<a class="workflow-attachment-link" href="${escapeHtml(
+              resolveAssetUrl(contract.contract_file),
+            )}" target="_blank" rel="noopener noreferrer"><i class="fas fa-file-arrow-down"></i> Open contract document</a>`
+          : "No contract document uploaded yet.";
+      }
     } else if (prefill.bookId) {
       document.getElementById("contractEditorBook").value = prefill.bookId;
     }
@@ -3443,6 +3668,8 @@ async function handleContractEditorSubmit(event) {
       author_id: authorId,
       contract_type: document.getElementById("contractEditorType")?.value,
       status: document.getElementById("contractEditorStatus")?.value,
+      signed_date:
+        document.getElementById("contractEditorSignedDate")?.value || "",
       royalty_percentage:
         document.getElementById("contractEditorRoyalty")?.value || "",
       advance_amount:
@@ -3457,6 +3684,23 @@ async function handleContractEditorSubmit(event) {
       payment_schedule:
         document.getElementById("contractEditorPaymentSchedule")?.value || "",
     };
+
+    const normalizedStatus = String(payload.status || "draft")
+      .trim()
+      .toLowerCase();
+    if (
+      ["signed", "executed"].includes(normalizedStatus) &&
+      !String(payload.signed_date || "").trim()
+    ) {
+      showNotification(
+        "Signed Date is required for signed/executed contracts",
+        "error",
+      );
+      return;
+    }
+
+    const contractFile =
+      document.getElementById("contractEditorFile")?.files?.[0];
 
     showLoading(contractId ? "Saving contract..." : "Creating contract...");
 
@@ -3481,8 +3725,47 @@ async function handleContractEditorSubmit(event) {
       return;
     }
 
+    const savedContractId = contractId || data.contract_id;
+    if (contractFile) {
+      if (!savedContractId) {
+        showNotification(
+          "Contract saved but document upload could not start",
+          "error",
+        );
+        return;
+      }
+
+      const fileFormData = new FormData();
+      fileFormData.append("contract_file", contractFile);
+
+      const uploadResponse = await fetch(
+        `${API_BASE_URL}/admin/contracts/${savedContractId}/file`,
+        {
+          method: "POST",
+          headers: {
+            Authorization: `Bearer ${token}`,
+            Accept: "application/json",
+          },
+          body: fileFormData,
+        },
+      );
+      const uploadData = await uploadResponse.json();
+      if (!uploadResponse.ok || !uploadData.success) {
+        showNotification(
+          uploadData.message || "Contract saved but document upload failed",
+          "error",
+        );
+        return;
+      }
+    }
+
     closeModal("contractEditorModal");
-    showNotification(data.message || "Contract saved successfully", "success");
+    showNotification(
+      contractFile
+        ? "Contract saved and document uploaded successfully"
+        : data.message || "Contract saved successfully",
+      "success",
+    );
     await Promise.all([loadContracts(), loadBooks(), loadAdminDashboard()]);
 
     if (
@@ -3805,7 +4088,10 @@ function isRenderableImageAsset(path) {
   if (String(path).startsWith("data:image/")) return true;
 
   try {
-    const pathname = new URL(path, window.location.origin).pathname.toLowerCase();
+    const pathname = new URL(
+      path,
+      window.location.origin,
+    ).pathname.toLowerCase();
     return /\.(avif|gif|jpe?g|png|svg|webp)$/.test(pathname);
   } catch (error) {
     return /\.(avif|gif|jpe?g|png|svg|webp)$/i.test(String(path));
@@ -3892,7 +4178,10 @@ function isSupportedImageFile(file) {
   ]);
   const mimeType = String(file.type || "").toLowerCase();
 
-  return mimeType.startsWith("image/") || imageExtensions.has(getFileExtension(file.name));
+  return (
+    mimeType.startsWith("image/") ||
+    imageExtensions.has(getFileExtension(file.name))
+  );
 }
 
 function updateProgressBar(elementId, percent) {
@@ -4111,9 +4400,10 @@ function renderAuthorProfileTags(author = {}) {
     .filter(Boolean);
 
   const uniqueTags = [...new Set(tagValues)];
-  const tagsToRender = (uniqueTags.length
-    ? uniqueTags
-    : ["Complete your profile to surface editorial metadata here."]
+  const tagsToRender = (
+    uniqueTags.length
+      ? uniqueTags
+      : ["Complete your profile to surface editorial metadata here."]
   ).slice(0, 5);
 
   tagContainer.innerHTML = tagsToRender
@@ -4153,11 +4443,7 @@ function renderAuthorProfileView(author = {}) {
     author.full_name,
     "Author profile",
   );
-  setAuthorProfileText(
-    "authorProfileViewHeadline",
-    headline,
-    fallbackHeadline,
-  );
+  setAuthorProfileText("authorProfileViewHeadline", headline, fallbackHeadline);
   setAuthorProfileText(
     "authorProfileViewUpdated",
     statusTitle,
@@ -4173,23 +4459,11 @@ function renderAuthorProfileView(author = {}) {
   setAuthorProfileText("authorProfileViewStaffId", author.staff_id);
   setAuthorProfileText("authorProfileViewFaculty", author.faculty);
   setAuthorProfileText("authorProfileViewDepartment", author.department);
-  setAuthorProfileText(
-    "authorProfileViewQualification",
-    author.qualifications,
-  );
-  setAuthorProfileText(
-    "authorProfileViewExpertise",
-    author.areas_of_expertise,
-  );
+  setAuthorProfileText("authorProfileViewQualification", author.qualifications);
+  setAuthorProfileText("authorProfileViewExpertise", author.areas_of_expertise);
   setAuthorProfileText("authorProfileViewOrcid", author.orcid_id);
-  setAuthorProfileText(
-    "authorProfileViewScholar",
-    author.google_scholar_id,
-  );
-  setAuthorProfileText(
-    "authorProfileViewLinkedIn",
-    author.linkedin_url,
-  );
+  setAuthorProfileText("authorProfileViewScholar", author.google_scholar_id);
+  setAuthorProfileText("authorProfileViewLinkedIn", author.linkedin_url);
   setAuthorProfileText(
     "authorProfileViewBiography",
     author.biography,
@@ -4204,9 +4478,7 @@ function setAuthorProfileEditMode(shouldEdit, options = {}) {
   const isEditing = hasProfile ? Boolean(shouldEdit) : true;
   const form = document.getElementById("authorProfileForm");
   const view = document.getElementById("authorProfileView");
-  const settingsButton = document.getElementById(
-    "authorProfileSettingsButton",
-  );
+  const settingsButton = document.getElementById("authorProfileSettingsButton");
   const heroButton = document.getElementById("authorHeroProfileButton");
   const buttonMarkup = !hasProfile
     ? '<i class="fas fa-id-card"></i> Complete Profile'
@@ -4556,7 +4828,10 @@ function setupAuthorWorkspaceListeners() {
       const file = this.files && this.files[0];
       if (!file) return;
       if (!isSupportedImageFile(file)) {
-        showNotification("Profile picture must be a valid image file.", "error");
+        showNotification(
+          "Profile picture must be a valid image file.",
+          "error",
+        );
         this.value = "";
         authorProfileImagePreview.src = getRenderableImageUrl(
           authorProfileState?.profile_image,

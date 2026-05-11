@@ -205,7 +205,9 @@ function isImageFile(file) {
 function isDocumentFile(file) {
   const extension = getNormalizedFileExtension(file?.originalname);
   const mimeType = String(file?.mimetype || "").toLowerCase();
-  return DOCUMENT_EXTENSIONS.has(extension) && DOCUMENT_MIME_TYPES.has(mimeType);
+  return (
+    DOCUMENT_EXTENSIONS.has(extension) && DOCUMENT_MIME_TYPES.has(mimeType)
+  );
 }
 
 function createUploader({ validator, errorMessage }) {
@@ -231,6 +233,11 @@ const upload = createUploader({
 const imageUpload = createUploader({
   validator: isImageFile,
   errorMessage: "Only image files are allowed for this upload.",
+});
+
+const documentUpload = createUploader({
+  validator: isDocumentFile,
+  errorMessage: "Only PDF, DOC, and DOCX files are allowed for this upload.",
 });
 
 app.use(cors(corsOptions));
@@ -809,6 +816,36 @@ async function ensureAuthorProfileColumns() {
   }
   if (authorAlterStatements.length > 0) {
     await dbQuery(`ALTER TABLE authors ${authorAlterStatements.join(", ")}`);
+  }
+}
+
+async function ensureBookPublishingColumns() {
+  const bookColumns = await getTableColumns("books");
+  const alterStatements = [];
+
+  if (!bookColumns.has("published_file")) {
+    alterStatements.push("ADD COLUMN published_file VARCHAR(255)");
+  }
+
+  if (alterStatements.length > 0) {
+    await dbQuery(`ALTER TABLE books ${alterStatements.join(", ")}`);
+  }
+}
+
+async function ensureContractDocumentColumns() {
+  const contractColumns = await getTableColumns("contracts");
+  const alterStatements = [];
+
+  if (!contractColumns.has("contract_file")) {
+    alterStatements.push("ADD COLUMN contract_file VARCHAR(255)");
+  }
+
+  if (!contractColumns.has("signed_date")) {
+    alterStatements.push("ADD COLUMN signed_date DATE");
+  }
+
+  if (alterStatements.length > 0) {
+    await dbQuery(`ALTER TABLE contracts ${alterStatements.join(", ")}`);
   }
 }
 
@@ -1594,6 +1631,9 @@ const initDatabase = async () => {
       "UPDATE books SET publication_date = DATE(created_at) WHERE publication_date IS NULL AND status = 'published'",
     );
 
+    await ensureBookPublishingColumns();
+    await ensureContractDocumentColumns();
+
     // Create default admin user
     const [adminRows] = await dbQuery("SELECT id FROM users WHERE email = ?", [
       "admin@babcock.edu.ng",
@@ -2223,7 +2263,8 @@ app.post("/api/auth/password-reset/confirm", async (req, res) => {
 
     res.json({
       success: true,
-      message: "Password reset successful. You can now log in with your new password.",
+      message:
+        "Password reset successful. You can now log in with your new password.",
     });
   } catch (error) {
     console.error("Password reset confirmation error:", error);
@@ -2442,10 +2483,10 @@ app.put(
         });
       }
 
-      const [result] = await dbQuery("UPDATE users SET status = ? WHERE id = ?", [
-        status,
-        req.params.id,
-      ]);
+      const [result] = await dbQuery(
+        "UPDATE users SET status = ? WHERE id = ?",
+        [status, req.params.id],
+      );
 
       if (result.affectedRows === 0) {
         return res.status(404).json({
@@ -2510,9 +2551,7 @@ app.get("/api/books/published", async (req, res) => {
   try {
     const requestedLimit = Number.parseInt(req.query.limit, 10);
     const hasLimit = Number.isFinite(requestedLimit);
-    const limit = hasLimit
-      ? Math.min(Math.max(requestedLimit, 1), 120)
-      : null;
+    const limit = hasLimit ? Math.min(Math.max(requestedLimit, 1), 120) : null;
 
     const query = `
       SELECT
@@ -2573,9 +2612,7 @@ app.get("/api/authors/directory", async (req, res) => {
   try {
     const requestedLimit = Number.parseInt(req.query.limit, 10);
     const hasLimit = Number.isFinite(requestedLimit);
-    const limit = hasLimit
-      ? Math.min(Math.max(requestedLimit, 1), 240)
-      : null;
+    const limit = hasLimit ? Math.min(Math.max(requestedLimit, 1), 240) : null;
 
     const query = `
       SELECT
@@ -3516,21 +3553,21 @@ app.get(
   authMiddleware,
   roleMiddleware(adminPortalRoles),
   async (req, res) => {
-  try {
-    const {
-      status,
-      category,
-      author_id,
-      search,
-      year,
-      format,
-      page = 1,
-      limit = 20,
-    } = req.query;
+    try {
+      const {
+        status,
+        category,
+        author_id,
+        search,
+        year,
+        format,
+        page = 1,
+        limit = 20,
+      } = req.query;
 
-    const offset = (page - 1) * limit;
+      const offset = (page - 1) * limit;
 
-    let query = `
+      let query = `
       SELECT b.*, u.full_name as author_name, u.email as author_email
       FROM books b
       LEFT JOIN authors a ON b.author_id = a.id
@@ -3538,7 +3575,7 @@ app.get(
       WHERE 1=1
     `;
 
-    let countQuery = `
+      let countQuery = `
       SELECT COUNT(*) as total 
       FROM books b
       LEFT JOIN authors a ON b.author_id = a.id
@@ -3546,91 +3583,92 @@ app.get(
       WHERE 1=1
     `;
 
-    const params = [];
-    const countParams = [];
+      const params = [];
+      const countParams = [];
 
-    if (status) {
-      query += " AND b.status = ?";
-      countQuery += " AND b.status = ?";
-      params.push(status);
-      countParams.push(status);
+      if (status) {
+        query += " AND b.status = ?";
+        countQuery += " AND b.status = ?";
+        params.push(status);
+        countParams.push(status);
+      }
+
+      if (category) {
+        query += " AND b.category = ?";
+        countQuery += " AND b.category = ?";
+        params.push(category);
+        countParams.push(category);
+      }
+
+      if (author_id) {
+        query += " AND b.author_id = ?";
+        countQuery += " AND b.author_id = ?";
+        params.push(author_id);
+        countParams.push(author_id);
+      }
+
+      if (format) {
+        query += " AND b.format = ?";
+        countQuery += " AND b.format = ?";
+        params.push(format);
+        countParams.push(format);
+      }
+
+      if (year) {
+        query += " AND YEAR(b.created_at) = ?";
+        countQuery += " AND YEAR(b.created_at) = ?";
+        params.push(year);
+        countParams.push(year);
+      }
+
+      if (search) {
+        query += " AND (b.title LIKE ? OR b.isbn LIKE ? OR u.full_name LIKE ?)";
+        countQuery +=
+          " AND (b.title LIKE ? OR b.isbn LIKE ? OR u.full_name LIKE ?)";
+        const searchTerm = `%${search}%`;
+        params.push(searchTerm, searchTerm, searchTerm);
+        countParams.push(searchTerm, searchTerm, searchTerm);
+      }
+
+      query += " ORDER BY b.created_at DESC LIMIT ? OFFSET ?";
+      params.push(parseInt(limit), offset);
+
+      const [books] = await dbQuery(query, params);
+      const [[{ total }]] = await dbQuery(countQuery, countParams);
+
+      // Get additional data for each book
+      for (const book of books) {
+        // Get inventory
+        const [inventory] = await dbQuery(
+          "SELECT format, quantity, available FROM inventory WHERE book_id = ?",
+          [book.id],
+        );
+        book.inventory = inventory;
+
+        // Get sales count
+        const [[{ salesCount }]] = await dbQuery(
+          "SELECT COUNT(*) as salesCount FROM sales WHERE book_id = ?",
+          [book.id],
+        );
+        book.salesCount = salesCount || 0;
+      }
+
+      res.json({
+        success: true,
+        books,
+        pagination: {
+          total,
+          page: parseInt(page),
+          limit: parseInt(limit),
+          pages: Math.ceil(total / limit),
+        },
+      });
+    } catch (error) {
+      console.error("Get books error:", error);
+      res.status(500).json({ success: false, message: "Failed to load books" });
     }
-
-    if (category) {
-      query += " AND b.category = ?";
-      countQuery += " AND b.category = ?";
-      params.push(category);
-      countParams.push(category);
-    }
-
-    if (author_id) {
-      query += " AND b.author_id = ?";
-      countQuery += " AND b.author_id = ?";
-      params.push(author_id);
-      countParams.push(author_id);
-    }
-
-    if (format) {
-      query += " AND b.format = ?";
-      countQuery += " AND b.format = ?";
-      params.push(format);
-      countParams.push(format);
-    }
-
-    if (year) {
-      query += " AND YEAR(b.created_at) = ?";
-      countQuery += " AND YEAR(b.created_at) = ?";
-      params.push(year);
-      countParams.push(year);
-    }
-
-    if (search) {
-      query += " AND (b.title LIKE ? OR b.isbn LIKE ? OR u.full_name LIKE ?)";
-      countQuery +=
-        " AND (b.title LIKE ? OR b.isbn LIKE ? OR u.full_name LIKE ?)";
-      const searchTerm = `%${search}%`;
-      params.push(searchTerm, searchTerm, searchTerm);
-      countParams.push(searchTerm, searchTerm, searchTerm);
-    }
-
-    query += " ORDER BY b.created_at DESC LIMIT ? OFFSET ?";
-    params.push(parseInt(limit), offset);
-
-    const [books] = await dbQuery(query, params);
-    const [[{ total }]] = await dbQuery(countQuery, countParams);
-
-    // Get additional data for each book
-    for (const book of books) {
-      // Get inventory
-      const [inventory] = await dbQuery(
-        "SELECT format, quantity, available FROM inventory WHERE book_id = ?",
-        [book.id],
-      );
-      book.inventory = inventory;
-
-      // Get sales count
-      const [[{ salesCount }]] = await dbQuery(
-        "SELECT COUNT(*) as salesCount FROM sales WHERE book_id = ?",
-        [book.id],
-      );
-      book.salesCount = salesCount || 0;
-    }
-
-    res.json({
-      success: true,
-      books,
-      pagination: {
-        total,
-        page: parseInt(page),
-        limit: parseInt(limit),
-        pages: Math.ceil(total / limit),
-      },
-    });
-  } catch (error) {
-    console.error("Get books error:", error);
-    res.status(500).json({ success: false, message: "Failed to load books" });
-  }
-});
+  },
+);
 
 app.post(
   "/api/admin/books",
@@ -3718,7 +3756,8 @@ app.post(
         price: parsedPrice === null ? null : Number(parsedPrice),
         publication_date:
           status === "published"
-            ? toNullable(publication_date) || timestamp.toISOString().slice(0, 10)
+            ? toNullable(publication_date) ||
+              timestamp.toISOString().slice(0, 10)
             : toNullable(publication_date),
         created_at: timestamp,
         updated_at: timestamp,
@@ -3745,51 +3784,51 @@ app.get(
   authMiddleware,
   roleMiddleware(adminPortalRoles),
   async (req, res) => {
-  try {
-    const [books] = await dbQuery(
-      `SELECT b.*, a.id as author_id, u.full_name as author_name, u.email as author_email,
+    try {
+      const [books] = await dbQuery(
+        `SELECT b.*, a.id as author_id, u.full_name as author_name, u.email as author_email,
               u.phone as author_phone, a.faculty as author_faculty, a.department as author_department
        FROM books b
        LEFT JOIN authors a ON b.author_id = a.id
        LEFT JOIN users u ON a.user_id = u.id
        WHERE b.id = ?`,
-      [req.params.id],
-    );
+        [req.params.id],
+      );
 
-    if (books.length === 0) {
-      return res
-        .status(404)
-        .json({ success: false, message: "Book not found" });
-    }
+      if (books.length === 0) {
+        return res
+          .status(404)
+          .json({ success: false, message: "Book not found" });
+      }
 
-    const book = books[0];
+      const book = books[0];
 
-    // Get submissions for this book
-    const [submissions] = await dbQuery(
-      "SELECT * FROM submissions WHERE book_id = ? ORDER BY submission_date DESC",
-      [book.id],
-    );
+      // Get submissions for this book
+      const [submissions] = await dbQuery(
+        "SELECT * FROM submissions WHERE book_id = ? ORDER BY submission_date DESC",
+        [book.id],
+      );
 
-    // Get contracts for this book
-    const [contracts] = await dbQuery(
-      "SELECT * FROM contracts WHERE book_id = ? ORDER BY created_at DESC",
-      [book.id],
-    );
+      // Get contracts for this book
+      const [contracts] = await dbQuery(
+        "SELECT * FROM contracts WHERE book_id = ? ORDER BY created_at DESC",
+        [book.id],
+      );
 
-    // Get production status
-    const [production] = await dbQuery(
-      "SELECT * FROM production WHERE book_id = ? ORDER BY created_at DESC",
-      [book.id],
-    );
+      // Get production status
+      const [production] = await dbQuery(
+        "SELECT * FROM production WHERE book_id = ? ORDER BY created_at DESC",
+        [book.id],
+      );
 
-    const [progress] = await dbQuery(
-      "SELECT * FROM book_progress WHERE book_id = ? ORDER BY start_date ASC, created_at ASC",
-      [book.id],
-    ).catch(() => [[]]);
+      const [progress] = await dbQuery(
+        "SELECT * FROM book_progress WHERE book_id = ? ORDER BY start_date ASC, created_at ASC",
+        [book.id],
+      ).catch(() => [[]]);
 
-    // Get reviews for this book
-    const [reviews] = await dbQuery(
-      `
+      // Get reviews for this book
+      const [reviews] = await dbQuery(
+        `
       SELECT r.*, u.full_name as reviewer_name
       FROM reviews r
       LEFT JOIN authors a ON r.reviewer_id = a.id
@@ -3797,39 +3836,40 @@ app.get(
       WHERE r.submission_id IN (SELECT id FROM submissions WHERE book_id = ?)
       ORDER BY r.completed_date DESC
     `,
-      [book.id],
-    );
+        [book.id],
+      );
 
-    // Get inventory
-    const [inventory] = await dbQuery(
-      "SELECT * FROM inventory WHERE book_id = ?",
-      [book.id],
-    );
+      // Get inventory
+      const [inventory] = await dbQuery(
+        "SELECT * FROM inventory WHERE book_id = ?",
+        [book.id],
+      );
 
-    // Get sales history
-    const [sales] = await dbQuery(
-      "SELECT * FROM sales WHERE book_id = ? ORDER BY sale_date DESC LIMIT 50",
-      [book.id],
-    );
+      // Get sales history
+      const [sales] = await dbQuery(
+        "SELECT * FROM sales WHERE book_id = ? ORDER BY sale_date DESC LIMIT 50",
+        [book.id],
+      );
 
-    res.json({
-      success: true,
-      book: {
-        ...book,
-        submissions,
-        contracts,
-        production,
-        progress,
-        reviews,
-        inventory,
-        sales,
-      },
-    });
-  } catch (error) {
-    console.error("Get book error:", error);
-    res.status(500).json({ success: false, message: "Failed to load book" });
-  }
-});
+      res.json({
+        success: true,
+        book: {
+          ...book,
+          submissions,
+          contracts,
+          production,
+          progress,
+          reviews,
+          inventory,
+          sales,
+        },
+      });
+    } catch (error) {
+      console.error("Get book error:", error);
+      res.status(500).json({ success: false, message: "Failed to load book" });
+    }
+  },
+);
 
 // Update book status
 app.put(
@@ -3837,94 +3877,117 @@ app.put(
   authMiddleware,
   roleMiddleware(adminPortalRoles),
   async (req, res) => {
-  try {
-    const { status, notes, publication_date, price } = req.body;
+    try {
+      const { status, notes, publication_date, price } = req.body;
 
-    const validStatuses = [
-      "draft",
-      "submitted",
-      "under_review",
-      "revisions_requested",
-      "accepted",
-      "in_production",
-      "published",
-      "rejected",
-      "archived",
-    ];
+      const validStatuses = [
+        "draft",
+        "submitted",
+        "under_review",
+        "revisions_requested",
+        "accepted",
+        "in_production",
+        "published",
+        "rejected",
+        "archived",
+      ];
 
-    if (!validStatuses.includes(status)) {
-      return res
-        .status(400)
-        .json({ success: false, message: "Invalid status" });
-    }
+      if (!validStatuses.includes(status)) {
+        return res
+          .status(400)
+          .json({ success: false, message: "Invalid status" });
+      }
 
-    const parsedPrice =
-      price === undefined || price === null || String(price).trim() === ""
-        ? null
-        : Number(price);
+      const parsedPrice =
+        price === undefined || price === null || String(price).trim() === ""
+          ? null
+          : Number(price);
 
-    if (
-      price !== undefined &&
-      price !== null &&
-      String(price).trim() !== "" &&
-      !Number.isFinite(parsedPrice)
-    ) {
-      return res
-        .status(400)
-        .json({ success: false, message: "Invalid price value" });
-    }
+      if (
+        price !== undefined &&
+        price !== null &&
+        String(price).trim() !== "" &&
+        !Number.isFinite(parsedPrice)
+      ) {
+        return res
+          .status(400)
+          .json({ success: false, message: "Invalid price value" });
+      }
 
-    const updateClauses = ["status = ?"];
-    const updateValues = [status];
+      const bookColumns = await getTableColumns("books");
+      const timestamp = new Date();
+      const updateClauses = ["status = ?"];
+      const updateValues = [status];
 
-    if (notes !== undefined) {
-      updateClauses.push("editor_notes = ?");
-      updateValues.push(toNullable(notes));
-    }
+      if (notes !== undefined && bookColumns.has("editor_notes")) {
+        updateClauses.push("editor_notes = ?");
+        updateValues.push(toNullable(notes));
+      }
 
-    if (price !== undefined) {
-      updateClauses.push("price = ?");
-      updateValues.push(parsedPrice);
-    }
+      if (price !== undefined && bookColumns.has("price")) {
+        updateClauses.push("price = ?");
+        updateValues.push(parsedPrice);
+      }
 
-    const normalizedPublicationDate =
-      publication_date === undefined ? undefined : toNullable(publication_date);
+      const normalizedPublicationDate =
+        publication_date === undefined
+          ? undefined
+          : toNullable(publication_date);
 
-    if (normalizedPublicationDate !== undefined) {
-      if (status === "published" && !normalizedPublicationDate) {
+      if (
+        bookColumns.has("publication_date") &&
+        normalizedPublicationDate !== undefined
+      ) {
+        if (status === "published" && !normalizedPublicationDate) {
+          updateClauses.push(
+            "publication_date = COALESCE(publication_date, CURRENT_DATE)",
+          );
+        } else {
+          updateClauses.push("publication_date = ?");
+          updateValues.push(normalizedPublicationDate);
+        }
+      } else if (
+        bookColumns.has("publication_date") &&
+        status === "published"
+      ) {
         updateClauses.push(
           "publication_date = COALESCE(publication_date, CURRENT_DATE)",
         );
-      } else {
-        updateClauses.push("publication_date = ?");
-        updateValues.push(normalizedPublicationDate);
       }
-    } else if (status === "published") {
-      updateClauses.push("publication_date = COALESCE(publication_date, CURRENT_DATE)");
+
+      if (bookColumns.has("updated_at")) {
+        updateClauses.push("updated_at = ?");
+        updateValues.push(timestamp);
+      }
+
+      const [result] = await dbQuery(
+        `UPDATE books SET ${updateClauses.join(", ")} WHERE id = ?`,
+        [...updateValues, req.params.id],
+      );
+
+      if (result.affectedRows === 0) {
+        return res
+          .status(404)
+          .json({ success: false, message: "Book not found" });
+      }
+
+      res.json({
+        success: true,
+        message: `Book status updated to ${status}`,
+      });
+    } catch (error) {
+      console.error("Update book status error:", error);
+      res.status(500).json({
+        success: false,
+        message: "Failed to update book status",
+        error:
+          process.env.NODE_ENV === "production"
+            ? undefined
+            : error?.message || String(error),
+      });
     }
-
-    const [result] = await dbQuery(
-      `UPDATE books SET ${updateClauses.join(", ")} WHERE id = ?`,
-      [...updateValues, req.params.id],
-    );
-
-    if (result.affectedRows === 0) {
-      return res
-        .status(404)
-        .json({ success: false, message: "Book not found" });
-    }
-
-    res.json({
-      success: true,
-      message: `Book status updated to ${status}`,
-    });
-  } catch (error) {
-    console.error("Update book status error:", error);
-    res
-      .status(500)
-      .json({ success: false, message: "Failed to update book status" });
-  }
-});
+  },
+);
 
 // Upload book cover
 app.post(
@@ -3963,6 +4026,116 @@ app.post(
       res
         .status(500)
         .json({ success: false, message: "Failed to upload cover" });
+    }
+  },
+);
+
+app.post(
+  "/api/admin/books/:id/publish",
+  authMiddleware,
+  roleMiddleware(["admin"]),
+  documentUpload.single("book_file"),
+  async (req, res) => {
+    try {
+      await ensureBookPublishingColumns();
+
+      if (!req.file) {
+        return res.status(400).json({
+          success: false,
+          message: "Please upload the final book file",
+        });
+      }
+
+      const bookId = req.params.id;
+      const [bookRows] = await dbQuery(
+        "SELECT id, title FROM books WHERE id = ?",
+        [bookId],
+      );
+
+      if (bookRows.length === 0) {
+        return res.status(404).json({
+          success: false,
+          message: "Book not found",
+        });
+      }
+
+      const publishedFile = `/uploads/${req.file.filename}`;
+      const timestamp = new Date();
+      const publicationDate = toNullable(req.body?.publication_date);
+      const rawPrice = req.body?.price;
+      const parsedPrice =
+        rawPrice === undefined ||
+        rawPrice === null ||
+        String(rawPrice).trim() === ""
+          ? null
+          : Number(rawPrice);
+      const bookColumns = await getTableColumns("books");
+
+      if (
+        parsedPrice !== null &&
+        (!Number.isFinite(parsedPrice) || parsedPrice < 0)
+      ) {
+        return res.status(400).json({
+          success: false,
+          message: "Price must be a valid non-negative number",
+        });
+      }
+
+      const updateClauses = ["status = 'published'", "published_file = ?"];
+      const updateValues = [publishedFile];
+
+      if (bookColumns.has("updated_at")) {
+        updateClauses.push("updated_at = ?");
+        updateValues.push(timestamp);
+      }
+
+      if (bookColumns.has("price") && rawPrice !== undefined) {
+        updateClauses.push("price = ?");
+        updateValues.push(parsedPrice);
+      }
+
+      if (bookColumns.has("publication_date")) {
+        if (publicationDate) {
+          updateClauses.push("publication_date = ?");
+          updateValues.push(publicationDate);
+        } else {
+          updateClauses.push(
+            "publication_date = COALESCE(publication_date, CURRENT_DATE)",
+          );
+        }
+      }
+
+      const [result] = await dbQuery(
+        `UPDATE books SET ${updateClauses.join(", ")} WHERE id = ?`,
+        [...updateValues, bookId],
+      );
+
+      if (result.affectedRows === 0) {
+        return res.status(404).json({
+          success: false,
+          message: "Book not found",
+        });
+      }
+
+      await logBookProgressStage({
+        bookId,
+        stage: "distribution",
+        status: "completed",
+        notes: `Book published${bookRows[0]?.title ? `: ${bookRows[0].title}` : ""}`,
+        completed: true,
+      });
+
+      res.json({
+        success: true,
+        message: "Book published successfully",
+        published_file: publishedFile,
+      });
+    } catch (error) {
+      console.error("Publish book error:", error);
+      res.status(500).json({
+        success: false,
+        message: "Failed to publish book",
+      });
     }
   },
 );
@@ -4008,19 +4181,19 @@ app.get(
   authMiddleware,
   roleMiddleware(adminPortalRoles),
   async (req, res) => {
-  try {
-    const { status, type, priority, page = 1, limit = 20 } = req.query;
-    const pageNumber = Math.max(Number.parseInt(page, 10) || 1, 1);
-    const limitNumber = Math.min(
-      Math.max(Number.parseInt(limit, 10) || 20, 1),
-      100,
-    );
-    const offset = (pageNumber - 1) * limitNumber;
-    const submissionColumns = await getTableColumns("submissions");
-    const hasSubmissionPriority = submissionColumns.has("priority");
-    const hasSubmissionDueDate = submissionColumns.has("due_date");
+    try {
+      const { status, type, priority, page = 1, limit = 20 } = req.query;
+      const pageNumber = Math.max(Number.parseInt(page, 10) || 1, 1);
+      const limitNumber = Math.min(
+        Math.max(Number.parseInt(limit, 10) || 20, 1),
+        100,
+      );
+      const offset = (pageNumber - 1) * limitNumber;
+      const submissionColumns = await getTableColumns("submissions");
+      const hasSubmissionPriority = submissionColumns.has("priority");
+      const hasSubmissionDueDate = submissionColumns.has("due_date");
 
-    let query = `
+      let query = `
       SELECT s.*, b.title as book_title, u.full_name as author_name,
              ${
                hasSubmissionDueDate
@@ -4036,69 +4209,70 @@ app.get(
       WHERE 1=1
     `;
 
-    let countQuery = `
+      let countQuery = `
       SELECT COUNT(*) as total 
       FROM submissions s
       JOIN books b ON s.book_id = b.id
       WHERE 1=1
     `;
 
-    const params = [];
-    const countParams = [];
+      const params = [];
+      const countParams = [];
 
-    if (status) {
-      query += " AND s.status = ?";
-      countQuery += " AND s.status = ?";
-      params.push(status);
-      countParams.push(status);
+      if (status) {
+        query += " AND s.status = ?";
+        countQuery += " AND s.status = ?";
+        params.push(status);
+        countParams.push(status);
+      }
+
+      if (type) {
+        query += " AND s.submission_type = ?";
+        countQuery += " AND s.submission_type = ?";
+        params.push(type);
+        countParams.push(type);
+      }
+
+      if (priority && hasSubmissionPriority) {
+        query += " AND s.priority = ?";
+        countQuery += " AND s.priority = ?";
+        params.push(priority);
+        countParams.push(priority);
+      }
+
+      const orderByClauses = [];
+      if (hasSubmissionPriority) {
+        orderByClauses.push("s.priority DESC");
+      }
+      if (hasSubmissionDueDate) {
+        orderByClauses.push("s.due_date ASC");
+      }
+      orderByClauses.push("s.submission_date DESC");
+
+      query += ` ORDER BY ${orderByClauses.join(", ")} LIMIT ? OFFSET ?`;
+      params.push(limitNumber, offset);
+
+      const [submissions] = await dbQuery(query, params);
+      const [[{ total }]] = await dbQuery(countQuery, countParams);
+
+      res.json({
+        success: true,
+        submissions,
+        pagination: {
+          total,
+          page: pageNumber,
+          limit: limitNumber,
+          pages: total > 0 ? Math.ceil(total / limitNumber) : 0,
+        },
+      });
+    } catch (error) {
+      console.error("Get submissions error:", error);
+      res
+        .status(500)
+        .json({ success: false, message: "Failed to load submissions" });
     }
-
-    if (type) {
-      query += " AND s.submission_type = ?";
-      countQuery += " AND s.submission_type = ?";
-      params.push(type);
-      countParams.push(type);
-    }
-
-    if (priority && hasSubmissionPriority) {
-      query += " AND s.priority = ?";
-      countQuery += " AND s.priority = ?";
-      params.push(priority);
-      countParams.push(priority);
-    }
-
-    const orderByClauses = [];
-    if (hasSubmissionPriority) {
-      orderByClauses.push("s.priority DESC");
-    }
-    if (hasSubmissionDueDate) {
-      orderByClauses.push("s.due_date ASC");
-    }
-    orderByClauses.push("s.submission_date DESC");
-
-    query += ` ORDER BY ${orderByClauses.join(", ")} LIMIT ? OFFSET ?`;
-    params.push(limitNumber, offset);
-
-    const [submissions] = await dbQuery(query, params);
-    const [[{ total }]] = await dbQuery(countQuery, countParams);
-
-    res.json({
-      success: true,
-      submissions,
-      pagination: {
-        total,
-        page: pageNumber,
-        limit: limitNumber,
-        pages: total > 0 ? Math.ceil(total / limitNumber) : 0,
-      },
-    });
-  } catch (error) {
-    console.error("Get submissions error:", error);
-    res
-      .status(500)
-      .json({ success: false, message: "Failed to load submissions" });
-  }
-});
+  },
+);
 
 app.get(
   "/api/admin/submissions/:id",
@@ -4296,7 +4470,11 @@ app.put(
         const currentBookStatus = currentBook?.status || "draft";
         if (!["in_production", "published"].includes(currentBookStatus)) {
           let nextBookStatus = null;
-          if (["pending", "assigned", "in_review", "review_completed"].includes(status)) {
+          if (
+            ["pending", "assigned", "in_review", "review_completed"].includes(
+              status,
+            )
+          ) {
             nextBookStatus = "under_review";
           } else if (status === "accepted") {
             nextBookStatus = "accepted";
@@ -4471,7 +4649,11 @@ app.post(
         ]);
       }
 
-      if (isEmailConfigured && audience === "author" && submission.author_email) {
+      if (
+        isEmailConfigured &&
+        audience === "author" &&
+        submission.author_email
+      ) {
         const emailLines = [
           `Hello ${submission.author_name || "Author"},`,
           "",
@@ -4486,10 +4668,16 @@ app.post(
         ];
 
         if (attachmentUrl) {
-          emailLines.push("", `Attachment available in the portal: ${attachmentUrl}`);
+          emailLines.push(
+            "",
+            `Attachment available in the portal: ${attachmentUrl}`,
+          );
         }
 
-        emailLines.push("", "Please sign in to the author workspace to review the latest workflow activity.");
+        emailLines.push(
+          "",
+          "Please sign in to the author workspace to review the latest workflow activity.",
+        );
 
         void sendEmail({
           to: submission.author_email,
@@ -4523,18 +4711,18 @@ app.get(
   authMiddleware,
   roleMiddleware(adminPortalRoles),
   async (req, res) => {
-  try {
-    const { status, type, author_id, page = 1, limit = 20 } = req.query;
-    const pageNumber = Math.max(Number.parseInt(page, 10) || 1, 1);
-    const limitNumber = Math.min(
-      Math.max(Number.parseInt(limit, 10) || 20, 1),
-      100,
-    );
-    const offset = (pageNumber - 1) * limitNumber;
-    const userColumns = await getTableColumns("users");
-    const hasAuthorPhone = userColumns.has("phone");
+    try {
+      const { status, type, author_id, page = 1, limit = 20 } = req.query;
+      const pageNumber = Math.max(Number.parseInt(page, 10) || 1, 1);
+      const limitNumber = Math.min(
+        Math.max(Number.parseInt(limit, 10) || 20, 1),
+        100,
+      );
+      const offset = (pageNumber - 1) * limitNumber;
+      const userColumns = await getTableColumns("users");
+      const hasAuthorPhone = userColumns.has("phone");
 
-    let query = `
+      let query = `
       SELECT c.*, b.title as book_title, u.full_name as author_name,
              u.email as author_email,
              ${
@@ -4549,39 +4737,40 @@ app.get(
       WHERE 1=1
     `;
 
-    const params = [];
+      const params = [];
 
-    if (status) {
-      query += " AND c.status = ?";
-      params.push(status);
+      if (status) {
+        query += " AND c.status = ?";
+        params.push(status);
+      }
+
+      if (type) {
+        query += " AND c.contract_type = ?";
+        params.push(type);
+      }
+
+      if (author_id) {
+        query += " AND c.author_id = ?";
+        params.push(author_id);
+      }
+
+      query += " ORDER BY c.created_at DESC LIMIT ? OFFSET ?";
+      params.push(limitNumber, offset);
+
+      const [contracts] = await dbQuery(query, params);
+
+      res.json({
+        success: true,
+        contracts,
+      });
+    } catch (error) {
+      console.error("Get contracts error:", error);
+      res
+        .status(500)
+        .json({ success: false, message: "Failed to load contracts" });
     }
-
-    if (type) {
-      query += " AND c.contract_type = ?";
-      params.push(type);
-    }
-
-    if (author_id) {
-      query += " AND c.author_id = ?";
-      params.push(author_id);
-    }
-
-    query += " ORDER BY c.created_at DESC LIMIT ? OFFSET ?";
-    params.push(limitNumber, offset);
-
-    const [contracts] = await dbQuery(query, params);
-
-    res.json({
-      success: true,
-      contracts,
-    });
-  } catch (error) {
-    console.error("Get contracts error:", error);
-    res
-      .status(500)
-      .json({ success: false, message: "Failed to load contracts" });
-  }
-});
+  },
+);
 
 app.get(
   "/api/admin/contracts/:id",
@@ -4626,102 +4815,110 @@ app.post(
   authMiddleware,
   roleMiddleware(adminPortalRoles),
   async (req, res) => {
-  try {
-    const {
-      book_id,
-      author_id,
-      contract_type,
-      status = "draft",
-      royalty_percentage,
-      advance_amount,
-      start_date,
-      end_date,
-      rights_granted,
-      territory,
-      payment_schedule,
-    } = req.body;
-
-    if (!book_id || !author_id) {
-      return res.status(400).json({
-        success: false,
-        message: "Book and author are required",
-      });
-    }
-
-    const validContractTypes = ["standard", "royalty", "advance", "work_for_hire"];
-    const validContractStatuses = [
-      "draft",
-      "sent",
-      "signed",
-      "executed",
-      "expired",
-      "terminated",
-    ];
-
-    if (!validContractTypes.includes(contract_type || "standard")) {
-      return res.status(400).json({
-        success: false,
-        message: "Invalid contract type",
-      });
-    }
-
-    if (!validContractStatuses.includes(status)) {
-      return res.status(400).json({
-        success: false,
-        message: "Invalid contract status",
-      });
-    }
-
-    // Generate contract number
-    const contractNumber = `CONTRACT-${Date.now()}-${Math.floor(Math.random() * 1000)}`;
-
-    const [result] = await dbQuery(
-      `INSERT INTO contracts (
-        book_id, author_id, contract_type, contract_number,
-        status, royalty_percentage, advance_amount, start_date, end_date,
-        rights_granted, territory, payment_schedule
-      ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
-      [
+    try {
+      const {
         book_id,
         author_id,
-        contract_type || "standard",
-        contractNumber,
-        status,
-        toNullable(royalty_percentage),
-        toNullable(advance_amount),
-        toNullable(start_date),
-        toNullable(end_date),
-        toNullable(rights_granted),
-        toNullable(territory),
-        toNullable(payment_schedule),
-      ],
-    );
+        contract_type,
+        status = "draft",
+        royalty_percentage,
+        advance_amount,
+        start_date,
+        end_date,
+        signed_date,
+        rights_granted,
+        territory,
+        payment_schedule,
+      } = req.body;
 
-    if (status === "executed") {
-      await dbQuery(
-        "UPDATE books SET status = 'in_production' WHERE id = ? AND status NOT IN ('published')",
-        [book_id],
+      if (!book_id || !author_id) {
+        return res.status(400).json({
+          success: false,
+          message: "Book and author are required",
+        });
+      }
+
+      const validContractTypes = [
+        "standard",
+        "royalty",
+        "advance",
+        "work_for_hire",
+      ];
+      const validContractStatuses = [
+        "draft",
+        "sent",
+        "signed",
+        "executed",
+        "expired",
+        "terminated",
+      ];
+
+      if (!validContractTypes.includes(contract_type || "standard")) {
+        return res.status(400).json({
+          success: false,
+          message: "Invalid contract type",
+        });
+      }
+
+      if (!validContractStatuses.includes(status)) {
+        return res.status(400).json({
+          success: false,
+          message: "Invalid contract status",
+        });
+      }
+
+      // Generate contract number
+      const contractNumber = `CONTRACT-${Date.now()}-${Math.floor(Math.random() * 1000)}`;
+
+      await ensureContractDocumentColumns();
+      const timestamp = new Date();
+      const createdContract = await insertRecordWithExistingColumns(
+        "contracts",
+        {
+          book_id,
+          author_id,
+          contract_type: contract_type || "standard",
+          contract_number: contractNumber,
+          status,
+          royalty_percentage: toNullable(royalty_percentage),
+          advance_amount: toNullable(advance_amount),
+          start_date: toNullable(start_date),
+          end_date: toNullable(end_date),
+          signed_date: toNullable(signed_date),
+          rights_granted: toNullable(rights_granted),
+          territory: toNullable(territory),
+          payment_schedule: toNullable(payment_schedule),
+          created_at: timestamp,
+          updated_at: timestamp,
+        },
       );
-    } else if (status === "signed") {
-      await dbQuery(
-        "UPDATE books SET status = 'accepted' WHERE id = ? AND status NOT IN ('in_production', 'published')",
-        [book_id],
-      );
+
+      if (status === "executed") {
+        await dbQuery(
+          "UPDATE books SET status = 'in_production' WHERE id = ? AND status NOT IN ('published')",
+          [book_id],
+        );
+      } else if (status === "signed") {
+        await dbQuery(
+          "UPDATE books SET status = 'accepted' WHERE id = ? AND status NOT IN ('in_production', 'published')",
+          [book_id],
+        );
+      }
+
+      res.json({
+        success: true,
+        message: "Contract created successfully",
+        contract_id: createdContract.insertId,
+        contract_number: contractNumber,
+      });
+    } catch (error) {
+      console.error("Create contract error:", error);
+      res
+        .status(500)
+        .json({ success: false, message: "Failed to create contract" });
     }
-
-    res.json({
-      success: true,
-      message: "Contract created successfully",
-      contract_id: result.insertId,
-      contract_number: contractNumber,
-    });
-  } catch (error) {
-    console.error("Create contract error:", error);
-    res
-      .status(500)
-      .json({ success: false, message: "Failed to create contract" });
-  }
-});
+  },
+);
 
 app.put(
   "/api/admin/contracts/:id",
@@ -4736,12 +4933,18 @@ app.put(
         advance_amount,
         start_date,
         end_date,
+        signed_date,
         rights_granted,
         territory,
         payment_schedule,
       } = req.body;
 
-      const validContractTypes = ["standard", "royalty", "advance", "work_for_hire"];
+      const validContractTypes = [
+        "standard",
+        "royalty",
+        "advance",
+        "work_for_hire",
+      ];
       const validStatuses = [
         "draft",
         "sent",
@@ -4751,7 +4954,10 @@ app.put(
         "terminated",
       ];
 
-      if (contract_type !== undefined && !validContractTypes.includes(contract_type)) {
+      if (
+        contract_type !== undefined &&
+        !validContractTypes.includes(contract_type)
+      ) {
         return res.status(400).json({
           success: false,
           message: "Invalid contract type",
@@ -4773,7 +4979,8 @@ app.put(
         values.push(value);
       };
 
-      if (contract_type !== undefined) updateField("contract_type", contract_type);
+      if (contract_type !== undefined)
+        updateField("contract_type", contract_type);
       if (status !== undefined) updateField("status", status);
       if (royalty_percentage !== undefined) {
         updateField("royalty_percentage", toNullable(royalty_percentage));
@@ -4781,14 +4988,21 @@ app.put(
       if (advance_amount !== undefined) {
         updateField("advance_amount", toNullable(advance_amount));
       }
-      if (start_date !== undefined) updateField("start_date", toNullable(start_date));
+      if (start_date !== undefined)
+        updateField("start_date", toNullable(start_date));
       if (end_date !== undefined) updateField("end_date", toNullable(end_date));
       if (rights_granted !== undefined) {
         updateField("rights_granted", toNullable(rights_granted));
       }
-      if (territory !== undefined) updateField("territory", toNullable(territory));
+      if (territory !== undefined)
+        updateField("territory", toNullable(territory));
       if (payment_schedule !== undefined) {
         updateField("payment_schedule", toNullable(payment_schedule));
+      }
+
+      const contractColumns = await getTableColumns("contracts");
+      if (signed_date !== undefined && contractColumns.has("signed_date")) {
+        updateField("signed_date", toNullable(signed_date));
       }
 
       if (updates.length === 0) {
@@ -4839,6 +5053,60 @@ app.put(
       res.status(500).json({
         success: false,
         message: "Failed to update contract",
+      });
+    }
+  },
+);
+
+app.post(
+  "/api/admin/contracts/:id/file",
+  authMiddleware,
+  roleMiddleware(adminPortalRoles),
+  documentUpload.single("contract_file"),
+  async (req, res) => {
+    try {
+      await ensureContractDocumentColumns();
+
+      if (!req.file) {
+        return res.status(400).json({
+          success: false,
+          message: "Please upload the contract document",
+        });
+      }
+
+      const contractId = req.params.id;
+      const contractFile = `/uploads/${req.file.filename}`;
+      const contractColumns = await getTableColumns("contracts");
+
+      const updateClauses = ["contract_file = ?"];
+      const updateValues = [contractFile];
+      if (contractColumns.has("updated_at")) {
+        updateClauses.push("updated_at = ?");
+        updateValues.push(new Date());
+      }
+
+      const [result] = await dbQuery(
+        `UPDATE contracts SET ${updateClauses.join(", ")} WHERE id = ?`,
+        [...updateValues, contractId],
+      );
+
+      if (result.affectedRows === 0) {
+        return res.status(404).json({
+          success: false,
+          message: "Contract not found",
+        });
+      }
+
+      res.json({
+        success: true,
+        message: "Contract document uploaded successfully",
+        contract_file: contractFile,
+      });
+    } catch (error) {
+      console.error("Upload contract document error:", error);
+      res.status(500).json({
+        success: false,
+        message: "Failed to upload contract document",
       });
     }
   },
@@ -5725,7 +5993,9 @@ app.get("/api/author/dashboard", authMiddleware, async (req, res) => {
         latest_feedback_decision: latestFeedback?.recommendation || null,
         latest_feedback_date: latestFeedback?.created_at || null,
         latest_feedback_attachment: latestFeedback?.attachment_url || null,
-        latest_feedback_action_required: Boolean(latestFeedback?.action_required),
+        latest_feedback_action_required: Boolean(
+          latestFeedback?.action_required,
+        ),
       };
     });
 
