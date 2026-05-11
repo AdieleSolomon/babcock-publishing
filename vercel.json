@@ -1,3 +1,29 @@
 {
-  "version": 2
+  "version": 2,
+  "routes": [
+    { "src": "/public/(.*)", "dest": "/frontend/public/$1" },
+    { "src": "/assets/(.*)", "dest": "/frontend/assets/$1" },
+    { "src": "/robots.txt", "dest": "/frontend/robots.txt" },
+    { "src": "/sitemap.xml", "dest": "/frontend/sitemap.xml" },
+    { "src": "/about(?:\\.html)?", "dest": "/frontend/about.html" },
+    { "src": "/authors(?:\\.html)?", "dest": "/frontend/authors.html" },
+    { "src": "/for-authors(?:\\.html)?", "dest": "/frontend/for-authors.html" },
+    { "src": "/gallery(?:\\.html)?", "dest": "/frontend/gallery.html" },
+    { "src": "/insights(?:\\.html)?", "dest": "/frontend/insights.html" },
+    { "src": "/products(?:\\.html)?", "dest": "/frontend/products.html" },
+    {
+      "src": "/publications(?:\\.html)?",
+      "dest": "/frontend/publications.html"
+    },
+    { "src": "/publishing(?:\\.html)?", "dest": "/frontend/publishing.html" },
+    {
+      "src": "/rights-permissions(?:\\.html)?",
+      "dest": "/frontend/rights-permissions.html"
+    },
+    { "src": "/services(?:\\.html)?", "dest": "/frontend/services.html" },
+    { "src": "/solutions(?:\\.html)?", "dest": "/frontend/solutions.html" },
+    { "src": "/staff(?:\\.html)?", "dest": "/frontend/staff.html" },
+    { "src": "/support(?:\\.html)?", "dest": "/frontend/support.html" },
+    { "src": "/(?:index\\.html)?", "dest": "/frontend/index.html" }
+  ]
 }

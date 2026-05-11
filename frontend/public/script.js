@@ -1325,6 +1325,21 @@ function initAdminLayout() {
   const mainContent = document.getElementById("mainContent");
   const toggleBtn = document.getElementById("toggleSidebar");
   const mobileToggle = document.getElementById("mobileMenuToggle");
+  const sidebarBackdrop = document.getElementById("adminSidebarBackdrop");
+  const desktopSearch = document.getElementById("globalSearch");
+  const mobileSearch = document.getElementById("adminMobileSearch");
+
+  const setSidebarOpen = (isOpen) => {
+    if (!sidebar) return;
+    sidebar.classList.toggle("active", isOpen);
+    if (sidebarBackdrop) {
+      sidebarBackdrop.classList.toggle("active", isOpen);
+    }
+    if (mobileToggle) {
+      mobileToggle.setAttribute("aria-expanded", String(isOpen));
+    }
+    document.body.classList.toggle("admin-sidebar-open", isOpen);
+  };
 
   if (toggleBtn && sidebar && mainContent) {
     toggleBtn.addEventListener("click", () => {
@@ -1341,9 +1356,29 @@ function initAdminLayout() {
 
   if (mobileToggle && sidebar) {
     mobileToggle.addEventListener("click", () => {
-      sidebar.classList.toggle("active");
+      setSidebarOpen(!sidebar.classList.contains("active"));
     });
   }
+
+  if (sidebarBackdrop) {
+    sidebarBackdrop.addEventListener("click", () => setSidebarOpen(false));
+  }
+
+  [desktopSearch, mobileSearch].forEach((input) => {
+    if (!input) return;
+    input.addEventListener("input", () => {
+      const peer = input === desktopSearch ? mobileSearch : desktopSearch;
+      if (peer && peer.value !== input.value) {
+        peer.value = input.value;
+      }
+    });
+  });
+
+  window.addEventListener("resize", () => {
+    if (window.innerWidth > 992) {
+      setSidebarOpen(false);
+    }
+  });
 }
 
 // ============================================
@@ -1359,6 +1394,13 @@ function setupDashboardNavigation() {
       e.preventDefault();
 
       if (!navItem.dataset.section) {
+        const sidebar = document.getElementById("sidebar");
+        const sidebarBackdrop = document.getElementById("adminSidebarBackdrop");
+        const mobileToggle = document.getElementById("mobileMenuToggle");
+        if (sidebar) sidebar.classList.remove("active");
+        if (sidebarBackdrop) sidebarBackdrop.classList.remove("active");
+        if (mobileToggle) mobileToggle.setAttribute("aria-expanded", "false");
+        document.body.classList.remove("admin-sidebar-open");
         return;
       }
 
@@ -1458,6 +1500,15 @@ function showDashboardSection(sectionId) {
   if (sidebar && sidebar.classList.contains("active")) {
     sidebar.classList.remove("active");
   }
+  const sidebarBackdrop = document.getElementById("adminSidebarBackdrop");
+  if (sidebarBackdrop) {
+    sidebarBackdrop.classList.remove("active");
+  }
+  const mobileToggle = document.getElementById("mobileMenuToggle");
+  if (mobileToggle) {
+    mobileToggle.setAttribute("aria-expanded", "false");
+  }
+  document.body.classList.remove("admin-sidebar-open");
 }
 
 async function loadAdminDashboard() {

@@ -48,65 +48,13 @@
     <link
       rel="stylesheet"
       href="https://cdn.datatables.net/1.13.6/css/jquery.dataTables.min.css" />
-    <link rel="stylesheet" href="public/styles.css?v=1.0.1" />
-    <link rel="stylesheet" href="public/enterprise.css?v=1.0.1" />
+    <link rel="stylesheet" href="public/styles.css?v=1.0.2" />
+    <link rel="stylesheet" href="public/enterprise.css?v=1.0.2" />
   </head>
   <body>
     <!-- ============= HOMEPAGE ============= -->
     <div id="homepage" class="press-home">
       <header class="site-header press-site-header">
-        <div class="press-utility-bar">
-          <div class="container press-utility-inner">
-            <div class="press-utility-links">
-              <a
-                href="https://umis.babcock.edu.ng"
-                target="_blank"
-                rel="noopener noreferrer"
-                >UMIS</a
-              >
-              <a
-                href="https://publication.babcock.edu.ng"
-                target="_blank"
-                rel="noopener noreferrer"
-                >Publications</a
-              >
-              <a
-                href="https://legacy.babcock.edu.ng/oer/bu_oer_intro.php"
-                target="_blank"
-                rel="noopener noreferrer"
-                >OER</a
-              >
-              <a
-                href="https://legacy.babcock.edu.ng/Virtual_tour/Babcock.html"
-                target="_blank"
-                rel="noopener noreferrer"
-                >Virtual Tour</a
-              >
-              <a
-                href="https://babcock.edu.ng/library"
-                target="_blank"
-                rel="noopener noreferrer"
-                >Library</a
-              >
-              <div
-                id="portalAccessNotice"
-                style="font-size: 18px; color: #e28383; font-weight: 500"
-                aria-live="polite">
-                login / register to view admin and author portals
-              </div>
-            </div>
-            <div class="press-utility-meta">
-              <span>Mon-Thu 9am-5pm, Fri 9am-1pm</span>
-              <a
-                href="https://legacy.babcock.edu.ng/search"
-                target="_blank"
-                rel="noopener noreferrer"
-                >Search</a
-              >
-            </div>
-          </div>
-        </div>
-
         <div class="press-primary-bar">
           <div class="container press-primary-row">
             <a href="index.html" class="press-brand">
@@ -249,6 +197,14 @@
             </li>
             <li>
               <a
+                href="https://legacy.babcock.edu.ng/oer/bu_oer_intro.php"
+                target="_blank"
+                rel="noopener noreferrer"
+                >OER</a
+              >
+            </li>
+            <li>
+              <a
                 href="https://babcock.edu.ng/library"
                 target="_blank"
                 rel="noopener noreferrer"
@@ -271,7 +227,22 @@
                 >Legacy BU Press</a
               >
             </li>
+            <li>
+              <a
+                href="https://legacy.babcock.edu.ng/search"
+                target="_blank"
+                rel="noopener noreferrer"
+                >Search</a
+              >
+            </li>
           </ul>
+        </div>
+        <div class="press-mobile-section press-mobile-portal">
+          <h3>Portal Access</h3>
+          <p id="portalAccessNotice" aria-live="polite">
+            login / register to view admin and author portals
+          </p>
+          <span>Mon-Thu 9am-5pm, Fri 9am-1pm</span>
         </div>
         <div class="press-mobile-auth" id="mobileAuthButtons">
           <button class="btn btn-outline" onclick="showLoginModal()">
@@ -1735,6 +1706,21 @@
             </button>
           </div>
 
+          <div class="sidebar-mobile-actions" aria-label="Mobile admin tools">
+            <label class="sidebar-search" for="adminMobileSearch">
+              <i class="fas fa-search"></i>
+              <input
+                aria-label="Mobile Global Search"
+                type="text"
+                placeholder="Search..."
+                id="adminMobileSearch" />
+            </label>
+            <button class="action-btn" type="button" onclick="loadAdminDashboard()">
+              <i class="fas fa-sync-alt"></i>
+              <span>Refresh dashboard</span>
+            </button>
+          </div>
+
           <nav class="sidebar-menu">
             <div class="menu-section">
               <div class="menu-title">Main</div>
@@ -1794,6 +1780,7 @@
             </div>
           </div>
         </aside>
+        <div class="admin-sidebar-backdrop" id="adminSidebarBackdrop"></div>
 
         <div class="main-content" id="mainContent">
           <header class="main-header">
@@ -1801,7 +1788,8 @@
               <button
                 class="mobile-menu-toggle"
                 id="mobileMenuToggle"
-                aria-label="Open menu">
+                aria-label="Open menu"
+                aria-expanded="false">
                 <i class="fas fa-bars"></i>
               </button>
               <h1 class="header-title" id="pageTitle">Dashboard</h1>
@@ -3508,6 +3496,6 @@
     <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
     <script src="https://cdn.datatables.net/1.13.6/js/jquery.dataTables.min.js"></script>
     <script src="public/config.js?v=1.0.1"></script>
-    <script src="public/script.js?v=1.0.1"></script>
+    <script src="public/script.js?v=1.0.2"></script>
   </body>
 </html>
